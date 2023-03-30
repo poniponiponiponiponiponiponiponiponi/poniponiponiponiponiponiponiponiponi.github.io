@@ -265,7 +265,7 @@ retf and far jmps instructions work because if you didn't know about this it
 can be a real headache. Basically if we push 0x23 or 0x33 before the address,
 then after retf the value is used in some internal processor's register and in
 this case we change from 32-bit mode to 64-bit mode. Every instruction after
-that will be treated as an 64bit instruction by the processor. The main problem
+that will be treated as an 64-bit instruction by the processor. The main problem
 is that gdb doesn't work well with this kind of hackery so after that gdb still
 thinks that it's executing 32-bit code. It's annoying if you don't notice it
 because then gdb looks like it's broken. For example you step one instruction

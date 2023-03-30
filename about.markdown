@@ -4,10 +4,8 @@ title: About
 permalink: /about/
 ---
 
-Currently I'm studying computer science in Wroclaw, Poland.
-My hobbies are:
-- Programming. Mostly low level. I feel confident writing in c and c++ but somewhere in the future I want to checkout Rust.
-I also know python pretty well.
-- Hacking. In ctf competitions I focus on binary exploitation.
-- Watching good animation (anime and cartoons).
-- Listening to weird music (Otoboke Beaver, Midori, Melt-Banana etc).
+I'm studying computer science in Wroclaw, Poland.
+My interests include:
+- Programming. Mostly low level. C, C++, Rust. I also know Python well.
+- Hacking. I play ctfs focusing on binary exploitation and reverse engineering.
+- Overall just media consumption. Anime, manga, music, video games, cartoons, youtube videos, etc... :)
