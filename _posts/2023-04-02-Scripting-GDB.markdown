@@ -325,7 +325,7 @@ Out[1]: <module 'gdb' from '/usr/share/gdb/python/gdb/__init__.py'>
 
 In [2]: help(gdb)
 ```
-If we want to check everything that is possible with it we can either ![read
+If we want to check everything that is possible with it we can either [read
 the docs](https://sourceware.org/gdb/onlinedocs/gdb/Python.html) or use the
 Python's built-in help function. So how can we use this object? The most
 important method that you will use all the time is `gdb.execute (command [,
@@ -351,7 +351,7 @@ But there's no other way to change a register value than using
 creating is the `Breakpoint` object. Even though it's name is breakpoint it can
 be also used to create watchpoints. The first constructor argument is a string
 that holds an expression for the `break` or `watch`. The second argument is
-what we want to create. Check ![the
+what we want to create. Check [the
 docs](https://sourceware.org/gdb/onlinedocs/gdb/Breakpoints-In-Python.html#Breakpoints-In-Python)
 for a full description of the available types but you can guess what they do
     just by their names: `gdb.BP_BREAKPOINT`, `gdb.BP_HARDWARE_BREAKPOINT`,
@@ -420,7 +420,7 @@ Breakpoint 7 at 0x55555555516f
 Another thing that I think might is useful is the option to create new
 commands. I will not dive deeper into it than a "hello world" example but
 if you ever find yourself in a need to create a command to make things easier
-or faster for you, ![the options is there](
+or faster for you, [the options is there](
 https://sourceware.org/gdb/onlinedocs/gdb/CLI-Commands-In-Python.html#CLI-Commands-In-Python).
 ```python
 In [1]: class MyCommand(gdb.Command):
@@ -461,7 +461,7 @@ gdb.attach(io, gdbscript='''
 But this is very limiting. We can't access GDB before making a decision what we
 want to execute and we can't execute anything after. To the rescue comes
 pwntools' integration with GDB that allows us to access the GDB's `gdb` god
-object through our script. It's possible thanks to the ![`RPyC` library](
+object through our script. It's possible thanks to the [`RPyC` library](
 https://rpyc.readthedocs.io/en/latest/) which is super interesting. The only
 thing we need to do for it to work is to pass `api=True` as an argument.
 ```python
