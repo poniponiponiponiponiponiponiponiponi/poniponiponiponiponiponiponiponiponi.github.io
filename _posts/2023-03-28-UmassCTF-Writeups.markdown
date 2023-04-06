@@ -9,12 +9,13 @@ categories: ctf rev pwn c
 This week I had the pleasure to play UmassCTF 2023 with a small team that we
 created with other people from around the internet. Hope the team sticks
 together for years to come but we'll see. Overall we got 8th place which I
-think is decent. Personally I solved one pwn (sadly there was only two pwns,
-the first was easy and the second felt super hard so I skipped it to focus on
-the easier ones) and two revs. One rev, even though pretty cool, was
-straightforward after you understand the gimmick of the challenge so I'm gonna
-skip the writeup for it. You can also read all the writeups from our team
-[on our website](https://ctf.cve2k9.club/). :)
+think is decent. Sadly there was only two pwns, the first was easy and the
+second one was comparatively hard, so instead I focused on helping with the
+easier revs. Personally I solved one pwn and two reversing challs. One rev,
+even though pretty cool, was straightforward after you understand the gimmick
+of the challenge so I'm gonna skip writing the writeup for it. You can also
+read all the writeups from our team [on our website](https://ctf.cve2k9.club/).
+:)
 
 # Sapphire
 > Description: Do you know both sapphire and ruby are corundum?
@@ -544,5 +545,6 @@ Now about the intended solution. I haven't tested it myself but I spoke with
 the admin/author about it. By answering neither `y` nor `n` to the question if
 you're ready, you can get a stack leak. According to him the intended solution
 was to recursively call the game through the restart option to shift the stack
-frame over the area where the flag was written to the stack in the password
-init function and then leak it using option two from the second menu.
+frame over the area where the password was written to the stack and then leak
+it using the "Print Answers" option from the second menu. The password appears
+on the stack after using the second option from the first menu.
