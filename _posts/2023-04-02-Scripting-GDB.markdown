@@ -6,25 +6,25 @@ categories: c python rev pwn
 ---
 
 # Introduction
-It's been years since I started using gdb and I'm still using it the same way.
+It's been years since I started using GDB and I'm still using it the same way.
 A lot of stepping and nexting, a breakpoint there and there, some printing and
 hexdumping. So I thought that it's finally time to change it and spend some
-time exploring automation in gdb. So that's what I did - I spend a day
-researching things around to improve my gdb-fu. Because finding some specific
+time exploring automation in GDB. So that's what I did - I spend a day
+researching things around to improve my GDB-fu. Because finding some specific
 information included going through github issues, reading stackoverflow
 comments and skimming through documentations, I decided to write a blogpost
 gathering all the things I learned and would love to be a little more
 accessible. I'm writing from a perspective of reverse engineering and exploit
 development where we don't have debugging symbols with the binary but
 everything there should be useful for everyone. All people in the cybersec
-community use plugins for gdb to make it more usable so if you don't I
+community use plugins for GDB to make it more usable so if you don't I
 recommend to you to use them too. Personally I always used pwndbg and the
 blogpost is written with some tips for it but there's also gef, peda and
-gdb-dashboard. We'll start with basics how to make simple gdb scripts if you
+GDB-dashboard. We'll start with basics how to make simple GDB scripts if you
 don't know it already, then we'll explore the tight integration of Python with
-gdb and we we'll wrap it up showing how to better use the Python's exploit
-development library `pwntools`'s gdb integration. And if this wasn't obvious
-already - I will assume that you have some gdb experience, just none when it
+GDB and we we'll wrap it up showing how to better use the Python's exploit
+development library `pwntools`'s GDB integration. And if this wasn't obvious
+already - I will assume that you have some GDB experience, just none when it
 comes to scripting it.
 
 # Basic GDB Scripting
@@ -46,7 +46,7 @@ int main() {
     return 0;
 }
 ```
-The `getchar` is there so we can easily attach gdb to the process if needed.
+The `getchar` is there so we can easily attach GDB to the process if needed.
 The source code is compiled with the command `gcc a.c`. There's the disassembly
 of our main function:
 ```c
@@ -97,7 +97,7 @@ Dump of assembler code for function main:
 End of assembler dump.
 pwndbg>
 ```
-One of the simplest and most useful tricks in gdb is to put a breakpoint
+One of the simplest and most useful tricks in GDB is to put a breakpoint
 somewhere and define some commands that are executed when we hit the breakpoint
 but ending the block of commands with a `continue` so we can observe how a
 value changes over time. For example we can see in the `main+83` instruction
@@ -122,13 +122,13 @@ pwndbg>
 ```
 Now when we run this program we will see every value being written to our
 array. Except when you use pwndbg. Even though I love this plugin it has for
-years already a bug where gdb freezes because of the continue. I believe it's
+years already a bug where GDB freezes because of the continue. I believe it's
 being worked on but at the point of writing this I have the newest version from
 github and it still happens to me, so I will tell you how to fix it in case it
 happens to you too. There's one of the issues related to it:
 `https://github.com/pwndbg/pwndbg/issues/1653`. The fix is to use `python
 gdb.execute('continue')` instead of a `continue`. This fixes the issue for me
-but sometimes gdb every like tenth~ time doesn't continue and you need to
+but sometimes GDB every like tenth~ time doesn't continue and you need to
 continue by hand. Now I couldn't replicate so I guess they fixed it? It's not a
 big issue however if that happens to you try to set memoize to off by using the
 `memoize` command once. Turning off memoization makes pwndbg noticably slower
@@ -163,12 +163,12 @@ $4 = 6
 ...
 ```
 
-Now let's talk about scripting the control flow in pure gdb. There are `if`
+Now let's talk about scripting the control flow in pure GDB. There are `if`
 statements, `else` statements (but no else ifs, if you want to `else if` you
 need to nest two statements) and `while` statements. There are keywords for
 breaks and continues: `loop_break`, `loop_continue`. You can define a function
 with a `define` (well... to be honest in the documentation they are refered to
-as commands not functions). Inside of gdb's "functions" we can run any command
+as commands not functions). Inside of GDB's "functions" we can run any command
 that we can run normally in the repl. A syntastic sugar for something like:
 ```
 break *main+83
@@ -182,7 +182,7 @@ would be:
 ```
 break *main+83 if $edx > 30
 ```
-Let's make a fibonacci function inside of gdb just for the sake of it:
+Let's make a fibonacci function inside of GDB just for the sake of it:
 ```
 define fib
     set $tmp = 0
@@ -198,14 +198,14 @@ define fib
 end
 ```
 We can run our defined function by typing `fib 123`. To be honest I haven't
-explored much of the gdb scripting language and I don't know where it's
+explored much of the GDB scripting language and I don't know where it's
 limitations are but I still wouldn't recommend it because doing even simple
 things can feel quite cumbersome. Even writing this example I couldn't find a
 way to do this recursively because there was no way of returning the value. For
 any complicated logic I would default to the embedded Python about which we
 will talk in the next section of the blogpost.
 
-Another useful trick is to log the gdb output to a file so we can later look
+Another useful trick is to log the GDB output to a file so we can later look
 at it or even parse the output somehow. It's especially useful since there's
 no redirect the output to a file option. We can log the output by typing:
 ```
@@ -258,7 +258,7 @@ RecreatedStruct s;
 a.out  original.c  recreation.c  recreation.o
 ➜  structs
 ```
-Now when we use gdb on `./a.out`:
+Now when we use GDB on `./a.out`:
 ```
 pwndbg> p s
 's' has unknown type; cast it to its declared type
@@ -290,15 +290,15 @@ pwndbg>
 # Python In GDB
 Okay, let's now move on to the main dish. We can launch Python inside of GDB in
 the following ways:
-- With the `python` command we use python in something like a batch mode. We
+- With the `python` command we use Python in something like a batch mode. We
   type a bunch of lines, we type `end` and all the lines get executed
 - With the `pi` or `python-interactive` command we launch Python in a repl. Imo
   this is the best way to interact with Python.
-- With the `source script_name.py` command. We execute a given python script.
+- With the `source script_name.py` command. We execute a given Python script.
 By giving either `python` or `pi` a line as an argument, then the line will be
 executed instead. If you use pwndbg you can also you the `ipi` command which
 launches Python in the superior iPython repl. Now what can we do with Python
-inside of gdb? Everything! One thing that is cool about the Python interpreter
+inside of GDB? Everything! One thing that is cool about the Python interpreter
 there is that it lives inside of GDB, so it remembers everything we do between
 the invocations.
 
@@ -444,7 +444,7 @@ pwndbg>
 
 # Abusing GDB In pwntools
 If you've ever used pwntools for exploit development then I'm sure you've
-already seen that you can pass gdb commands to the `gdb.attach` or 
+already seen that you can pass GDB commands to the `gdb.attach` or 
 `gdb.debug` functions through the `gdbscript` argument.
 ```python
 from pwn import *
@@ -461,7 +461,7 @@ gdb.attach(io, gdbscript='''
 But this is very limiting. We can't access GDB before making a decision what we
 want to execute and we can't execute anything after. To the rescue comes
 pwntools' integration with GDB that allows us to access the GDB's `gdb` god
-object through our script. It's possible thanks to the [`RPyC` library](
+object through our script. It's possible thanks to the [RPyC library](
 https://rpyc.readthedocs.io/en/latest/) which is super interesting. The only
 thing we need to do for it to work is to pass `api=True` as an argument.
 ```python
@@ -476,4 +476,66 @@ Now we can do anything we've learned in the second blogpost's section about
 Python. Neat! For example this is how we define a breakpoint:
 ```python
 bp = io.gdb.Breakpoint("*main")
+```
+
+We can confirm that, in fact, we're working with the same object by doing a
+small experiment. Let's take a look at this example script:
+```python
+#!/usr/bin/env python3
+
+import time
+from pwn import *
+
+
+exe = ELF("./a.out_patched")
+
+context.binary = exe
+context.terminal = ['alacritty', '-e']
+
+
+def main():
+    r = gdb.debug([exe.path], api=True)
+    while True:
+        time.sleep(1)
+        try:
+            print(r.gdb.magic)
+        except AttributeError:
+            print('magic not defined')
+
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Okay now let's run it.
+```
+➜  dsa python solve.py
+[*] '/tmp/dsa/a.out_patched'
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[+] Starting local process '/usr/bin/gdbserver': pid 64755
+[*] running in new terminal: ['/usr/bin/gdb', '-q', '/tmp/dsa/a.out_patched', '-x', '/tmp/pwn0qtbhyhr.gdb']
+magic not defined
+magic not defined
+magic not defined
+magic not defined
+```
+
+Now we run the Python interpreter in GDB and define the magic attribute.
+```python
+In [1]: gdb.magic = 1234
+```
+
+It works!
+```
+magic not defined
+magic not defined
+1234
+1234
+1234
+1234
 ```
