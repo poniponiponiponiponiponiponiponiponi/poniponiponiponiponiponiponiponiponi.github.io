@@ -424,10 +424,10 @@ or faster for you, [the options is there](
 https://sourceware.org/gdb/onlinedocs/gdb/CLI-Commands-In-Python.html#CLI-Commands-In-Python).
 ```python
 In [1]: class MyCommand(gdb.Command):
-   ...:     def __init__ (self):
+   ...:     def __init__(self):
    ...:         super(MyCommand, self).__init__("my_command_name", gdb.COMMAND_USER)
    ...:
-   ...:     def invoke (self, args, from_tty):
+   ...:     def invoke(self, args, from_tty):
    ...:         print("hewwo!")
    ...:
 
@@ -503,7 +503,6 @@ def main():
             print('magic not defined')
 
 
-
 if __name__ == "__main__":
     main()
 ```
@@ -524,6 +523,7 @@ magic not defined
 magic not defined
 magic not defined
 ```
+
 
 Now we run the Python interpreter in GDB and define the magic attribute.
 ```python
