@@ -295,6 +295,7 @@ the following ways:
 - With the `pi` or `python-interactive` command we launch Python in a repl. Imo
   this is the best way to interact with Python.
 - With the `source script_name.py` command. We execute a given Python script.
+
 By giving either `python` or `pi` a line as an argument, then the line will be
 executed instead. If you use pwndbg you can also you the `ipi` command which
 launches Python in the superior iPython repl. Now what can we do with Python
@@ -325,17 +326,17 @@ Out[1]: <module 'gdb' from '/usr/share/gdb/python/gdb/__init__.py'>
 
 In [2]: help(gdb)
 ```
-If we want to check everything that is possible with it we can either [read
-the docs](https://sourceware.org/gdb/onlinedocs/gdb/Python.html) or use the
+If we want to check everything that is possible with it we can either [read the
+docs](https://sourceware.org/gdb/onlinedocs/gdb/Python.html) or use the
 Python's built-in help function. So how can we use this object? The most
-important method that you will use all the time is `gdb.execute (command [,
-from_tty [, to_string]])`. It takes as an argument a command to execute and
+important method that you will be using all the time is `gdb.execute (command
+[, from_tty [, to_string]])`. It takes as an argument a command to execute and
 an optional keyword argument `to_string`. If it's set to `True` then the
-command instead of returning the output to the screen we can the output as a
-string so later we can for example parse it. In theory this method is more than
-enough but parsing all the output would be a nightmare so GDB exposes a method
-for a lot of things for us. For example we can read an expression's result or
-register value in the following ways:
+command instead of returning the output to the screen, we get the output as a
+string, so later we can parse it. In theory this method is more than enough but
+parsing all the output would be a nightmare so GDB exposes a method for a lot
+of things for us. For example we can read an expression's result or register
+value in the following ways:
 ```python
 In [1]: gdb.parse_and_eval('$rip')
 Out[1]: <gdb.Value at 0x7fb087f99430>
