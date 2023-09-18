@@ -28,8 +28,8 @@ cp /lib/x86_64-linux-gnu/libc.so.6 /host
 ```
 
 # Linux kernel exploitation
-In case a challenge doesn't provide helper scripts there are some templates based on https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/ :
-- for compressing the initramfs directory
+In case a challenge doesn't provide helper scripts there are some templates based on https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/ .
+For compressing the initramfs directory:
 ```bash
 #!/bin/sh
 
@@ -44,7 +44,8 @@ find . \
 | gzip -v1 > initramfs.cpio.gz
 mv ./initramfs.cpio.gz ../
 ```
-- for decompressing initramfs.cpio.gz
+
+For decompressing initramfs.cpio.gz
 ```bash
 #!/bin/sh
 
@@ -55,8 +56,9 @@ gunzip ./initramfs.cpio.gz
 cpio -idm < ./initramfs.cpio
 rm initramfs.cpio
 ```
-- for decompressing the compressed kernel image (usually called vmlinuz) use: https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux
-- for running the kernel vm with an exposed GDB port
+
+For decompressing the compressed kernel image (usually called vmlinuz) use: https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux
+For running the kernel vm with an exposed GDB port
 ```bash
 #!/bin/sh
 
