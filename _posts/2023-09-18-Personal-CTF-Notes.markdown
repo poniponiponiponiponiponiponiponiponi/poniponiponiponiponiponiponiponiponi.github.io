@@ -27,6 +27,11 @@ ldd /bin/ls # to see where the libc is or whatever (in this case libc is in /lib
 cp /lib/x86_64-linux-gnu/libc.so.6 /host
 ```
 
+# Papers
+- [AVX Timing Side-Channel Attacks against Address Space Layout Randomization](https://arxiv.org/pdf/2304.07940.pdf)
+- [Prefetch Side-Channel Attacks: Bypassing SMAP and Kernel ASLR](https://gruss.cc/files/prefetch.pdf)
+
+
 # Linux kernel exploitation
 In case a challenge doesn't provide helper scripts there are some templates based on https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/ .
 For compressing the initramfs directory:
@@ -93,7 +98,7 @@ constraints:
 - glibc-2.24 - Added check for `FILE`s vtable address.
 - glibc-2.26 - Moved the `FILE`s vtable to a non-writable memory.
 - glibc-2.29 - Moved the `FILE`s vtable back to a writable area.
-- glibc-2.34 - Removed ret2csu.
+- glibc-2.34 - Removed the ret2csu gadget.
 - glibc-2.34 - `malloc` hooks removed from the API.
 
 # Pyjails
