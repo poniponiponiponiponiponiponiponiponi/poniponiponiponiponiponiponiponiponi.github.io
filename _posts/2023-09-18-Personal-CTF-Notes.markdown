@@ -97,6 +97,7 @@ constraints:
 # Important versions of things
 - glibc-2.24 - Added check for `FILE`s vtable address.
 - glibc-2.26 - Moved the `FILE`s vtable to a non-writable memory.
+- glibc-2.28 - Added tcache double free check.
 - glibc-2.29 - Moved the `FILE`s vtable back to a writable area.
 - glibc-2.34 - Removed the ret2csu gadget.
 - glibc-2.34 - `malloc` hooks removed from the API.
