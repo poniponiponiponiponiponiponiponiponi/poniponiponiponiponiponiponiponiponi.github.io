@@ -115,3 +115,4 @@ Tricks that might be helpful:
   ones.](https://peps.python.org/pep-3131/)
 - [You can change the encoding of the file with a comment. Changing to
   utf-7 is especially useful.](https://peps.python.org/pep-0263/)
+- [Symbolic Python.](https://esolangs.org/wiki/Symbolic_Python)
