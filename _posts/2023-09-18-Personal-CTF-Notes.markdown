@@ -6,7 +6,7 @@ categories: c python pwn rev ctf
 ---
 
 # Introduction
-These are my private notes that I used to keep to myself but I figured there is some in my opinion cool stuff worth sharing there. I use them all the time myself!
+These are my private notes that I used to keep for myself but I figured that there is some in my opinion cool stuff worth sharing there. I use them all the time myself!
 
 # Running non-native binaries with Qemu
 Run:
@@ -30,7 +30,7 @@ cp /lib/x86_64-linux-gnu/libc.so.6 /host
 # Papers
 - [AVX Timing Side-Channel Attacks against Address Space Layout Randomization](https://arxiv.org/pdf/2304.07940.pdf)
 - [Prefetch Side-Channel Attacks: Bypassing SMAP and Kernel ASLR](https://gruss.cc/files/prefetch.pdf)
-
+- [Blind Format Strings Attacks](https://www.sec.in.tum.de/i20/publications/blind-format-string-attacks/@@download/file/formatstring.pdf)
 
 # Linux kernel exploitation
 In case a challenge doesn't provide helper scripts there are some templates based on https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/ .
