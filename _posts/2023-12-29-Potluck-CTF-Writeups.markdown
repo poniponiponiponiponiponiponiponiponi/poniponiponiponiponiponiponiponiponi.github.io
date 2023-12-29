@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Potluck CTF 2023 Write-Ups"
-date: 2023-03-28
+date: 2023-12-29
 categories: ctf rev pwn c emacs
 ---
 
