@@ -81,7 +81,8 @@ qemu-system-x86_64 \
     -append "console=ttyS0 kaslr kpti=1 quiet panic=1"
 ```
 
-# Obscure tricks
+# More or less obscure tricks
+- [Code execution with a write primitive on last libc](https://github.com/nobodyisnobody/docs/tree/main/code.execution.on.last.libc)
 - There's the `_dl_make_stack_executable` function in glibc's ld. I've never seen this used in an actual exploit but seems cool to know about nonetheless.
 - `mmap` returns addresses placed close to libc (check out `house of muney` for more info).
 - The read and write syscalls do not complain about being fed an invalid memory address and simply return an error. Might be useful for finding writeable memory without having a leak.
@@ -116,3 +117,7 @@ Tricks that might be helpful:
 - [You can change the encoding of the file with a comment. Changing to
   utf-7 is especially useful.](https://peps.python.org/pep-0263/)
 - [Symbolic Python.](https://esolangs.org/wiki/Symbolic_Python)
+
+# LaTeX
+For simple RCE's I like [the hacktricks article](https://book.hacktricks.xyz/pentesting-web/formula-csv-doc-latex-ghostscript-injection). If it's not enough there's this very cool paper: [Are Text-Only Data Formats Safe? Or, Use This LATEX Class File to Pwn Your Computer](https://hovav.net/ucsd/dist/texhack.pdf). Also [reading binary files might be useful](https://tex.stackexchange.com/a/70636).
+
