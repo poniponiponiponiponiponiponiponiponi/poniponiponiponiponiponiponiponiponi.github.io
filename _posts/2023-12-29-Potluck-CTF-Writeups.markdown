@@ -122,7 +122,7 @@ if __name__ == "__main__":
 ```
 
 # Schrödinger's P1G
-In this challenge we basically get a bytecode interpreter that we will be exploiting. Luckily for us the binary is not stripped so reversing is trivial. Let's start with reversing! First let's look at the main decompilation. There's some initialization code, mostly nothing interesting for us. We can see there that using `stdout` as the arguments will make the program read the code from stdin (which is confusing but whatever).
+In this challenge we basically get a custom bytecode interpreter that we will be exploiting. Luckily for us the binary is not stripped so the reversing will be somewhat trivial. Let's start then with reversing! First let's look at the `main` function decompilation. There's some initialization code, mostly nothing interesting for us. We can see there that using `stdout` as the arguments will make the program read the code from stdin (which is confusing but whatever).
 ```c
 undefined8 main(EVP_PKEY_CTX *param_1,long param_2)
 
@@ -154,7 +154,7 @@ Then the code is read, parsed and runned:
     vmRun();
     uVar1 = 1;
 ```
-One thing to notice about how it's read is that its just one call to `read`. This makes it annoying to play around with cuz we can't use the shell for it because a shell will stop reading when it encounters a newline and the program expects a bunch of newlines. Instead we need to use pwntools or maybe pipeing. Anyway, let's first look into how it's ran and after that how it's parsed.
+One thing to notice about how our input is read is that it's just one call to `read`. This makes it annoying to play around with cuz we can't use the shell for interacting with the program because a shell will stop reading when it encounters a newline and the program expects a bunch of newlines. Instead we need to use pwntools or maybe pipeing. Anyway, let's first look into how it's ran and after that how it's parsed.
 ```c
 void vmRun(void)
 
@@ -182,7 +182,7 @@ void vmRun(void)
 }
 ```
 
-Looks like we can create a bunch of threads, each thread will run it's own instructions with with the `vm` function. Later turns out the threads are mostly to look scary and we will *almost* not use them at all. Alright, now let's look at the parsing that will transform the instruction we give it into bytecode.
+Looks like we can create a bunch of threads, each thread will run it's own instructions with with the `vm` function. Later turns out the threads are mostly to look scary and we will *almost* not use them at all. From what the author wrote post ctf the intended solution was much more complex and the threads actually mattered there but oh well. Alright, now let's look at the parsing that will transform the instructions we give the program into custom bytecode.
 
 ```c
 undefined8 parser(char *param_1)
@@ -239,7 +239,7 @@ undefined8 parser(char *param_1)
 }
 ```
 
-I'll spare you the details. Basically the function looks for a line "thread" to create a new thread and then it will run the following instruction we give it. The instructions are transformed into bytecode in the `generate_mcode` function. Those are my notes from all the instructions:
+I'll spare you the details. Basically the function looks for a line "thread" to create a new thread and then it will run the following instructions we give it. The instructions are transformed into bytecode in the `generate_mcode` function. Those are my notes from all the instructions:
 ```
 print r0 0x123 0x123
 alloc r0 size
@@ -255,8 +255,7 @@ mov2 r0 r1
 # other inst2 are the same
 ```
 
-We don't get an instruction go get an input from the user so the exploit will need to be written fully in this custom bytecode.
-What alloc does is it allocates memory on the heap and stores in in a register we give it. It stores the length of the allocation in `regs[arg1+0xc]` and it looks like the code for instructions like write and read checks this length, but it's very easy to avoid it.
+We don't get an instruction go get an input from the user so the exploit will need to be written fully in those instructions. What alloc does is it allocates memory on the heap and then stores the address in a register we give it. It also stores the length of the allocation in `regs[arg1+0xc]` and it looks like the code for instructions like write and read checks this length, but the checking does not matter and is very easy to avoid.
 ```c
       case 0xb:
                     /* alloc */
@@ -294,7 +293,7 @@ For example we can just do arithmetical operations on the address stored in r0 a
     read r0 r0 0  # Read this address to r0
 ```
 
-First we get a libc leak from the heap. Because it's not the main arena from ptmalloc, because it's multithreaded, it stores a pointer to the main arena at the beginning of our second arena and it just so happens that main arena is inside of libc. If you have no idea what I'm talking about this is a good article about ptmalloc internals: https://sourceware.org/glibc/wiki/MallocInternals . The rest of the exploit:
+First we get a libc leak from the heap. Because we're not operating on the main arena from ptmalloc cuz it's multithreaded, glibc stores a pointer to the main arena at the beginning of our second arena and it just so happens that main arena is located inside of libc. If you have no idea what I'm talking about [this is a good article about ptmalloc's internals](https://sourceware.org/glibc/wiki/MallocInternals). The rest of the exploit:
 ```
     add r0 7580  # Calculate offset inside of libc to a stack address. In this case it's `__environ` but there are a lot of stack addresses inside of libc.
     mov2 r1 r0  # Make a copy of the libc address inside of r1. We will use it while creating a rop chain.
@@ -313,7 +312,7 @@ First we get a libc leak from the heap. Because it's not the main arena from ptm
     write r0 r1 0
 ```
 
-Then when the program finishes executing we return and our rop chain is executed resulting in a shell. There is the whole exploit code:
+Then when the threads finish executing we return from called functions and our rop chain is executed resulting in a shell. There is the whole exploit code:
 ```python
 #!/usr/bin/env python3
 
