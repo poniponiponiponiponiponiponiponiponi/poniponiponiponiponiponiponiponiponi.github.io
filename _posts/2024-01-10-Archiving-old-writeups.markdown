@@ -459,11 +459,11 @@ This is the ROM we used (top-most one): https://tiroms.weebly.com
 
 To send all the things into the calculator emulator go to the `Variables` tab and do it there.
 
-![screenshot_20230427_014241.png](/screenshot_20230427_014241.png)
+![screenshot_20230427_014241.png](/files/screenshot_20230427_014241.png)
 
 After that go to the `Keypad` tab and press `prgm` button to load the files.
 
-![screenshot_20230427_002409.png](/angstrom/screenshot_20230427_002409.png)
+![screenshot_20230427_002409.png](/files/screenshot_20230427_002409.png)
 
 After that we get a menu from which we can select the town executable.
 
