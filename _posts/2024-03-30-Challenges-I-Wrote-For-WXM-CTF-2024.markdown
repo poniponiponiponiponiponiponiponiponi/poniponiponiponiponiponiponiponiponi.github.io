@@ -136,13 +136,14 @@ So the intended solution was to:
 - leak a stack address from libc,
 - leak the binary address from libc,
 - leak the flag from the binary.
+
 It could be solved in a shorter by one step way by finding a binary address inside of libc instead of using the stack for it but honestly I wasn't aware of this while writing the challenge.
 To find the addresses in a GDB session you can dump a bunch of memory and search for the addresses by hand.
 GDB plugins like pwndbg or gef have special commands for finding addresses. I use pwndbg so I'll show you how to find them there.
 A naive solution would be to try to dump a bunch of pointers with the `telescope` command and hope for a lucky find.
 ![Image](/files/telescopeleak.png)
 
-However we can do bether than that. In pwndbg we can use the `probeleak` command to find what we want for us. In the past I saw someone using GEF and honestly the command equivalent there felt more ergonomic but both can do the same thing.
+However we can do better than that. In pwndbg we can use the `probeleak` command to find what we want for us. In the past I saw someone using GEF and honestly the command equivalent there felt more ergonomic but both can do the same thing.
 ![Image](/files/probeleakleak.png)
 
 In the end, there's the `solve.py` (if you're confused by the `_patched` in the exe name, it's cuz I use [pwninit](https://github.com/io12/pwninit) but removing it also works):
