@@ -123,7 +123,7 @@ So to visualize this idea, we can make a directed graph.
 Green arrows mean it's very likely there's a pointer from one to the other, yellow means that maybe there's a pointer and a red arrow means that a pointer like that is unlikely.
 Of course im drawing this from a perspective of a smaller binary, in the case of huge binaries I'm sure there are pointers to everything sprinkled all over the place.
 BEHOLD...
-![Image][/files/leakdiagram.png]
+![Image](/files/leakdiagram.png)
 
 To elaborate on some choices:
 - The red arrows are there cuz it would be weird if we stored a stack address for example as a global variable inside of a binary - that's probably a bug.
