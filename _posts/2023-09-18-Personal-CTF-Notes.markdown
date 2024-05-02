@@ -78,7 +78,7 @@ qemu-system-x86_64 \
     -monitor /dev/null \
     -gdb tcp::1234 \
     -no-reboot \
-    -append "console=ttyS0 kaslr kpti=1 quiet panic=1"
+    -append "console=ttyS0 kaslr pti=on quiet panic=1"
 ```
 
 # More or less obscure tricks
