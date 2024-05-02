@@ -86,7 +86,7 @@ qemu-system-x86_64 \
 - There's the `_dl_make_stack_executable` function in glibc's ld. I've never seen this used in an actual exploit but seems cool to know about nonetheless.
 - `mmap` returns addresses placed close to libc (check out `house of muney` for more info).
 - The read and write syscalls do not complain about being fed an invalid memory address and simply return an error. Might be useful for finding writeable memory without having a leak.
-- Theres a magic race condition in one `one_gadget` (the gadget is actually in exec_comm and to find it you have to use one_gadget with `-l 1` argument). It can return a shell even though the constraints aren't met.
+- Allegedly theres a magic race condition in one `one_gadget` (the gadget is actually in exec_comm and to find it you have to use one_gadget with `-l 1` argument). It can return a shell even though the constraints aren't met. I saw it a long ago in a ctf being used but when I tried to recreate it recently it didn't seem to work, so take this with a grain of salt and do your own research.
 ```c
 0x10dbca posix_spawn(rsp+0x64, "/bin/sh", [rsp+0x40], 0, rsp+0x70, r9)
 constraints:
@@ -102,6 +102,7 @@ constraints:
 - glibc-2.29 - Moved the `FILE`s vtable back to a writable area.
 - glibc-2.34 - Removed the ret2csu gadget.
 - glibc-2.34 - `malloc` hooks removed from the API.
+- Linux 6.2 - `commit_creds(prepare_kernel_cred(NULL));` no longer works. Now we need to pass `&init_cred` as the arg.
 
 # Pyjails
 Example payloads to reuse:
