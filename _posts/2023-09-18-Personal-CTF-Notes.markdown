@@ -45,12 +45,12 @@ mv ./exploit ./initramfs
 # compress the initramfs dir
 cd initramfs
 find . \
-| cpio -ov --format=newc \
+| cpio -ov --format=newc --owner=root \
 | gzip -v1 > initramfs.cpio.gz
 mv ./initramfs.cpio.gz ../
 ```
 
-For decompressing initramfs.cpio.gz
+For decompressing `initramfs.cpio.gz`:
 ```bash
 #!/bin/sh
 
@@ -62,8 +62,9 @@ cpio -idm < ./initramfs.cpio
 rm initramfs.cpio
 ```
 
-For decompressing the compressed kernel image (usually called vmlinuz) use: https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux
-For running the kernel vm with an exposed GDB port
+For decompressing the compressed kernel image (usually called vmlinuz) use: [this](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux).
+
+For running the kernel vm with an exposed GDB port:
 ```bash
 #!/bin/sh
 
@@ -80,6 +81,13 @@ qemu-system-x86_64 \
     -no-reboot \
     -append "console=ttyS0 kaslr pti=on quiet panic=1"
 ```
+
+## Links
+- [Best resource for kernel exploitation introduction](https://pawnyable.cafe/)
+- [Structs useful for heap exploitation](https://ptr-yudai.hatenablog.com/entry/2020/03/16/165628)
+- https://github.com/ocastejon/linux-kernel-learning/blob/main/notes/slab-allocator.md
+- [Linux mm notes](https://github.com/lorenzo-stoakes/linux-mm-notes)
+- [Understanding paging](https://zolutal.github.io/understanding-paging/)
 
 # More or less obscure tricks
 - [Code execution with a write primitive on last libc](https://github.com/nobodyisnobody/docs/tree/main/code.execution.on.last.libc)
