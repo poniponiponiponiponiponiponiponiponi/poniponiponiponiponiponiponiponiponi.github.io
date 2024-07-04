@@ -4,8 +4,9 @@ title: About
 permalink: /about/
 ---
 
-I'm studying computer science in Wroclaw, Poland.
+My name is Adrian and I'm currently studying computer engineering (in polish: informatyka techniczna) in Wroclaw, Poland.
 My interests include:
-- Programming. Mostly low level. C, C++, Rust. I also know Python well.
-- Hacking. I play ctfs focusing on binary exploitation and reverse engineering.
-- Overall just media consumption. Anime, manga, music, video games, cartoons, youtube videos, etc... :)
+- Programming and computer science with a focus on low-level aspects of it. Mainly C and Rust. I also know (and like!) Python well.
+- Free and open-source software. Emacs and Linux are the only things I can see. ;)
+- "Hacking". I play CTFs focusing on binary exploitation and a little bit of reverse engineering sprinkled there and there.
+- Overall just media consumption. Anime, music, video games, cartoons, youtube videos, visual novels, etc...
