@@ -110,6 +110,7 @@ constraints:
 - glibc-2.29 - Moved the `FILE`s vtable back to a writable area.
 - glibc-2.34 - Removed the ret2csu gadget.
 - glibc-2.34 - `malloc` hooks removed from the API.
+- Linux 2.6.23 - NULL ptr dereference mitigation
 - Linux 6.2 - `commit_creds(prepare_kernel_cred(NULL));` no longer works. Now we need to pass `&init_cred` as the arg.
 
 # Pyjails
