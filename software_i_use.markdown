@@ -2,12 +2,14 @@
 permalink: /about/software
 ---
 
+# Software I use and why
+
 Warning! Opinions below.
 
-# Emacs vs Vim (Vim, Neovim, Vi, Ed...)
+## Emacs vs Vim (Vim, Neovim, Vi, Ed...)
 Emacs. I'm not an elitist and I dont believe Emacs is better in any
 technical way. I just like the software.
-## Keybindings
+### Keybindings
 I even prefer the keybindings over Vim, I'm not huge on modal editing
 like the whole internet seems to be. The constant switching between
 normal mode and insert mode seems very annoying to me. In a way Vim
@@ -15,7 +17,7 @@ users are for me like people who use caps-lock to capitalize their
 words instead of the superior shift button. There are the jokes of the
 emacs pinky or horrible emacs shortcuts however after rebinding
 caps-lock to ctrl writing is very pleasant for me.
-## The language
+### The language
 Lisp is a language that I like and seems really cool *in theory* but
 outside of Emacs I don't really have any use for it. I'm writing a
 quick and dirty ad-hoc program? Python. Writing exploits? C and
@@ -28,7 +30,7 @@ to neovim, which I'm not a big fan of either. It's a fine language but
 it doesn't do anything for me, you know. I think the idea of
 representing everything as a table/tree/whatever is clever. I said to
 myself that I'm not gonna mention the indexing from one.
-## Config files
+### Config files
 Topic a little related to the languages but not fully. It's also
 related to how different plugins in the ecosystem handle
 configuration. When I tried using Neovim my config ended up as
@@ -41,7 +43,7 @@ the same functionality (is some ways more, in other less). I almost
 want to say three times but I don't have the numbers anymore and I
 don't want to exaggarate. My config feels more elegant with about the
 same work put into it.
-## Plugins
+### Plugins
 For me plugins in both editors are basically the same. All I need is
 an LSP client (for which I use eglot) and treesitter (which is
 built-in in Emacs). The rest is just sugar on top of it. Some people
@@ -51,7 +53,7 @@ plugins. Honestly I think Neovim is winning in the plugin race. The
 editor is more popular, there are much more people writing Lua plugins
 and reporting bugs on GitHub currently than there are Lisp hackers
 writing Emacs macros.
-## The bad things about Emacs
+### The bad things about Emacs
 - There's no perfect plugin for indentation guides. The best one by
   far is highlight-indent-guides but it still leaves gaps between
   empty lines which is rather ugly and distracting. Especially for a
@@ -73,7 +75,7 @@ writing Emacs macros.
 - And some more things you could mention. The community being small.
   Some dead/junky plugins. Startup times. I can't think of anything
   more to be honest.
-## ... vs Helix
+### ... vs Helix
 I like the idea of Helix: having a Vim-like editor with human out of
 the box experience. I like that. I gain nothing from having a huge
 config file. However I don't trust the developers and the work being
@@ -84,7 +86,7 @@ worked on for years (https://github.com/helix-editor/helix/issues/1151
 ) which I consider to be basic as far as using the editor goes. Still
 no plugin system in sight which I consider essential.
 
-## ... vs any other editor
+### ... vs any other editor
 At the point of writing this I never really used anything outside of
 Vim, Emacs and Helix. I used a little bit of IntelliJ IDEA for a uni
 group project but I wasn't impressed. When I started learning
@@ -96,7 +98,18 @@ editors I really despise is anything from JetBrains for the predatory
 tactic of selling the same editor multiple times for every language
 they decide to support.
 
-# DEs vs WMs
+## Shell
+Firstly I'm not a fan of zsh as the defaults there are as bad as it is
+possible to make them. Because of this I used fish in the past but now
+we have the drawback of having to use a shell language you probably
+don't want to touch cuz you won't see it anywhere else anyway
+(especially since I rarely write shell scripts to begin with). That's
+why nowadays I mostly use eshell with eat as a terminal inside of
+Emacs. The shell has nice integration with Emacs (duh), it uses
+counsel and ivy for completion by default, etc. I also use Bash in the
+TTY because that's the default.
+
+## DEs vs WMs
 Even though I use i3 I believe that tiling window managers are hugely
 overrated for most people use-cases and they use it only because
 either their favourite e-celebrity uses WMs or their friend group does
@@ -109,7 +122,7 @@ the same time. "Alt-tabbing" is more than enough for this. I guess I
 use Emacs as my terminal multiplexer and if somebody doesn't want to
 use tmux then using a tiling window manager might be helpful.
 
-# Programming languages
+## Programming languages
 My two main programming languages are Python and Rust. Like I stated
 above in the Emacs section Python is my goto language for anything
 where dynamic typing is king. Why not a Lisp? Lisps tend to be a
@@ -126,7 +139,7 @@ functional-style programming combined with low-level concepts. All of
 the CLI-centric tooling. Forgive me for getting passionate but I
 really think it's a lovely language. For debugging I use ipdb and gdb.
 
-# X11 vs Wayland
+## X11 vs Wayland
 I have an amd GPU and I still use Xorg. I tried using Sway with
 Wayland and it felt like torturing myself. I'm gonna give Wayland an
 other try but not in the next few years. So what was my problem?
@@ -145,7 +158,7 @@ focus on what I want to in the current moment. Some examples:
 those problems for what? I heard multiple monitor setups work better
 on Wayland. Too bad I use only one monitor.
 
-# Linux distributions
+## Linux distributions
 I don't have any hot takes when It comes Linux distros. Honestly I'm
 fine with anything as long as it doesn't get in my way. I prefer
 systemd distros because that's what I'm used to and it always worked
@@ -153,4 +166,6 @@ fine for me (some of the arguments against systemd seem to be bad
 faith in my opinion). Currently I'm using Arch but I'm planning on
 going back to Fedora. I tried using Guix for a day but after not being
 able to install everything I wanted I gave up. Maybe I'll give NixOS a
-shot in the future.
+shot in the future (probably not, it seems like one of those things
+that you love the idea of, however using it as a desktop will be on
+top of the pain hierarchy).
