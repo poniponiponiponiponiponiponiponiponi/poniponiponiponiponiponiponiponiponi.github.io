@@ -62,14 +62,14 @@ writing Emacs macros.
   has an experimental feature that tries to fix it but it was very
   buggy. Sometimes it was flickering sometimes the lines didn't show
   up after scrolling. Obviously no blame towards the package creators,
-  I think the problem appears because of how Emacs handles faces,
+  I think the problems appear because of how Emacs handles faces,
   making some stuff annoying to do.
 - No proper highlight column at cursor position, which could be used
   as a workaround for the lack of nice looking indentation guides.
   The best extension was [this
   one](https://codeberg.org/akib/emacs-hl-column) but it still wasn't
   interacting properly with company-mode and it sometimes pushed the
-  first completionsuggestion forward.
+  first completion suggestion forward.
 - No proper dap-mode. Well there's the dap-mode plugin but it requires
   you to use lsp-mode which I don't like I don't want to be locked in
   that ecosystem.
