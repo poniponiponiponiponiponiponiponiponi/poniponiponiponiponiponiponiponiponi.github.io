@@ -58,14 +58,18 @@ writing Emacs macros.
   far is highlight-indent-guides but it still leaves gaps between
   empty lines which is rather ugly and distracting. Especially for a
   functionality that's a nobrainer in other
-  editors. Highlight-Indentation-for-Emacs has an experimental feature
-  that tries to fix it but it was very buggy. Sometimes it was
-  flickering sometimes the lines didn't show up after scrolling.
+  editors. [Highlight-Indentation-for-Emacs](https://github.com/antonj/Highlight-Indentation-for-Emacs)
+  has an experimental feature that tries to fix it but it was very
+  buggy. Sometimes it was flickering sometimes the lines didn't show
+  up after scrolling. Obviously no blame towards the package creators,
+  I think the problem appears because of how Emacs handles faces,
+  making some stuff annoying to do.
 - No proper highlight column at cursor position, which could be used
   as a workaround for the lack of nice looking indentation guides.
-  The best extension was https://codeberg.org/akib/emacs-hl-column but
-  it still wasn't interacting properly with company-mode and it
-  sometimes pushed the first completion suggestion forward.
+  The best extension was [this
+  one](https://codeberg.org/akib/emacs-hl-column) but it still wasn't
+  interacting properly with company-mode and it sometimes pushed the
+  first completionsuggestion forward.
 - No proper dap-mode. Well there's the dap-mode plugin but it requires
   you to use lsp-mode which I don't like I don't want to be locked in
   that ecosystem.
@@ -81,8 +85,8 @@ the box experience. I like that. I gain nothing from having a huge
 config file. However I don't trust the developers and the work being
 done on it is just too slow (which is understandable, this is an
 open-source project done without much profit, yada, yada). There are
-still some problems with for syntax highlighting that haven't been
-worked on for years (https://github.com/helix-editor/helix/issues/1151
+still [some problems with for syntax highlighting that haven't been
+worked on for years](https://github.com/helix-editor/helix/issues/1151
 ) which I consider to be basic as far as using the editor goes. Still
 no plugin system in sight which I consider essential.
 
@@ -112,29 +116,38 @@ TTY because that's the default.
 ## DEs vs WMs
 Even though I use i3 I believe that tiling window managers are hugely
 overrated for most people use-cases and they use it only because
-either their favourite e-celebrity uses WMs or their friend group does
-so. The only reason I use i3 is because I want to have an easily
-configurable setup, where I have everything in one file I can copy
-around. I don't think there's much speed to be gained from switching
-windows a little faster. I can't think of a case where I have more
-than 3 windows (Emacs, Firefox and Ghidra) I want to swap around at
-the same time. "Alt-tabbing" is more than enough for this. I guess I
-use Emacs as my terminal multiplexer and if somebody doesn't want to
-use tmux then using a tiling window manager might be helpful.
+either their favourite internet e-celebrity uses WMs or their friend
+group does so. The only reason I use i3 is because I want to have an
+easily configurable setup, where I have everything in one file I can
+copy around. I don't think there's much speed to be gained from
+switching windows a little faster. I can't think of a case where I
+have more than 3 windows open (Emacs, Firefox and Ghidra) that I want
+to swap around at the same time. "Alt-tabbing" is more than enough for
+this. I guess I use Emacs as my terminal multiplexer and if somebody
+doesn't want to use tmux then using a tiling window manager might be
+helpful.
 
 ## Programming languages
 My two main programming languages are Python and Rust. Like I stated
 above in the Emacs section Python is my goto language for anything
 where dynamic typing is king. Why not a Lisp? Lisps tend to be a
-little dead and realistically in the modern world, where programming
-stopped being like magic and started being more like science, where we
-poke at different libraries and see what happens, we want our language
-to be well supported with a lot libraries and stuff. Overall I really
-like the language, the only thing that I hate is the lack of
-multistatement lambdas. When it comes to statically typed languages
-Rust is my favourite. Everything about it just clicks for me. The
-ADTs. The pattern matching. The explicitness of the language (compared
-to C++ which is a very implicit language in a lot of ways). The
+little dead and realistically in the modern world, where [programming
+stopped being like magic and started being more like
+science](http://lambda-the-ultimate.org/node/5335), where we poke at
+different libraries and see what happens, we want our language to be
+well supported with a lot libraries, cli tools and other
+stuff. Overall I really like the language, the only thing that I hate
+is [the lack of multistatement
+lambdas](https://lwn.net/Articles/964839/). When it comes to
+statically typed languages Rust is my favourite. Everything about it
+just clicks for me. The ADTs. The pattern matching. The explicitness
+of the language (compared to C++ which is a very implicit language in
+a lot of ways. To be precise about what I mean - I don't talk about
+implicit type conversions, though that's part of it, what I mean is
+stuff more like how we don't know if something is a "pointer"
+(reference) by how it's used until we look at the function signature,
+all the functions that are implicitly used and created that are hard
+to predict until you really KNOW the rules, etc.). The
 functional-style programming combined with low-level concepts. All of
 the CLI-centric tooling. Forgive me for getting passionate but I
 really think it's a lovely language. For debugging I use ipdb and gdb.
