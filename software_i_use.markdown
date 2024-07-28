@@ -26,7 +26,7 @@ with dynamic typing? Python. I want to write software with good static
 typing that is like a pyramid, very solid but maybe a little stiff?
 Rust. So Emacs fullfils the need of writing Lisp inside of me. Vim has
 Vimscript which everyone and their mother seems to hate and Lua thanks
-to neovim, which I'm not a big fan of either. It's a fine language but
+to Neovim, which I'm not a big fan of either. It's a fine language but
 it doesn't do anything for me, you know. I think the idea of
 representing everything as a table/tree/whatever is clever. I said to
 myself that I'm not gonna mention the indexing from one.
@@ -155,7 +155,7 @@ really think it's a lovely language. For debugging I use ipdb and gdb.
 ## X11 vs Wayland
 I have an amd GPU and I still use Xorg. I tried using Sway with
 Wayland and it felt like torturing myself. I'm gonna give Wayland an
-other try but not in the next few years. So what was my problem?
+other try but not in the next few years. So what were my problems?
 There were many and I'm sure most of them have a fix but as a user I
 live by the philosophy of least resistance - I'm gonna use the
 software that causes the least amount of friction and allows me to
