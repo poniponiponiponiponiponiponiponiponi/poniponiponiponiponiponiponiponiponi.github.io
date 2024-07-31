@@ -67,15 +67,17 @@ Lisp hackers writing Emacs macros.
 - And some more things you could mention. The community being small.
   Some dead/junky packages. Startup times. I can't think of anything
   else to be honest.
+  
+
 ### ... vs Helix
 I like the idea of Helix: having a Vim-like editor with human out of
 the box experience (and no, I'm not a big fan of Vim or Emacs
-distributions like Doom Emacs). I gain nothing from having a huge
-config file. However I don't trust the developers and the work being
-done on Helix is just too slow (which is understandable, this is an
-open-source project done without much in any profit, yada,
-yada). There are still [some problems with syntax highlighting that
-haven't been worked on for
+distributions like Doom Emacs either, but that's an another topic). I
+gain nothing from having a huge config file. However I don't trust the
+developers and the work being done on Helix is just too slow (which is
+understandable, this is an open-source project done without much if
+any profit, yada, yada). There are still [some problems with syntax
+highlighting that haven't been worked on for
 years](https://github.com/helix-editor/helix/issues/1151 ) which I
 consider to be basic as far as using the editor goes. Still no plugin
 system in sight which I consider essential.
@@ -86,8 +88,8 @@ Vim, Emacs and Helix. I used a little bit of IntelliJ IDEA for a uni
 group project but I wasn't impressed. When I started learning
 programming it was Python with the built-in IDLE editor and after that
 somehow I moved straight to Vim. I prefer to use true FOSS software
-when I have the choice but if for example a job I'm in will require to
-use VSCode for whatever reason I will not complain (probably!). The
+when I have the choice but if for example a job I'm in will require me
+to use VSCode for whatever reason I will not complain (probably!). The
 only editors I despise is anything from JetBrains and alikes for the
 predatory tactic of selling the same editor multiple times for every
 language they decide to support. Imagine if Adobe started selling
@@ -107,17 +109,16 @@ default.
 
 ## DEs vs WMs
 Even though I use i3 I believe that tiling window managers are hugely
-overrated for most people use-cases and they use it only because
+overrated for most people use-cases and they only use it because
 either their favourite internet celebrity uses them or their friend
-group does so. The only reason I use i3 is because I want to have an
-easily configurable setup, where I have everything in one file I can
-copy around. I don't think there's much speed to be gained from
-switching windows a little faster. I can't think of a case where I
-have more than 3 windows open (Emacs, Firefox and Ghidra) that I want
-to swap around at the same time. "Alt-tabbing" is more than enough for
-this. I guess I use Emacs as my terminal multiplexer and if somebody
-doesn't want to use tmux then using a tiling window manager might be
-helpful.
+group does so. The reason I use i3 is because I want to have an easily
+configurable setup, where you have everything in one file you can copy
+around. I don't think there's much speed to be gained from switching
+windows a little faster. I can't think of a case where I have more
+than 3 windows open (Emacs, Firefox and Ghidra) that I want to swap
+around at the same time. "Alt-tabbing" is more than enough for this. I
+guess I use Emacs as my terminal multiplexer and if somebody doesn't
+want to use tmux then using a tiling window manager might be helpful.
 
 ## Programming languages
 My two main programming languages are Python and Rust. Like I stated
@@ -142,20 +143,20 @@ all the functions that are implicitly used and created that are hard
 to predict until you really KNOW the rules, etc.). The
 functional-style programming combined with low-level concepts. All of
 the CLI-centric tooling. Forgive me for getting passionate but I think
-it's a lovely language. I also use C though nowadays more and more
-rarely. I use it for exploit dev sometimes, when I just need to do
-some syscalls, and when I feel like doing some pointer fuckery. What I
-like about C is how well it maps to assembly like no other language.
-I heard once an argument that it's not true because of all the
-optimizations and while it might be true in theory, in practice
-there's a difference between theory and practice. If you ever tried to
-reverse engineer compiled programs you know how much easier it is to
-do so with a C program than with any other language.
+it's a lovely language. I also use C, though nowadays more and more
+rarely. I use it sometimes for exploit dev, when I just need to do
+some syscalls and call it a day, or when I feel like doing some
+pointer fuckery. What I like about C is how well it maps to assembly
+like no other language. I heard once an argument that it's not true
+because of all the optimizations and while it might be true in theory,
+in practice there's a difference between theory and practice. If you
+ever tried to reverse engineer compiled programs you know how much
+easier it is to do so with a C program than with any other language.
 
-For debugging I use ipdb and gdb.
+For debugging I use gdb and ipdb.
 
 ## X11 vs Wayland
-I have an AMD GPU and I still use Xorg. I tried using Wayland with
+I have an AMD GPU and I still use X11. I tried using Wayland with
 Sway and it felt like torturing myself. I'm gonna give Wayland an
 another try but not in the next few years. So what were my problems?
 There were many and I'm sure most of them have a fix but as a user I
@@ -165,7 +166,7 @@ focus on what I want to in the current moment. Some examples:
 - There was some forced VSync kind of problem. All video games that I
   wanted to play that are input sensitive were unplayable on Sway.
   Even though VSync was turned off in the game settings I had huge
-  input lag in osu! and Counter Strike that wasn't present in Xorg.
+  input lag in osu! and Counter Strike that wasn't present in X11.
 - Pixelated/blurry (at this point I dont remember to be honest, maybe
   both depending on the scale) scaling of things that weren't made for
   Wayland. I have a 3K display in my laptop so scaling is
