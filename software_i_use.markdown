@@ -6,17 +6,18 @@ permalink: /about/software
 
 Warning! Opinions below.
 
-## Emacs vs Vim (Vim, Neovim, Vi, Ed...)
-Emacs. However I'm not an elitist and I dont believe Emacs is better
-in any technical way. I just like the software.
+## Emacs vs Vim (Vim, Neovim, Vi, Ed, ...)
+[Emacs](https://youtu.be/V3QF1uAvbkU). That said I'm not an elitist
+and I don't believe Emacs is better in any empirical way. I just like
+the program.
 ### Keybindings
 I even prefer the keybindings over Vim, I'm not huge on modal editing
 like the whole internet seems to be. The constant switching between
-normal mode and insert mode seems very annoying. In a way Vim users
-are for me like people who use Caps Lock to capitalize their letters
+normal mode and insert mode is very annoying for me. In a way Vim users
+seem to be like people who use Caps Lock to capitalize their letters
 instead of the superior shift button. There are the jokes about the
 Emacs pinky or horrible Emacs' shortcuts however after rebinding
-Caps Lock to Ctrl writing is very pleasant for me.
+Caps Lock to Ctrl writing is very pleasant.
 ### The language
 Lisp is a language that I like and seems really cool *in theory* but
 outside of Emacs I don't really have any use for it. I'm writing a
@@ -34,8 +35,8 @@ myself that I'm not gonna mention the indexing from one.
 Topic a little related to the languages but not fully. It's also
 related to how different plugins/packages in the ecosystem handle
 configuration. This may say more about myself but when I used Neovim
-in the past my config always always ended up being really messy as all
-the plugins I used like LSP support required me to paste a big bulk of
+in the past my config always ended up being really messy as all
+the plugins I used, like LSP support, required me to paste a big bulk of
 code. I never felt like I understood all the lines in my config. In
 Emacs I somehow ended with a **two times** smaller config with about
 the same functionality (is some ways more, in other less). I almost
@@ -53,32 +54,27 @@ is winning in the plugin race. The editor is more popular, there are
 many more people writing Lua plugins and reporting bugs than there are
 Lisp hackers writing Emacs macros.
 ### The bad things about Emacs
-- No perfect highlight column at cursor position. The best extension I
-  found was [this one](https://codeberg.org/akib/emacs-hl-column) but
-  it still wasn't interacting properly with company-mode, it sometimes
-  pushed the first completion suggestion forward, and some other
-  modes.
 - No proper dap-mode. Well there's the dap-mode package but it
   requires you to use lsp-mode which I don't like and I don't want to
   be locked in that ecosystem.
 - It can feel quite slow on some occasions. It feels great for most of
   the time but there are cases where you can feel the garbage
   collector. You can feel the gap buffer. You can feel the one thread.
-- And some more things you could mention. The community being small.
+- And some other things you could mention. The community being small.
   Some dead/junky packages. Startup times. I can't think of anything
   else to be honest.
-  
+
 
 ### ... vs Helix
-I like the idea of Helix: having a Vim-like editor with human out of
-the box experience (and no, I'm not a big fan of Vim or Emacs
+I like the idea of Helix: having a Vim-like editor with out of the box
+human experience (and no, I'm not a big fan of Vim/Emacs
 distributions like Doom Emacs either, but that's an another topic). I
 gain nothing from having a huge config file. However I don't trust the
 developers and the work being done on Helix is just too slow (which is
 understandable, this is an open-source project done without much if
 any profit, yada, yada). There are still [some problems with syntax
 highlighting that haven't been worked on for
-years](https://github.com/helix-editor/helix/issues/1151 ) which I
+years](https://github.com/helix-editor/helix/issues/1151) which I
 consider to be basic as far as using the editor goes. Still no plugin
 system in sight which I consider essential.
 
@@ -100,7 +96,7 @@ Firstly I'm not a fan of Zsh because the defaults there are as bad as
 it is possible to make them. Due to this I used fish in the past but
 now we have the drawback of having to use a shell language you
 probably don't want to touch cuz you won't see it anywhere else
-anyway, even if it's better than Bash (especially since I rarely write
+anyway, even if it's a little better than Bash (especially since I rarely write
 shell scripts to begin with). That's why nowadays I mostly use Eshell
 with Eat as a terminal emulator inside of Emacs. The shell has nice
 integration with Emacs (duh), it uses the completion package of your
@@ -109,7 +105,7 @@ default.
 
 ## DEs vs WMs
 Even though I use i3 I believe that tiling window managers are hugely
-overrated for most people use-cases and they only use it because
+overrated for most people's use-cases and they only use it because
 either their favourite internet celebrity uses them or their friend
 group does so. The reason I use i3 is because I want to have an easily
 configurable setup, where you have everything in one file you can copy
@@ -170,7 +166,7 @@ focus on what I want to in the current moment. Some examples:
 - Pixelated/blurry (at this point I dont remember to be honest, maybe
   both depending on the scale) scaling of things that weren't made for
   Wayland. I have a 3K display in my laptop so scaling is
-  necessary. It was for example when using Ghidra.
+  necessary. It was present for example when using Ghidra.
 - Push2talk not working on Discord without a workaround.
 
 And all those problems for what? I heard multiple monitor setups work
