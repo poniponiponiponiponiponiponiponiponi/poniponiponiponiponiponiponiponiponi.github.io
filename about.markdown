@@ -17,7 +17,7 @@ Random "achievements":
 friends. In 2024 we wanted to change the team's name from [CVE2K9](https://ctftime.org/team/214211)
 to [sillysec](https://ctftime.org/team/268440) but most people in the team got, what feels like, burned out and we rarely play now,
 so I'm open to joining other teams, feel free to contact me.
-- Some CTF highlights: 3rd place on [1753CTF 2024](https://ctftime.org/team/268440), 3rd place on [BlueHens CTF 2023](https://ctftime.org/event/2126),
+- Some CTF highlights: 3rd place on [1753CTF 2024](https://ctftime.org/event/2234), 3rd place on [BlueHens CTF 2023](https://ctftime.org/event/2126),
 2nd place on [NewportBlakeCTF 2023](https://ctftime.org/event/2072), 3rd place on [AmateursCTF 2023](https://ctftime.org/event/1983).
 Now to be honest those are mostly competitions aimed at intermediate people and beginners so getting high places there isn't that impressive,
 but still... it looks good on paper.
