@@ -7,7 +7,7 @@ permalink: /about/software
 Warning! Opinions below.
 
 ## Emacs vs Vim (Vim, Neovim, Vi, Ed, ...)
-[Emacs](https://youtu.be/V3QF1uAvbkU). That said I'm not an elitist
+[Emacs](https://youtu.be/V3QF1uAvbkU)! That said I'm not an elitist
 and I don't believe Emacs is better in any empirical way. I just like
 the program.
 ### The language
@@ -24,7 +24,7 @@ which I'm not a big fan of either. It's a fine language but it doesn't
 ignite that spark inside of me, you know. I think the idea of
 representing everything as a table/tree/whatever you wanna call it is
 clever. I said to myself that I'm not gonna mention the indexing from
-one.
+one because it's a very surface level thing. ~~And I failed miserably.~~
 ### Config files
 Topic a little related to the languages but not fully. It's also
 related to how different plugins/packages in the ecosystem handle
@@ -174,7 +174,8 @@ what I want to in the current moment. Some examples:
   Even though VSync was turned off in the game settings I had huge
   input lag in osu! and Counter Strike that wasn't present in X11.~~
   Seems like this issue is fixed with the implementation of a [tearing
-  protocol](https://github.com/swaywm/sway/issues/7811).
+  protocol](https://github.com/swaywm/sway/issues/7811) but it still
+  isn't implemented everywhere.
 - Fullscreen in video games behaved weirdly.
 - Pixelated/blurry (at this point I dont remember to be honest, maybe
   both depending on the scale) scaling of things that weren't made for
@@ -187,13 +188,40 @@ And all those problems for what? I heard multiple monitor setups work
 better on Wayland. Too bad I use only one.
 
 ## Linux distributions
-I don't have any hot takes when It comes Linux distributions. Honestly
-I'm fine with anything as long as it doesn't get in my way. I prefer
-Systemd distros because that's what I'm used to, it always worked fine
-and was easy to diagnose with journalctl (some of the arguments
-against Systemd seem to be bad faith). Currently I'm using Arch but
-I'm planning on going back to Fedora. I tried Guix for a day but after
-not being able to install everything I wanted I gave up. Maybe I'll
-give NixOS a shot in the future (probably not, just like Guix it seems
-like one of those things that you love the idea of, however using it
-as a desktop will be on top of the pain hierarchy).
+I don't have any 'hot takes' when It comes Linux
+distributions. Honestly I'm fine with anything as long as it doesn't
+get in my way. I prefer Systemd distros because that's what I'm used
+to, it always worked fine and was easy to diagnose with journalctl
+(some of the arguments against Systemd seem to be bad
+faith). Currently I'm using Arch. In the past I used Fedora 38 (or was
+it 37?) on my laptop and Fedora 40 on my desktop PC but there were
+always some small problems that made me give up on using Fedora as a
+daily driver. It seems like not a lot of people use Fedora on a
+desktop, at least I've only met one person. For example the PCSX2
+package at the time of writing is by default unsuable beyond a simple
+launch. First of all for it's a 32-bit package for some
+reason. Secondly, the SPU2 plugin is not found so we can't even
+complete the initial setup. After a little debugging we can see it
+happens because we don't have a 32-bit version of libjack.so.0 and the
+plugin needs it.
+
+```shell
+[poni@Asuka /usr/lib/games/pcsx2]$ file libspu2x-2.0.0.so
+libspu2x-2.0.0.so: ELF 32-bit LSB shared object, Intel 80386, version 1 (SYSV), dynamically linked, BuildID[sha1]=ecc8471906cda77ab15e125bc18ad4160f5ad928, stripped
+[poni@Asuka /usr/lib/games/pcsx2]$ ldd libspu2x-2.0.0.so | rg "not found"
+	libjack.so.0 => not found
+```
+
+So to fix it we need to `sudo dnf install
+jack-audio-connection-kit.i686`. I also encountered some weird Wine
+issues like a random obscure game crashing on a mov instruction with a
+memory address that doesn't exist, even though it worked fine on
+Arch. For the usual complains dnf is slower than it should be,
+especially after adding some
+[copr](https://copr.fedorainfracloud.org/) repos. I still like Fedora
+as a server though. When it comes to more obscure distros, I tried
+Guix for a day but after not being able to install everything I wanted
+I gave up. Maybe I'll give NixOS a shot in the future (probably not,
+just like Guix it seems like one of those things that you love the
+idea of, however using it as a daily driver will be on the top of the
+pain hierarchy).
