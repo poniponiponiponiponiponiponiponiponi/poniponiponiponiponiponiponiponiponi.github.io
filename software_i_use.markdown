@@ -24,7 +24,8 @@ which I'm not a big fan of either. It's a fine language but it doesn't
 ignite that spark inside of me, you know. I think the idea of
 representing everything as a table/tree/whatever you wanna call it is
 clever. I said to myself that I'm not gonna mention the indexing from
-one because it's a very surface level thing. ~~And I failed miserably.~~
+one because it's a very surface level thing. ~~And I failed
+miserably.~~
 ### Config files
 Topic a little related to the languages but not fully. It's also
 related to how different plugins/packages in the ecosystem handle
@@ -181,8 +182,8 @@ what I want to in the current moment. Some examples:
   both depending on the scale) scaling of things that weren't made for
   Wayland. I have a 3k display in my laptop so scaling is
   necessary. It was present for example when using Ghidra.
-- Push2talk not working on Discord without a workaround. Not hard to
-  work around it but it's better when things just work. ;)
+- Push2talk and screen sharing not working on Discord by default. Not
+  hard to work around it but it's better when things just work. ;)
   
 And all those problems for what? I heard multiple monitor setups work
 better on Wayland. Too bad I use only one.
@@ -193,17 +194,18 @@ distributions. Honestly I'm fine with anything as long as it doesn't
 get in my way. I prefer Systemd distros because that's what I'm used
 to, it always worked fine and was easy to diagnose with journalctl
 (some of the arguments against Systemd seem to be bad
-faith). Currently I'm using Arch. In the past I used Fedora 38 (or was
-it 37?) on my laptop and Fedora 40 on my desktop PC but there were
-always some small problems that made me give up on using Fedora as a
-daily driver. It seems like not a lot of people use Fedora on a
-desktop, at least I've only met one person. For example the PCSX2
-package at the time of writing is by default unsuable beyond a simple
-launch. First of all for it's a 32-bit package for some
-reason. Secondly, the SPU2 plugin is not found so we can't even
-complete the initial setup. After a little debugging we can see it
-happens because we don't have a 32-bit version of libjack.so.0 and the
-plugin needs it.
+faith). Currently I'm using Arch, I don't know why but it's the only
+thing that works and if it doesn't it's easy to google (duckduckgo it)
+why. In the past I used Fedora 38 (or was it 37?) on my laptop and
+Fedora 40 on my desktop PC but there were always some small problems
+that made me give up on using Fedora as a daily driver. It seems like
+not a lot of people use Fedora on a desktop, at least I've only met
+one person. For example the PCSX2 package at the time of writing this
+is by default unsuable beyond a simple launch. First of all it's a
+32-bit package for some reason. Secondly, the SPU2 plugin is not found
+so we can't even complete the initial setup. After a little debugging
+we can see it happens because we don't have a 32-bit version of
+libjack.so.0 and the plugin needs it.
 
 ```shell
 [poni@Asuka /usr/lib/games/pcsx2]$ file libspu2x-2.0.0.so
@@ -213,15 +215,24 @@ libspu2x-2.0.0.so: ELF 32-bit LSB shared object, Intel 80386, version 1 (SYSV), 
 ```
 
 So to fix it we need to `sudo dnf install
-jack-audio-connection-kit.i686`. I also encountered some weird Wine
-issues like a random obscure game crashing on a mov instruction with a
-memory address that doesn't exist, even though it worked fine on
-Arch. For the usual complains dnf is slower than it should be,
-especially after adding some
-[copr](https://copr.fedorainfracloud.org/) repos. I still like Fedora
-as a server though. When it comes to more obscure distros, I tried
-Guix for a day but after not being able to install everything I wanted
-I gave up. Maybe I'll give NixOS a shot in the future (probably not,
-just like Guix it seems like one of those things that you love the
-idea of, however using it as a daily driver will be on the top of the
-pain hierarchy).
+jack-audio-connection-kit.i686`. This shouldn't happen and it should
+be there as a dependency. I also encountered some weird Wine issues
+like a random obscure game crashing on a mov instruction with a memory
+address that doesn't exist, even though it worked fine on Arch. For
+the usual complains dnf is slower than it should be, especially after
+adding some [copr](https://copr.fedorainfracloud.org/) repos. I still
+like Fedora as a server though. When it comes to more obscure distros,
+I tried Guix for a day but after not being able to install everything
+I wanted I gave up. Same with Gentoo - I actually kinda liked it but I
+used it for a day (or half a day, the other half was installation) and
+I found the constant fighting with USEFLAGS to be annoying. I also had
+a problem using rustup on it. I might comeback to it in the future
+though, when I don't have "more important" things to do and I can
+focus on getting better at using Gentoo. Maybe I'll give NixOS a shot
+in the future (probably not, just like Guix it seems like one of those
+things that you love the idea of, however using it as a daily driver
+will be on the top of the pain hierarchy). From what I heard Void has
+a really cool package manager that lets you customize compiler flags
+for a specific package if you so desire while still being a binary
+distro, however not having SystemD is a nono for me (which wasn't a
+problem for me in Guix but Guix gets a pass :P).
