@@ -7,45 +7,44 @@ permalink: /about/software
 Warning! Opinions below.
 
 ## Emacs vs Vim (Vim, Neovim, Vi, Ed, ...)
-[Emacs](https://youtu.be/V3QF1uAvbkU)! That said I'm not an elitist
-and I don't believe Emacs is better in any empirical way. I just like
-the program.
+[Emacs](https://youtu.be/V3QF1uAvbkU)! I like the program a little bit
+too much so I listed the reasons why below.
 ### The language
-Lisp is a language that I like and seems really cool *in theory* but
-outside of Emacs I don't really have any use for it. I'm writing a
-quick and dirty ad-hoc program? Python. Writing exploits? C and
-Python. I want to poke at some API or really any task that is good
-with dynamic typing? Python. I want to write software with good static
-typing that is like a pyramid, very solid but maybe a little stiff?
-Rust. Things that run in the browser? JavaScript. So Emacs fullfils
-the need of writing Lisp inside of me. Vim has Vimscript which
-everyone and their mother seems to hate and Lua thanks to Neovim,
-which I'm not a big fan of either. It's a fine language but it doesn't
-ignite that spark inside of me, you know. I think the idea of
-representing everything as a table/tree/whatever you wanna call it is
-clever. I said to myself that I'm not gonna mention the indexing from
-one because it's a very surface level thing. ~~And I failed
-miserably.~~
+Lisps are a family of languages I always had a soft spot for and they
+seem really cool *in theory* but outside of Emacs I don't really have
+any use for them. I'm writing a quick and dirty ad-hoc program?
+Python. Writing exploits? C and Python. I want to poke at some API or
+really any task that is good with dynamic typing? Python. I want to
+write software with a good static typing system that is like a
+pyramid, very solid but maybe a little stiff? Rust. Things that run in
+the browser?  JavaScript. So you could say that Emacs fullfils the
+need of writing Lisp inside of me. Vim has Vimscript which everyone
+and their mom seems to hate and, thanks to Neovim, Lua which I'm not a
+big fan of either (It's a fine language but it doesn't get me
+excited. The idea of representing everything as a table/tree/whatever
+is clever. I said to myself that I'm not gonna mention the indexing
+from one because it's a very surface level thing. ~~And I failed
+miserably~~.).
 ### Config files
 Topic a little related to the languages but not fully. It's also
-related to how different plugins/packages in the ecosystem handle
-configuration. This may say more about myself but when I used Neovim
-in the past my config always ended up being really messy as all the
-plugins I used, like LSP support, required me to paste a big bulk of
-code in the config file. I never felt like I understood all the lines,
-at least without putting effort into it. In Emacs I somehow ended with
-a **two times** smaller config with about the same functionality (is
-some ways more, in other less). I almost want to say three times but I
-don't have the numbers anymore and I don't want to exaggarate. My
-config feels more elegant with about the same amount of "care" put
-into it.
+related to how different plugins or packages in the ecosystem handle
+configuration. This may say more about myself, but when I used Neovim
+in the past, my config always ended up being really, really messy. All
+the plugins I used, like LSP support, required me to paste some big
+bulk of code into the config file. I never felt like I understood all
+the lines, at least without putting effort into it. In Emacs I somehow
+ended up having a **two times** smaller config with about the same
+functionality (is some ways more, in other less). I almost want to say
+three times but I don't have the numbers anymore and I don't want to
+exaggarate. My config also feels more elegant with about the same
+amount of "care" put into it.
 ### Keybindings
 I even prefer the keybindings over Vim! I'm not huge on modal editing
 like the whole internet seems to be. The constant switching between
 normal mode and insert mode is very annoying for me. In a way Vim
-users seem to me like people who use Caps Lock to capitalize their
-letters instead of the superior shift button. There are the jokes
-about the Emacs pinky or horrible Emacs' shortcuts however after
+users remind me of people who use Caps Lock to capitalize their
+letters instead of the superior (!!) shift button. There are the jokes
+about the Emacs pinky or horrible Emacs' shortcuts, however after
 rebinding Caps Lock to Ctrl writing is very pleasant.
 ### Plugins/packages
 For me plugins in both editors are basically the same. All I need is a
@@ -58,29 +57,32 @@ is overall winning in the plugin race. The editor is more popular,
 there are many more people writing Lua plugins and reporting bugs than
 there are Lisp hackers writing Emacs macros.
 ### The bad things about Emacs
-- No proper dap-mode. Well there's the dap-mode package but it
+- ~~No proper dap-mode. Well there's the dap-mode package but it
   requires you to use lsp-mode which I don't like and I don't want to
-  be locked in that ecosystem.
+  be locked in that ecosystem.~~ Seems like there's
+  [Dape](https://github.com/svaante/dape) now, but I haven't played
+  with it yet.
 - It can be quite slow on some occasions. It feels great for most of
   the time but there are cases where you can feel the garbage
-  collector. You can feel the gap buffer. You can feel the one thread.
+  collector. You can feel the [gap
+  buffer](https://en.wikipedia.org/wiki/Gap_buffer). You can feel the
+  one thread.
 - And some other things you could mention. The community being small.
   Some dead/junky packages. Startup times. I can't think of anything
   else to be honest.
 
 
 ### ... vs Helix
-I like the idea of Helix: having a Vim-like editor with out of the box
-human experience (and no, I'm not a big fan of Vim/Emacs distributions
-like Doom Emacs either, but that's an another topic). I gain nothing
-from having a huge config file. However I don't trust the developers
-and the work being done on Helix is just too slow (which is
-understandable, this is an open-source project done without much if
-any profit, yada, yada). There are still [some problems with syntax
-highlighting that haven't been worked on for
+I like the idea of Helix - having a Vim-like editor with out of the
+box human experience. I gain nothing from having a huge config
+file. However I don't trust the developers and the work being done on
+Helix is just too slow (which is understandable, this is an
+open-source project done without much if any profit, yada,
+yada). There are still [some problems with syntax highlighting that
+haven't been worked on for
 years](https://github.com/helix-editor/helix/issues/1151) which I
-consider to be basic as far as using the editor goes. Still no plugin
-system in sight which I consider essential.
+consider to be basic as far as using the editor goes. Also still no
+plugin system in sight which I consider to be essential.
 
 ### ... vs any other editor
 At the point of writing this I never really used anything outside of
@@ -88,13 +90,11 @@ Vim, Emacs and Helix. I used a little bit of IntelliJ IDEA for a uni
 group project but I wasn't impressed. When I started learning
 programming it was Python with the built-in IDLE editor and after that
 somehow I moved straight to Vim. I prefer to use true FOSS software
-when I have the choice but if for example a job I'm in will require me
-to use VSCode for whatever reason I will not complain (probably!). The
-only editors I despise on an ideological level is anything from
-JetBrains and alikes for the predatory tactic of selling the same
-editor multiple times for every language they decide to support.
-Imagine if Adobe started selling a different program for every file
-format!
+when I have the choice, but if for example a job I'm in will require
+me to use VSCode I will not complain (probably!). The only editors I
+despise on an ideological level is anything made by JetBrains and
+alikes for the predatory tactic of selling the same editor multiple
+times for every language they decided to support.
 
 ## Shell
 Firstly I'm not a fan of Zsh because the defaults there are as bad as
@@ -111,21 +111,21 @@ because that's the default.
 ## DEs vs WMs
 Even though I use i3 myself I believe that tiling window managers are
 hugely overrated for most people's use-cases (It doesn't mean they
-aren't good! Just that their value is overestimated.) and they only
-use them because either their favourite internet celebrity uses them
-or their friend group does so. The reason I use i3 is because I want
-to have an easily configurable setup, where you have everything in one
-file you can copy around. I don't think there's much speed to be
-gained from switching windows a little faster. I can't think of a case
-where I have more than 3 windows open (Emacs, Firefox and Ghidra) that
-I want to swap around at the same time. "Alt-tabbing" is more than
-enough for this. I guess I use Emacs as my terminal multiplexer and if
-somebody doesn't want to use tmux then using a tiling window manager
-might be helpful.
+aren't good! Or even that they aren't fun to use. Just that their
+value is overestimated.) and they only use them because either their
+favourite internet celebrity uses them or their friend group does
+so. The reason I it is because I want to have an easily configurable
+setup, where you have everything in one file you can copy around. I
+don't think there's much speed to be gained from switching windows a
+little faster. I can't think of a case where I have more than 3
+windows open (Emacs, Firefox and Ghidra) that I want to swap around at
+the same time. "Alt-tabbing" is more than enough for this. I guess I
+use Emacs as my terminal multiplexer and if somebody doesn't want to
+use tmux then using a tiling window manager might be helpful.
 
 ## Programming languages
 My two main programming languages are Python and Rust. Like I stated
-above in the Emacs section Python is my goto language for anything
+above in the Emacs section, Python is my goto language for anything
 where dynamic typing is king. Why not a Lisp? Lisps tend to be a
 little dead and realistically in the modern world, where [programming
 stopped being like magic and started being more like
@@ -141,35 +141,28 @@ is the more pragmantic choice. When it comes to statically typed
 languages Rust is my favourite. Everything about it just clicks for
 me. The ADTs. The pattern matching. The functional-style programming
 combined with low-level concepts. All of the CLI-centric tooling. The
-explicitness of the language (compared to C++ which is a very implicit
-language in a lot of ways. To be precise about what I mean - I don't
-talk about implicit type conversions, though that's part of it, what I
-mean is stuff more like how we don't know if something is a "pointer"
-(reference) by how it's used until we look at the function signature,
-all the functions that are implicitly used and created that are hard
-to predict until you really KNOW the rules, the fact that you can
-never know for sure if a copy is expensive or not, etc.). Forgive me
-for getting passionate but I think it's a lovely language. I also use
-C, though nowadays more and more rarely. I use it sometimes for
-exploit dev, when I just need to do some syscalls and call it a day,
-or when I feel like doing some pointer fuckery. What I like about C is
-how well it maps to assembly like no other language. I heard once an
-argument that it's not true because of all the optimizations and while
-it might be true in theory, in practice there's a difference between
-theory and practice. If you ever tried to reverse engineer compiled
-programs you know how much easier it is to do so with a C program than
-with any other language.
+explicitness of the language. It's a lovely language. I also use C,
+though nowadays more and more rarely. I use it sometimes for my
+hobbist exploit development stuff, when I just need to do some
+syscalls and call it a day. What I like about C is how well it maps to
+assembly like no other language. I heard once an argument that it's
+not true because of all the optimizations and while it might be true
+in theory, in practice there's a difference between theory and
+practice. If you ever tried to reverse engineer compiled software you
+know how much easier it is to do so with a C program than with any
+other language.
+
 
 For debugging I use gdb and ipdb.
 
 ## X11 vs Wayland
-I have an AMD GPU and I still use X11. I tried using Wayland with Sway
-and it felt like torturing myself. I'm gonna give Wayland an another
-try but not in the next few years. So what were my problems? There
-were some and I'm sure most of them have a fix but as a user I live by
-the philosophy of the least resistance - I'm gonna use the software
-that causes the least amount of friction and allows me to focus on
-what I want to in the current moment. Some examples:
+I have an AMD GPU and I still use X11. I tried Wayland with Sway and
+it felt like torturing myself. I'm gonna give Wayland an another try
+but not in the next few years. So what were my problems? I'm sure most
+of them have a fix but as a user I live by the philosophy of the least
+resistance - I'm gonna use the software that causes the least amount
+of friction and allows me to focus on what I want to in the current
+moment. Some examples:
 - ~~There was some forced VSync kind of problem. All video games that
   I wanted to play that are input sensitive were unplayable on Sway.
   Even though VSync was turned off in the game settings I had huge
@@ -194,18 +187,17 @@ distributions. Honestly I'm fine with anything as long as it doesn't
 get in my way. I prefer Systemd distros because that's what I'm used
 to, it always worked fine and was easy to diagnose with journalctl
 (some of the arguments against Systemd seem to be bad
-faith). Currently I'm using Arch, I don't know why but it's the only
-thing that works and if it doesn't it's easy to google (duckduckgo it)
+faith). Currently I'm using Arch, I don't know why but it's the thing
+that works best and if it doesn't it's easy to google (or duck it)
 why. In the past I used Fedora 38 (or was it 37?) on my laptop and
 Fedora 40 on my desktop PC but there were always some small problems
-that made me give up on using Fedora as a daily driver. It seems like
-not a lot of people use Fedora on a desktop, at least I've only met
-one person. For example the PCSX2 package at the time of writing this
-is by default unsuable beyond a simple launch. First of all it's a
-32-bit package for some reason. Secondly, the SPU2 plugin is not found
-so we can't even complete the initial setup. After a little debugging
-we can see it happens because we don't have a 32-bit version of
-libjack.so.0 and the plugin needs it.
+that made me give up on using Fedora as a daily driver. For example
+the PCSX2 package at the time of writing this is by default unsuable
+beyond a simple launch. First of all it's a 32-bit package for some
+reasons. Secondly, the SPU2 plugin is not found so we can't even
+complete the initial setup. After a little debugging we can see it
+happens because we don't have a 32-bit version of libjack.so.0 and the
+plugin needs it.
 
 ```shell
 [poni@Asuka /usr/lib/games/pcsx2]$ file libspu2x-2.0.0.so
@@ -220,19 +212,10 @@ be there as a dependency. I also encountered some weird Wine issues
 like a random obscure game crashing on a mov instruction with a memory
 address that doesn't exist, even though it worked fine on Arch. For
 the usual complains dnf is slower than it should be, especially after
-adding some [copr](https://copr.fedorainfracloud.org/) repos. I still
-like Fedora as a server though. When it comes to more obscure distros,
-I tried Guix for a day but after not being able to install everything
-I wanted I gave up. Same with Gentoo - I actually kinda liked it but I
-used it for a day (or half a day, the other half was installation) and
-I found the constant fighting with USEFLAGS to be annoying. I also had
-a problem using rustup on it. I might comeback to it in the future
-though, when I don't have "more important" things to do and I can
-focus on getting better at using Gentoo. Maybe I'll give NixOS a shot
-in the future (probably not, just like Guix it seems like one of those
-things that you love the idea of, however using it as a daily driver
-will be on the top of the pain hierarchy). From what I heard Void has
-a really cool package manager that lets you customize compiler flags
-for a specific package if you so desire while still being a binary
-distro, however not having SystemD is a nono for me (which wasn't a
-problem for me in Guix but Guix gets a pass :P).
+adding some copr repos. I still like Fedora as a server though. When
+it comes to more obscure distros, I tried Guix for a day but after not
+being able to install everything I wanted I gave up. Same with
+Gentoo - I actually kinda liked it but I used it for a day (or half a
+day, the other half was the installation process) and I found the
+constant fighting with USEFLAGS to be annoying. I also had a problem
+with using rustup on it.
