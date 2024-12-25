@@ -6,7 +6,7 @@ categories: c linux bsd pwn
 ---
 
 # Intro
-In this post I'm gonna compare different security mitigations in Linux and different BSD flavours. Specifically it's gonna be FreeBSD, OpenBSD, NetBSD and DragonflyBSD. If you expected MacOS I'm sorry not sorry but I do not have the budget for it. I could also include Windows there but honestly using Windows feels like a pain even for a small blogpost like this. Usually in my writing im assuming some experience in exploit development so I avoid explaining what ASLR and friends are but in this case I'm gonna make an exception so more people can read it *somewhat* comfortably. An important thing to note is that this is not supposed to be statement which OS is more secure. This is just an exploration of how different OS's tackle the most common of mitigation techniques used. Whatever it will look like, if you want a secure operating system you [probably](https://isopenbsdsecu.re/) should use OpenBSD as it includes a lot of additional security measures, for example [my friend silt](https://0xc3.win/) shared [this the other day](https://marc.info/?l=openbsd-tech&m=170205367232026) on our Discord server. Another important thing to note is that everything is done on default settings. I'm sure all the security mitigations can be improved upon by turning on some options but in my defense basic security should be on by default and not be opt-in.
+In this post I'm gonna compare different security mitigations in Linux and different BSD flavours. Specifically, it's gonna be FreeBSD, OpenBSD, NetBSD and DragonflyBSD. If you expected MacOS I'm sorry not sorry, I do not have the budget for it. I also could include Windows there but honestly using Windows feels like a pain even for a small blogpost like this. Usually in my writing im assuming some experience in exploit development so I avoid explaining what ASLR and friends are but in this case I'm gonna make an exception so more people can read it *somewhat* comfortably. An important thing to note is that this is not supposed to be statement which OS is more secure. This is just an exploration of how different OS's tackle the most common of mitigation techniques used. Whatever it will look like, if you want a secure operating system you [probably](https://isopenbsdsecu.re/) should use OpenBSD as it includes a lot of additional security measures, for example [my friend silt](https://0xc3.win/) shared [this the other day](https://marc.info/?l=openbsd-tech&m=170205367232026) on our Discord server. Another important thing to note is that everything is done on default settings. I'm sure all the security mitigations can be improved upon by turning on some options but in my defense basic security should be on by default and not be opt-in.
 
 # How It Was Done
 For compiling on every system I used gcc which as it turned out was in a lot of different versions, some were newer and some were very old. I also used clang just in case to compare but I did not notice any significant differences. The Linux testing was done on my Arch Linux machine but the behaviour shouldn't differ between distros.
@@ -14,12 +14,12 @@ For compiling on every system I used gcc which as it turned out was in a lot of 
 # Write XOR Execute
 This is not a chapter I expected to make but I was forced to. In every modern operating system there is [this rule](https://en.wikipedia.org/wiki/W%5EX) that a memory page shouldn't be at the same time executable and writeable. Especially [the stack](https://en.wikipedia.org/wiki/Call_stack) where our local function's data and different other data like the return addresses from function calls are stored on. When we ignore this rule an [older than time itself exploitation technique](http://phrack.org/issues/49/14.html) can be used where we put the code we want to execute as data on the stack and then we return to it by overwriting the return address. Also called [shellcoding](https://en.wikipedia.org/wiki/Shellcode). Of course it's not a perfect mitigation, as a countermeasure we have [return-oriented programming](https://en.wikipedia.org/wiki/Return-oriented_programming), but it's a start. You would expect every operating system with an internet connection to adhere to this rule but no, seems like DragonflyBSD doesn't care.
 ![Image](/files/dfs1.webp)
-At the beginning I thought gdb is playing tricks on me especially since on DragonflyBSD it didn't support `info proc mappings` so I couldn't check what's the permissions of the memory segment, but no. I wrote a small code example and I'm perfectly able to overwrite the return address to the stack and execute my code.
+At the beginning I thought gdb is playing tricks on me especially since on DragonflyBSD it didn't support `info proc mappings` so I couldn't check what are the permissions of the memory segment, but no. I wrote a small code snippet and I'm perfectly able to overwrite the return address to the stack and execute my code.
 ![Image](/files/dfs2.png)
 Explanation: at `(&a)+2` there's stored the return address on the stack, so I'm overwriting it with the address of `a` which is also stored on the stack. So after the main function returns, we're executing cpu instructions that are encoded in the number `0x909090cccc909090`. Specifically `0x90` is the [opcode](https://en.wikipedia.org/wiki/Opcode) for [NOP](https://en.wikipedia.org/wiki/NOP_(code)) and `0xcc` is the opcode for [INT3](https://en.wikipedia.org/wiki/INT_(x86_instruction)#INT3) which is an instruction used for implementing software breakpoints. We can see that it's executed correctly because of the `Trace/BPT trap`.
 
 # ASLR
-Now we're gonna explore everything related to [ASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which is just a mitigation that tries to make all the memory addresses random. For testing ASLR I ran a program like this or it's variation multiple times:
+Now we're gonna explore everything related to [ASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which is a mitigation that tries to make all of the memory addresses randomized. For testing ASLR I ran a program like this or its variation multiple times:
 ```c
 int main() {
   int stack;
@@ -36,7 +36,7 @@ This is not a white paper so I'm gonna spare you all the details.
 
 ## ASLR on Linux
 
-One thing that is unique to Linux is that (at least) glibc uses the `brk` syscall for creating the heap, while every BSD flavour seemed to use the `mmap` syscall. I'm not sure if it's a well known thing but the brk syscall on Linux creates it's memory segment after our binary and our ASLR only adds some small offset to it. So the security of heap addresses is mostly dependant on the security off the binary address.
+One thing that is unique to Linux is that (at least) glibc uses the `brk` syscall for creating the heap, while every BSD flavour seemed to use the `mmap` syscall. I'm not sure if it's a well known fact but the brk syscall on Linux creates it's memory segment after our binary and our ASLR only adds some small offset to it. So the security of heap addresses is mostly dependant on the security of addresses of our binary.
 
 | i | bin            | heap           | heap-bin diff |
 |---|----------------|----------------|---------------|
@@ -58,7 +58,7 @@ By looking at the table we can see that the first byte of the binary barely chan
 | 4 | 0x7f16f6c12b20 | 0x7f16f6ded620 | 0x1dab00  | 0x7f16f6e93000 | -0x2804e0     |
 | 5 | 0x7fdbdc487b20 | 0x7fdbdc662620 | 0x1dab00  | 0x7fdbdc708000 | -0x2804e0     |
 
-In case of dynamically loaded libraries we can see that they have the same as our binary around 3.5 bytes of entropy. However different libraries and mmaped memory have the same offset from each other so if we leak one we can calculate the other ones. In this case our mmaped memory appeared after the libc, resulting in a negative number in our difference, but after we mmap enough memory it will start appearing before the libc. This is in fact used in the [House of Muney](https://github.com/mdulin2/house-of-muney) which is one of the coolest if not the coolest "house of" glibc's ptmalloc exploitation technique IMO.
+In case of dynamically loaded libraries we can see that they have the same as our binary around 3.5 bytes of entropy. However different libraries and mmaped memory have the same offset from each other so if we leak one we can calculate the other ones. In this case our mmaped memory appeared after the libc, resulting in a negative number in our difference, but after we mmap enough memory it will start appearing before the libc. This is in fact used in the [House of Muney](https://github.com/mdulin2/house-of-muney) technique which is one of the coolest "house of" glibc's ptmalloc exploitation techniques.
 
 | i | stack          |
 |---|----------------|
@@ -94,7 +94,7 @@ The binary address stays the same even though the binary is compiled as position
 | 4 | 0x7fffffdfd84c |
 | 5 | 0x7fffffdfd8bc |
 
-The randomness of the stack is pathetic, combined with the fact that it's executable, it's a deadly combination.
+The randomness of the stack is pathetic, combined with the fact that the stack is executable it's a deadly combination.
 
 | i | libc        | math        | math-libc    |
 |---|-------------|-------------|--------------|
@@ -203,6 +203,6 @@ I hope by now you already see the pattern in which I compare the values. So I wi
 Now let's talk about [stack canaries](https://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries). I really like the way Linux does them. The first byte of a stack canary is always equal to zero. On a 64-bit system 7 bytes is still more than enough entropy and what we get from the null byte is additional security. Because of it there are scenerios where we for example overwrite N bytes with the letter A, after the letters there's the canary, and when the letters A are printed we won't leak the canary because of it - cuz there's a zero byte separating them. For some reasons only Linux does this. Every other canary didn't included the null byte. Other thing I like about the way Linux does canaries is that they are located in a [special register fs](https://unix.stackexchange.com/questions/453749/what-sets-fs0x28-stack-canary) that stores the address of a random place in the memory. Even when he have a write-what-where condition, unless we already have a leak, we won't be able to overwrite the original canary. 
 ![Image](/files/canaryfs.png)
 ![Image](/files/findcanary.png)
-Now, this is not true for all Linux systems. Seems like the GNU toolchain only does this on the x86 and x64 architectures. On the ARM architecture the canary is actually stored inside our binary. To be fair ARM doesn't have the fs register, but there's nothing stopping it from using some other one. The same applies for every non-Linux system (including x86 and x64). For example this is how we get the canary inside of x64 OpenBSD:
+Now, this is not true for all Linux systems. Seems like the GNU toolchain only does this on the x86 and x64 architectures. On the ARM architecture the canary is actually stored inside our binary. To be fair ARM doesn't have the fs register, but there's nothing stopping it from using some other one. The same applies for every non-Linux system (including x86 and x64). For example this is how we get the canary inside of x64 on OpenBSD:
 ![Image](/files/bsdcanary.png)
 ![Image](/files/bsdcanary2.png)

@@ -6,10 +6,9 @@ categories: ctf pwn c
 ---
 
 # Intro
-Even though [WxMCTF 2024](https://ctftime.org/event/2179/) was a ctf competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges.
-What they didn't had was pwn4 and pwn5 (the second hardest and hardest pwn) so my assigned task was to create them.
+Even though [WxMCTF 2024](https://ctftime.org/event/2179/) was a CTF competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges.
+What they didn't yet had done was pwn4 and pwn5 (the second hardest and hardest pwn), so my assigned task was to create them.
 In this post I will go over my thought process of designing the challenges and the solutions.
-In short, pwn4 turned out to be pretty easy but educational and pwn5 was the hardest problem in the competition going by solves.
 
 # pwn4 - leakleakleak
 ```
@@ -21,7 +20,7 @@ Leak, leak, leak, leak, I want you in my leak!
 flag:
 wxmctf{woooOoOoO0O0O00_just_M3_4nd_Y0U_tog3th3r_in_MY_r00m_x3c}
 ```
-If you didn't got it, the challenge name is a reference to the song [Boom, Boom, Boom](https://www.youtube.com/watch?v=llyiQ4I-mcQ) (maybe next year I should create a nightcore version, heh). At the beginning I thought the chall will be a little too easy but at the end it fitted nicely between pwn3 and pwn5 collecting 17 solves. The problem included the source code - binary exploitation problems ain't reversing problems, IMO most of the time they should include the source code but I'm going off-topic. If you want to try it out for yourself, there's the source code:
+If you didn't got it, the challenge's name is a reference to the song [Boom, Boom, Boom](https://www.youtube.com/watch?v=llyiQ4I-mcQ) (maybe next year I should create a nightcore version, heh). At the beginning I thought that challenge might be a little too easy, but at the end it fitted nicely between pwn3 and pwn5, collecting 17 solves. The problem included the source code - binary exploitation problems ain't reversing problems, IMO most of the time they should include the source code but I'm going off-topic there. If you want to try it out for yourself, there's the source code:
 ```c
 // compile with: gcc leakleakleak.c -o leakleakleak -fpie -pie
 
@@ -114,19 +113,19 @@ COPY leakleakleak /srv/app/run
 And there's the [included binary](/files/leakleakleak).
 
 ## The Idea
-So the idea behind the chall is to teach people how to find chains of addresses.
-For example we can always expect that on the stack there are other stack addresses, our binary addresses and libc addresses.
-We can always expect there's a stack address in libc (`__environ`).
+The idea behind the challenge is to teach people how to find chains of addresses.
+For example we can always assume that on the stack there are other stack addresses, addresses of our binary, and libc addresses.
+We can always expect that there's a stack address in libc somewhere (for example inside of the `__environ` variable).
 However a libc address is on the heap only if some conditions are satisfied.
-In this case, [ptmalloc](https://sourceware.org/glibc/wiki/MallocInternals) stores chunks that belong to unsorted, large and small bins as a circular doubly-linked list that starts and ends in libc.
+In this case [ptmalloc](https://sourceware.org/glibc/wiki/MallocInternals), the glibc's memory allocator, stores chunks that belong to unsorted, large and small bins as a circular doubly-linked list that starts and ends in libc.
 So to visualize this idea, we can make a directed graph.
-Green arrows mean it's very likely there's a pointer from one to the other, yellow means that maybe there's a pointer and a red arrow means that a pointer like that is unlikely.
-Of course im drawing this from a perspective of a smaller binary, in the case of huge binaries I'm sure there are pointers to everything sprinkled all over the place.
+Green arrows mean that it's very likely there's a pointer from one to the other, yellow means that maybe there's a pointer and a red arrow means that a pointer like that is unlikely.
+Of course I'm drawing this from a perspective of a smaller binary, in the case of huge binaries I'm sure there are pointers to everything sprinkled all over the place.
 BEHOLD...
 ![Image](/files/leakdiagram.png)
 
 To elaborate on some choices:
-- The red arrows are there cuz it would be weird if we stored a stack address for example as a global variable inside of a binary - that's probably a bug.
+- The red arrows are there cuz it would be weird if we stored a stack address for example as a global variable inside of our binary - that's probably a bug.
 - The heap has a lot of yellow arrows as the heap is pretty much almost zeroed. We need to do stuff with it so stuff can show up there.
 
 ## The Solution
@@ -137,7 +136,7 @@ So the intended solution was to:
 - leak the binary address from libc,
 - leak the flag from the binary.
 
-It could be solved in a shorter by one step way by finding a binary address inside of libc instead of using the stack for it but honestly I wasn't aware of this while writing the challenge.
+It could be solved in a shorter way by one step, by finding a binary address inside of libc instead of using the stack for it, but honestly I haven't thought about it while writing the challenge.
 To find the addresses in a GDB session you can dump a bunch of memory and search for the addresses by hand.
 GDB plugins like pwndbg or gef have special commands for finding addresses. I use pwndbg so I'll show you how to find them there.
 A naive solution would be to try to dump a bunch of pointers with the `telescope` command and hope for a lucky find.
@@ -233,7 +232,7 @@ This time the challenge name is a reference to the cult classic anime [Serial Ex
 And the title is not a drill! We can actually see the main protagonist Lain learning the C programming language at school while [using Common Lisp at home](https://www.reddit.com/r/Lain/comments/wb410b/is_this_real_code_and_if_yes_in_which_language/).
 ![Image](https://preview.redd.it/is-this-real-code-and-if-yes-in-which-language-found-it-in-v0-8aved1q18ie91.jpg?width=1080&crop=smart&auto=webp&s=68127b0a2779378c5c33a1ba9184b95107d05d26)
 
-Overall the challenge got solved 2 times so I'm happy about that.
+Overall this challenge got solved 2 times so I'm happy about that. Going by solves it turned out to be the hardest challenge in the competition.
 
 ## The Idea
 So the challenge is a [lisp-like](https://en.wikipedia.org/wiki/Lisp_(programming_language)) expression evaluator. This is how we interact with the program:
@@ -268,15 +267,15 @@ CoplandOS <<<
 The idea for the solution is that I wanted to create heap challenge that is different that most of your typical note taking programs.
 If you ever tried solving heap exploitation challenges I'm sure you came across those.
 They tend to be popular because they are easy to make, don't require much creativity and most of the time easy to solve while introducing an idea.
-In essence, the exploit is a basic heap one, however the bug is a little more subtle and the [heap feng shui](https://en.wikipedia.org/wiki/Heap_feng_shui) is harder to control, as with every expression there's a lot of allocations involved, mixing up `malloc`s, `free`s and `calloc`s. As a footnote: if you didn't know, calling `calloc` isn't the same as calling `malloc` + `memset`. By comparing both functions' source code we can see for example that `calloc` avoids anything related to tcache inside of ptmalloc. If I had to make an educated guess it's because the glibc authors try to avoid zeroing memory as much as possible. In addition to the standard security mitigations like PIE, NX and stack canaries, I also enabled full RELRO. Really for not a particular reason, it doesn't make the chall harder, it's just to show that we are getting serious. ;)
-To get to the specifics the program works like a typical process of interpreting a programming language would look like.
+In essence, the exploit is a basic heap one, however the bug is a little bit more subtle and the [heap feng shui](https://en.wikipedia.org/wiki/Heap_feng_shui) is harder to control, as with every expression there are a lot of allocations involved, mixing up `malloc`s, `free`s and `calloc`s. As a footnote: if you didn't know, calling `calloc` isn't the same as calling `malloc` + `memset`. By comparing both functions' source code we can see for example that `calloc` avoids anything related to tcache inside of ptmalloc. If I had to make an educated guess it's because the glibc authors try to avoid zeroing memory as much as possible. In addition to the standard security mitigations like PIE, NX and stack canaries, I also enabled full RELRO. Really for not a particular reason, it doesn't make the chall harder, it's just to show that we are getting serious. ;)
+To get to the specifics the code works like a typical process of interpreting a programming language would look like.
 First we [split our string into tokens](https://en.wikipedia.org/wiki/Lexical_analysis#Tokenization).
 Then we transform the tokens into an [abstract syntax tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) with a [recursive descent parser](https://en.wikipedia.org/wiki/Recursive_descent_parser).
 And at the end we go through all the tree nodes interpreting them in the way.
 In a drawing the process would look like this:
 ![Image](/files/evalstages.png)
 
-Actually I've learned all of this by reading [Crafting Interpreters](https://craftinginterpreters.com/) in the past, which is a great, great book.
+Actually I've learned all of this by reading [Crafting Interpreters](https://craftinginterpreters.com/) in the past, which is a great, great book btw.
 Overall, this is the source code I ended up with: [CLICK](/files/lisp.c). The file is pretty long so I didn't included it as a code snippet.
 Close to the end you can see a `you_should_be_able_to_solve_this(void)` function that calls `/bin/sh`. In reality it doesn't make the chall easier in any way, I included it to be a little cheeky.
 This is the Dockerfile:
@@ -292,9 +291,9 @@ COPY flag.txt /srv/app/flag.txt
 And [this is the binary](/files/lain).
 
 ## The Solution
-I won't be explaining in detail how a heap exploit works. There is an [infinite](https://github.com/shellphish/how2heap) [amount](https://azeria-labs.com/heap-exploitation-part-1-understanding-the-glibc-heap-implementation/) [of](https://heap-exploitation.dhavalkapil.com/) [good](https://youtu.be/coAJ4KyrWmY?list=PL-ymxv0nOtqr4OchXR2rV_WNhpj4ccPq1) [enough](https://www.youtube.com/watch?v=HPDBOhiKaD8) [resources](http://phrack.org/issues/66/10.html) [about](https://www.udemy.com/course/linux-heap-exploitation-part-1/) [it](https://tukan.farm/2016/07/26/ptmalloc-fanzine/) that realistically I can't compete with them a blogpost like this.
-Instead I will focus on the challenge itself.
-First things first, I'm getting some leaks to break the ASLR. The challenge works on both strings and integers but there's a very simple type confusion thanks to that. The code checking the operands' types checks only the first one and assumes the rest is the same.
+I won't be explaining in detail how a heap exploit works. There is an [infinite](https://github.com/shellphish/how2heap) [amount](https://azeria-labs.com/heap-exploitation-part-1-understanding-the-glibc-heap-implementation/) [of](https://heap-exploitation.dhavalkapil.com/) [good](https://youtu.be/coAJ4KyrWmY?list=PL-ymxv0nOtqr4OchXR2rV_WNhpj4ccPq1) [enough](https://www.youtube.com/watch?v=HPDBOhiKaD8) [resources](http://phrack.org/issues/66/10.html) [about](https://www.udemy.com/course/linux-heap-exploitation-part-1/) [it](https://tukan.farm/2016/07/26/ptmalloc-fanzine/) that realistically I can't compete with them in a small postmortem blogpost like this.
+Instead I will focus on the challenge solution itself.
+First things first, I'm getting some leaks to break the ASLR. The program works on both strings and integers, but there's a very simple type confusion thanks to that. The code that checks the operands' types does it only once for the first one and assumes the rest of the operands are the same.
 ```c
 Node *plus_fnc(Node *args) {
   Node *node = create_node();
@@ -400,7 +399,7 @@ void add_token(const char *token_str, size_t token_len, Token **beg, Token **end
 ```
 
 From this point we can proceed in infinite number of ways since we're getting an almost arbitrarly long heap buffer overflow.
-The two most obvious methods would be to either abuse fastbins or tcache.
+The two most obvious methods are to either abuse fastbins or tcache.
 Fastbins are a little more constrained that tcache in modern glibc, however in this challenge `calloc`s happen earlier than `malloc`s
 so I found it easier to reason about while developing the exploit for my challenge. An another player in the ctf solved it with tcache poisoning
 but I can't link their solution since they posted it only on the competition's Discord server.
