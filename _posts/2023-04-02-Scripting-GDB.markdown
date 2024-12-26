@@ -13,16 +13,16 @@ time exploring automation in GDB. So that's what I did - I spend a day
 researching things around to improve my GDB-fu. Because finding some specific
 information included going through github issues, reading stackoverflow
 comments and skimming through documentations, I decided to write a blogpost
-gathering all the things I learned and would love to be a little more
+gathering all the things I've learned and would love to be a little more
 accessible. I'm writing from a perspective of reverse engineering and exploit
 development where we don't have debugging symbols with the binary but
-everything there should be useful for everyone. All people in the cybersec
-community use plugins for GDB to make it more usable so if you don't I
-recommend to you to use them too. Personally I always used pwndbg and the
-blogpost is written with some tips for it but there's also gef, peda and
-GDB-dashboard. We'll start with basics how to make simple GDB scripts if you
+everything there should be useful for regular debugging too. Everyone in the cybersec
+community uses plugins for GDB to make it more usable so if you don't I
+recommend using them too. Personally I always used pwndbg and the
+blogpost is written with some tips for it but there's also gef and
+GDB-dashboard. We'll start with the basics, how to make simple GDB scripts if you
 don't know it already, then we'll explore the tight integration of Python with
-GDB and we we'll wrap it up showing how to better use the Python's exploit
+GDB, and we will wrap it up showing how to better use the Python's exploit
 development library `pwntools`'s GDB integration. And if this wasn't obvious
 already - I will assume that you have some GDB experience, just none when it
 comes to scripting it.
@@ -98,8 +98,8 @@ End of assembler dump.
 pwndbg>
 ```
 One of the simplest and most useful tricks in GDB is to put a breakpoint
-somewhere and define some commands that are executed when we hit the breakpoint
-but ending the block of commands with a `continue` so we can observe how a
+somewhere and define some commands that are executed when we hit the breakpoint,
+but at the end of the block of commands we put a `continue` so we can observe how a
 value changes over time. For example we can see in the `main+83` instruction
 our newely calculated value being saved in an array.
 ```assembly
@@ -121,15 +121,15 @@ End with a line saying just "end".
 pwndbg>
 ```
 Now when we run this program we will see every value being written to our
-array. Except when you use pwndbg. Even though I love this plugin it has for
+array. Except when you use pwndbg. Even though I love this plugin, it has for
 years already a bug where GDB freezes because of the continue. I believe it's
 being worked on but at the point of writing this I have the newest version from
 github and it still happens to me, so I will tell you how to fix it in case it
 happens to you too. There's one of the issues related to it:
 `https://github.com/pwndbg/pwndbg/issues/1653`. The fix is to use `python
 gdb.execute('continue')` instead of a `continue`. This fixes the issue for me
-but sometimes GDB every like tenth~ time doesn't continue and you need to
-continue by hand. Now I couldn't replicate so I guess they fixed it? It's not a
+but sometimes GDB every roughly tenth~ time doesn't continue and you need to
+continue by hand. Now I couldn't replicate it, so I guess they fixed it? It's not a
 big issue however if that happens to you try to set memoize to off by using the
 `memoize` command once. Turning off memoization makes pwndbg noticably slower
 so I recommend to turn it on after that by typing the command a second time.
@@ -164,12 +164,15 @@ $4 = 6
 ```
 
 Now let's talk about scripting the control flow in pure GDB. There are `if`
-statements, `else` statements (but no else ifs, if you want to `else if` you
+statements, `else` statements (but no else ifs, if you want an `else if` you
 need to nest two statements) and `while` statements. There are keywords for
 breaks and continues: `loop_break`, `loop_continue`. You can define a function
-with a `define` (well... to be honest in the documentation they are refered to
+with a `define` (well... in the documentation they are refered to
 as commands not functions). Inside of GDB's "functions" we can run any command
-that we can run normally in the repl. A syntastic sugar for something like:
+that we can run normally in the repl.
+
+
+A syntastic sugar for something like:
 ```
 break *main+83
 commands
@@ -182,6 +185,8 @@ would be:
 ```
 break *main+83 if $edx > 30
 ```
+
+
 Let's make a fibonacci function inside of GDB just for the sake of it:
 ```
 define fib
@@ -198,11 +203,11 @@ define fib
 end
 ```
 We can run our defined function by typing `fib 123`. To be honest I haven't
-explored much of the GDB scripting language and I don't know where it's
-limitations are but I still wouldn't recommend it because doing even simple
-things can feel quite cumbersome. Even writing this example I couldn't find a
+explored much of the GDB scripting language and I don't know where its
+limitations are, but I still wouldn't recommend using it cuz doing even simple
+things can feel quite cumbersome. Even while writing this example I couldn't find a
 way to do this recursively because there was no way of returning the value. For
-any complicated logic I would default to the embedded Python about which we
+any complicated logic I would default to the embedded Python, about which we
 will talk in the next section of the blogpost.
 
 Another useful trick is to log the GDB output to a file so we can later look
@@ -290,18 +295,19 @@ pwndbg>
 # Python In GDB
 Okay, let's now move on to the main dish. We can launch Python inside of GDB in
 the following ways:
-- With the `python` command we use Python in something like a batch mode. We
+- With the `python` command, we can use Python in something like a batch mode. We
   type a bunch of lines, we type `end` and all the lines get executed
-- With the `pi` or `python-interactive` command we launch Python in a repl. Imo
-  this is the best way to interact with Python.
+- With the `pi` or `python-interactive` command we launch Python in a
+  REPL. In my opinion this is the best way to interact with Python.
 - With the `source script_name.py` command. We execute a given Python script.
 
-By giving either `python` or `pi` a line as an argument, then the line will be
-executed instead. If you use pwndbg you can also you the `ipi` command which
-launches Python in the superior iPython repl. Now what can we do with Python
-inside of GDB? Everything! One thing that is cool about the Python interpreter
-there is that it lives inside of GDB, so it remembers everything we do between
-the invocations.
+By giving either `python` or `pi` a line of code as an argument, then
+the line will be executed instead. If you use pwndbg you can also you
+the `ipi` command which launches Python in the superior iPython
+REPL. Now what can we do with Python inside of GDB? Everything! One
+thing that is cool about the Python interpreter there is that it lives
+inside of GDB, so it remembers everything we do between the
+invocations.
 
 ```python
 pwndbg> ipi
@@ -348,8 +354,8 @@ In [3]: gdb.execute('print $rip', to_string=True)
 Out[3]: '$1 = (void (*)()) 0x55555555515d <main+4>\n'
 ```
 But there's no other way to change a register value than using
-`gdb.execute('set $rax = 0x10')`. The most important object that we will be
-creating is the `Breakpoint` object. Even though it's name is breakpoint it can
+`gdb.execute('set $rax = 0x10')`. The most important object that we will want to
+create is the `Breakpoint` object. Even though it's called a breakpoint, it can
 be also used to create watchpoints. The first constructor argument is a string
 that holds an expression for the `break` or `watch`. The second argument is
 what we want to create. Check [the
@@ -357,8 +363,8 @@ docs](https://sourceware.org/gdb/onlinedocs/gdb/Breakpoints-In-Python.html#Break
 for a full description of the available types but you can guess what they do
     just by their names: `gdb.BP_BREAKPOINT`, `gdb.BP_HARDWARE_BREAKPOINT`,
     `gdb.BP_WATCHPOINT`, `gdb.BP_HARDWARE_WATCHPOINT`, `gdb.BP_READ_WATCHPOINT`
-    or `gdb.BP_ACCESS_WATCHPOINT`. If you don't specify any the default is a
-    standard breakpoint. If the type is set to a watchpoint breakpoint
+    or `gdb.BP_ACCESS_WATCHPOINT`. If you don't specify any, the default is
+    your typical breakpoint. If the type is set to a watchpoint breakpoint
     (gdb.BP_WATCHPOINT) then we have to specify a third argument for the
     watchpoint type: `gdb.WP_READ`, `gdb.WP_WRITE` or `gdb.WP_ACCESS`. Now
     after we created our breakpoint it has quite a number of useful methods and
