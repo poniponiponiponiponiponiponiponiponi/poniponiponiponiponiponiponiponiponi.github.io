@@ -27,6 +27,11 @@ ldd /bin/ls # to see where the libc is or whatever (in this case libc is in /lib
 cp /lib/x86_64-linux-gnu/libc.so.6 /host
 ```
 
+# Links
+- [FSOP stuff cuz I always forget the details](https://niftic.ca/posts/fsop/)
+- [ptmalloc security checks](https://heap-exploitation.dhavalkapil.com/diving_into_glibc_heap/security_checks)
+- [Best syscall website](https://syscalls.mebeim.net/?table=x86/64/x64/latest)
+
 # Papers
 - [AVX Timing Side-Channel Attacks against Address Space Layout Randomization](https://arxiv.org/pdf/2304.07940.pdf)
 - [Prefetch Side-Channel Attacks: Bypassing SMAP and Kernel ASLR](https://gruss.cc/files/prefetch.pdf)
@@ -102,6 +107,7 @@ constraints:
   [r9] == NULL || r9 == NULL
   [rsp+0x40] == NULL || (s32)[[rsp+0x40]+0x4] <= 0
  ```
+- In QEMU challs check if `-monitor null` is present for the cheese possibility.
 
 # Important versions of things
 - glibc-2.24 - Added check for `FILE`s vtable address.
