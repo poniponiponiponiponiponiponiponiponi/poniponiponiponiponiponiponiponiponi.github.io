@@ -2,7 +2,7 @@ name: Deploy Jekyll site to GitHub Pages
 
 on:
   push:
-    branches: [main]
+    branches: [main]  # Change this if your default branch is different
 
 permissions:
   contents: read
@@ -17,10 +17,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Ruby
+      - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: '3.1'
@@ -28,16 +28,8 @@ jobs:
       - name: Install dependencies
         run: bundle install
 
-      - name: Build Jekyll site
+      - name: Build the site with Jekyll
         run: bundle exec jekyll build
-
-      # Workaround to prefetch upload-artifact (not executed)
-      - name: Workaround for upload-artifact resolution
-        uses: actions/upload-artifact@v3
-        with:
-          name: dummy
-          path: README.md
-        if: false
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
