@@ -1,4 +1,3 @@
-![image](https://github.com/user-attachments/assets/5216d9ea-51cb-4ded-84bc-15ec47726b1e)---
 layout: post
 title: "Challenges I Wrote For BtSCTF 2025"
 date: 2025-05-11
