@@ -1,4 +1,4 @@
----
+![image](https://github.com/user-attachments/assets/5216d9ea-51cb-4ded-84bc-15ec47726b1e)---
 layout: post
 title: "Challenges I Wrote For BtSCTF 2025"
 date: 2025-05-11
@@ -14,7 +14,7 @@ Congrats to kalmarunionen and valgrind for solving the challenge!
 
 This challenge is a simple memory allocator, called a buddy allocator, written in Rust and compiled to Risc-V. I found this to be a cool idea that I'm proud of because it's one of the rare cases where using unsafe Rust is very natural, so there isn't just a bunch of unsafes for the challenge's sake. There's isn't much functionality in the program: you can write to a buffer (called a flag) and you can free it. That's all. This is how it looks like:
 
-![image](https://github.com/user-attachments/assets/72bea86f-bb0d-49e9-91a9-f82d828b1f22)
+![image]([https://github.com/user-attachments/assets/72bea86f-bb0d-49e9-91a9-f82d828b1f22](https://media.discordapp.net/attachments/628673491528318977/1371065813682884608/578fd3c2-ef42-4a7c-b273-693f45b287bd.png?ex=6821c80b&is=6820768b&hm=6eed5965c475907ac2bb24da278ea5353697a522a6bc45c83f8018fbda474938&=&format=webp&quality=lossless&width=575&height=695))
 
 
 and the non-allocator related logic:
