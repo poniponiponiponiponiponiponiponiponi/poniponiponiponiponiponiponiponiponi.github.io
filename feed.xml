@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-11T10:27:16+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For Bts Ctf 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For Bts Ctf 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;p&gt;layout: post
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-11T10:30:28+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For Bts Ctf 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For Bts Ctf 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;p&gt;layout: post
 title: “Challenges I Wrote For BtSCTF 2025”
 date: 2025-05-11
 categories: ctf pwn c rust risc-v
@@ -511,13 +511,13 @@ too long writes.&lt;/p&gt;
 is 8 bytes long, where the 4 bytes we move are at the. So we want to write poni at address
 main+3627+4.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/81e90f15-0eb4-47f4-be21-1cd47f2d7839&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/72596d83-ea72-4f9d-a1a7-baa8a2591f90&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;And analogously we do the same for movl before the read function. Notice that there
 the compiler used a different instruction that is 7 bytes long. So we do +3 when
 calculating the offsets instead.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/51d0be4e-1c08-4b40-a041-47083175793d&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/305569f4-8a05-4541-bc3b-b1f4563c7b2c&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;c1&quot;&gt;# Overwrite the mov instructions.
 &lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;bin_base_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x20&lt;/span&gt;
