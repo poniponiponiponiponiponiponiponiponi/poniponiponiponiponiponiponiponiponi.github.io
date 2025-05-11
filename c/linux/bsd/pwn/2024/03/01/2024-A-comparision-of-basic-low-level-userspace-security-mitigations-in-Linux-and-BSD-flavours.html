@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>A Comparision of Basic Low-Level Userspace Security Mitigations In Linux and BSD Flavours | poni’s blog</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="A Comparision of Basic Low-Level Userspace Security Mitigations In Linux and BSD Flavours" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Intro In this post I’m gonna compare different security mitigations in Linux and different BSD flavours. Specifically, it’s gonna be FreeBSD, OpenBSD, NetBSD and DragonflyBSD. If you expected MacOS I’m sorry not sorry, I do not have the budget for it. I also could include Windows there but honestly using Windows feels like a pain even for a small blogpost like this. Usually in my writing im assuming some experience in exploit development so I avoid explaining what ASLR and friends are but in this case I’m gonna make an exception so more people can read it somewhat comfortably. An important thing to note is that this is not supposed to be statement which OS is more secure. This is just an exploration of how different OS’s tackle the most common of mitigation techniques used. Whatever it will look like, if you want a secure operating system you probably should use OpenBSD as it includes a lot of additional security measures, for example my friend silt shared this the other day on our Discord server. Another important thing to note is that everything is done on default settings. I’m sure all the security mitigations can be improved upon by turning on some options but in my defense basic security should be on by default and not be opt-in." />
+<meta property="og:description" content="Intro In this post I’m gonna compare different security mitigations in Linux and different BSD flavours. Specifically, it’s gonna be FreeBSD, OpenBSD, NetBSD and DragonflyBSD. If you expected MacOS I’m sorry not sorry, I do not have the budget for it. I also could include Windows there but honestly using Windows feels like a pain even for a small blogpost like this. Usually in my writing im assuming some experience in exploit development so I avoid explaining what ASLR and friends are but in this case I’m gonna make an exception so more people can read it somewhat comfortably. An important thing to note is that this is not supposed to be statement which OS is more secure. This is just an exploration of how different OS’s tackle the most common of mitigation techniques used. Whatever it will look like, if you want a secure operating system you probably should use OpenBSD as it includes a lot of additional security measures, for example my friend silt shared this the other day on our Discord server. Another important thing to note is that everything is done on default settings. I’m sure all the security mitigations can be improved upon by turning on some options but in my defense basic security should be on by default and not be opt-in." />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/bsd/pwn/2024/03/01/2024-A-comparision-of-basic-low-level-userspace-security-mitigations-in-Linux-and-BSD-flavours.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/bsd/pwn/2024/03/01/2024-A-comparision-of-basic-low-level-userspace-security-mitigations-in-Linux-and-BSD-flavours.html" />
+<meta property="og:site_name" content="poni’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-01T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="A Comparision of Basic Low-Level Userspace Security Mitigations In Linux and BSD Flavours" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-03-01T00:00:00+00:00","datePublished":"2024-03-01T00:00:00+00:00","description":"Intro In this post I’m gonna compare different security mitigations in Linux and different BSD flavours. Specifically, it’s gonna be FreeBSD, OpenBSD, NetBSD and DragonflyBSD. If you expected MacOS I’m sorry not sorry, I do not have the budget for it. I also could include Windows there but honestly using Windows feels like a pain even for a small blogpost like this. Usually in my writing im assuming some experience in exploit development so I avoid explaining what ASLR and friends are but in this case I’m gonna make an exception so more people can read it somewhat comfortably. An important thing to note is that this is not supposed to be statement which OS is more secure. This is just an exploration of how different OS’s tackle the most common of mitigation techniques used. Whatever it will look like, if you want a secure operating system you probably should use OpenBSD as it includes a lot of additional security measures, for example my friend silt shared this the other day on our Discord server. Another important thing to note is that everything is done on default settings. I’m sure all the security mitigations can be improved upon by turning on some options but in my defense basic security should be on by default and not be opt-in.","headline":"A Comparision of Basic Low-Level Userspace Security Mitigations In Linux and BSD Flavours","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/bsd/pwn/2024/03/01/2024-A-comparision-of-basic-low-level-userspace-security-mitigations-in-Linux-and-BSD-flavours.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/bsd/pwn/2024/03/01/2024-A-comparision-of-basic-low-level-userspace-security-mitigations-in-Linux-and-BSD-flavours.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">poni&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/about/software">Software I use and why</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">A Comparision of Basic Low-Level Userspace Security Mitigations In Linux and BSD Flavours</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-03-01T00:00:00+00:00" itemprop="datePublished">Mar 1, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="intro">Intro</h1>
+<p>In this post I’m gonna compare different security mitigations in Linux and different BSD flavours. Specifically, it’s gonna be FreeBSD, OpenBSD, NetBSD and DragonflyBSD. If you expected MacOS I’m sorry not sorry, I do not have the budget for it. I also could include Windows there but honestly using Windows feels like a pain even for a small blogpost like this. Usually in my writing im assuming some experience in exploit development so I avoid explaining what ASLR and friends are but in this case I’m gonna make an exception so more people can read it <em>somewhat</em> comfortably. An important thing to note is that this is not supposed to be statement which OS is more secure. This is just an exploration of how different OS’s tackle the most common of mitigation techniques used. Whatever it will look like, if you want a secure operating system you <a href="https://isopenbsdsecu.re/">probably</a> should use OpenBSD as it includes a lot of additional security measures, for example <a href="https://0xc3.win/">my friend silt</a> shared <a href="https://marc.info/?l=openbsd-tech&amp;m=170205367232026">this the other day</a> on our Discord server. Another important thing to note is that everything is done on default settings. I’m sure all the security mitigations can be improved upon by turning on some options but in my defense basic security should be on by default and not be opt-in.</p>
+
+<h1 id="how-it-was-done">How It Was Done</h1>
+<p>For compiling on every system I used gcc which as it turned out was in a lot of different versions, some were newer and some were very old. I also used clang just in case to compare but I did not notice any significant differences. The Linux testing was done on my Arch Linux machine but the behaviour shouldn’t differ between distros.</p>
+
+<h1 id="write-xor-execute">Write XOR Execute</h1>
+<p>This is not a chapter I expected to make but I was forced to. In every modern operating system there is <a href="https://en.wikipedia.org/wiki/W%5EX">this rule</a> that a memory page shouldn’t be at the same time executable and writeable. Especially <a href="https://en.wikipedia.org/wiki/Call_stack">the stack</a> where our local function’s data and different other data like the return addresses from function calls are stored on. When we ignore this rule an <a href="http://phrack.org/issues/49/14.html">older than time itself exploitation technique</a> can be used where we put the code we want to execute as data on the stack and then we return to it by overwriting the return address. Also called <a href="https://en.wikipedia.org/wiki/Shellcode">shellcoding</a>. Of course it’s not a perfect mitigation, as a countermeasure we have <a href="https://en.wikipedia.org/wiki/Return-oriented_programming">return-oriented programming</a>, but it’s a start. You would expect every operating system with an internet connection to adhere to this rule but no, seems like DragonflyBSD doesn’t care.
+<img src="/files/dfs1.webp" alt="Image" />
+At the beginning I thought gdb is playing tricks on me especially since on DragonflyBSD it didn’t support <code class="language-plaintext highlighter-rouge">info proc mappings</code> so I couldn’t check what are the permissions of the memory segment, but no. I wrote a small code snippet and I’m perfectly able to overwrite the return address to the stack and execute my code.
+<img src="/files/dfs2.png" alt="Image" />
+Explanation: at <code class="language-plaintext highlighter-rouge">(&amp;a)+2</code> there’s stored the return address on the stack, so I’m overwriting it with the address of <code class="language-plaintext highlighter-rouge">a</code> which is also stored on the stack. So after the main function returns, we’re executing cpu instructions that are encoded in the number <code class="language-plaintext highlighter-rouge">0x909090cccc909090</code>. Specifically <code class="language-plaintext highlighter-rouge">0x90</code> is the <a href="https://en.wikipedia.org/wiki/Opcode">opcode</a> for <a href="https://en.wikipedia.org/wiki/NOP_(code)">NOP</a> and <code class="language-plaintext highlighter-rouge">0xcc</code> is the opcode for <a href="https://en.wikipedia.org/wiki/INT_(x86_instruction)#INT3">INT3</a> which is an instruction used for implementing software breakpoints. We can see that it’s executed correctly because of the <code class="language-plaintext highlighter-rouge">Trace/BPT trap</code>.</p>
+
+<h1 id="aslr">ASLR</h1>
+<p>Now we’re gonna explore everything related to <a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization">ASLR</a> which is a mitigation that tries to make all of the memory addresses randomized. For testing ASLR I ran a program like this or its variation multiple times:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">int</span> <span class="n">stack</span><span class="p">;</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"bin: %p heap: %p stack: %p libc: %p math: %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+	 <span class="n">main</span><span class="p">,</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="o">&amp;</span><span class="n">stack</span><span class="p">,</span> <span class="n">putchar</span><span class="p">,</span> <span class="n">sin</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">p</span> <span class="o">=</span> <span class="n">mmap</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="mh">0x1000</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="n">MAP_ANON</span> <span class="o">|</span> <span class="n">MAP_PRIVATE</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">p</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>This is not a white paper so I’m gonna spare you all the details.</p>
+
+<h2 id="aslr-on-linux">ASLR on Linux</h2>
+
+<p>One thing that is unique to Linux is that (at least) glibc uses the <code class="language-plaintext highlighter-rouge">brk</code> syscall for creating the heap, while every BSD flavour seemed to use the <code class="language-plaintext highlighter-rouge">mmap</code> syscall. I’m not sure if it’s a well known fact but the brk syscall on Linux creates it’s memory segment after our binary and our ASLR only adds some small offset to it. So the security of heap addresses is mostly dependant on the security of addresses of our binary.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>bin</th>
+      <th>heap</th>
+      <th>heap-bin diff</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x55e801709169</td>
+      <td>0x55e80349c2a0</td>
+      <td>0x1d93137</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x556e260b1169</td>
+      <td>0x556e267a72a0</td>
+      <td>0x6f6137</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x55a8f6002169</td>
+      <td>0x55a8f765f2a0</td>
+      <td>0x165d137</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x5643f11c2169</td>
+      <td>0x5643f2ef52a0</td>
+      <td>0x1d33137</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x563ac7313169</td>
+      <td>0x563ac7bfd2a0</td>
+      <td>0x8ea137</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x56143239d169</td>
+      <td>0x5614328fe2a0</td>
+      <td>0x561137</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>By looking at the table we can see that the first byte of the binary barely changes and the least significant byte and a half stays the same (this is done so the alignment to memory pages remains the same). By looking at this we can deduce that the randomness only applies to around 4 or 3 and a half bytes giving us 4/3.5 bytes of entropy. Except some very extreme cases this should be more than enough to protect us from bruteforcing the ASLR, especially done through an internet connection. However when we look at the difference between heap addresses and binary addresses only around 1 byte and a half change. In a scenario where the attacker has a leak of our binary it shouldn’t be hard to bruteforce the heap address since there is around 1 in 0xfff (1/4095) chance we will correctly guess the address. In a case where the binary doesnt have <a href="https://en.wikipedia.org/wiki/Position-independent_code">position independent code</a> we can even try to guess the address without a leak.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>libc</th>
+      <th>math</th>
+      <th>math-libc</th>
+      <th>1st mmap</th>
+      <th>libc-1st mmap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x7f0d053ffb20</td>
+      <td>0x7f0d055da620</td>
+      <td>0x1dab00</td>
+      <td>0x7f0d05680000</td>
+      <td>-0x2804e0</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x7ff9b973bb20</td>
+      <td>0x7ff9b9916620</td>
+      <td>0x1dab00</td>
+      <td>0x7ff9b99bc000</td>
+      <td>-0x2804e0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x7f51cb692b20</td>
+      <td>0x7f51cb86d620</td>
+      <td>0x1dab00</td>
+      <td>0x7f51cb913000</td>
+      <td>-0x2804e0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x7f2503693b20</td>
+      <td>0x7f250386e620</td>
+      <td>0x1dab00</td>
+      <td>0x7f2503914000</td>
+      <td>-0x2804e0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x7f16f6c12b20</td>
+      <td>0x7f16f6ded620</td>
+      <td>0x1dab00</td>
+      <td>0x7f16f6e93000</td>
+      <td>-0x2804e0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x7fdbdc487b20</td>
+      <td>0x7fdbdc662620</td>
+      <td>0x1dab00</td>
+      <td>0x7fdbdc708000</td>
+      <td>-0x2804e0</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>In case of dynamically loaded libraries we can see that they have the same as our binary around 3.5 bytes of entropy. However different libraries and mmaped memory have the same offset from each other so if we leak one we can calculate the other ones. In this case our mmaped memory appeared after the libc, resulting in a negative number in our difference, but after we mmap enough memory it will start appearing before the libc. This is in fact used in the <a href="https://github.com/mdulin2/house-of-muney">House of Muney</a> technique which is one of the coolest “house of” glibc’s ptmalloc exploitation techniques.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>stack</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x7ffdeff02f48</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x7ffc6fbded58</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x7ffeb6ce9c48</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x7fffc896b688</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x7ffe5e2e1d08</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x7ffcbf1e6c78</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Stack addresses are independent of any other ones. We can observe that there’s 4 bytes of entropy. Fun fact: the randomness at mask &amp; 0xfff0 is done later by adding a random offset to the stack. The least significant <a href="https://en.wikipedia.org/wiki/Nibble">nibble</a> is not touched so the stack alignment to powers of 16 remains the same.</p>
+
+<h2 id="aslr-on-dragonflybsd">ASLR on DragonflyBSD</h2>
+<p>There by default ASLR doesn’t affect mmaped memory but we can use the <code class="language-plaintext highlighter-rouge">sysctl vm.randomize_mmap=1</code> command to enable it, so I used it.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>bin</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x1021b3a</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x1021b3a</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x1021b3a</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x1021b3a</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x1021b3a</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x1021b3a</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The binary address stays the same even though the binary is compiled as position independent.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>stack</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x7fffffdfd7bc</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x7fffffdfda0c</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x7fffffdfd76c</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x7fffffdfd86c</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x7fffffdfd84c</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x7fffffdfd8bc</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The randomness of the stack is pathetic, combined with the fact that the stack is executable it’s a deadly combination.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>libc</th>
+      <th>math</th>
+      <th>math-libc</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0xfdd675b05</td>
+      <td>0xfd6bdfdd0</td>
+      <td>-0x6a95d35</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0xd4a9a9b05</td>
+      <td>0xf27e11dd0</td>
+      <td>0x1dd4682cb</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0xfcd0b8b05</td>
+      <td>0xc64001dd0</td>
+      <td>-0x3690b6d35</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0xf2f818b05</td>
+      <td>0xff688fdd0</td>
+      <td>0xc70772cb</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0xfdf59cb05</td>
+      <td>0xfdc2fbdd0</td>
+      <td>-0x32a0d35</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0xff261eb05</td>
+      <td>0x97ac4add0</td>
+      <td>-0x6779d3d35</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>heap</th>
+      <th>1st mmap</th>
+      <th>2nd mmap</th>
+      <th>3rd mmap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0xc137d02c0</td>
+      <td>0xfb2fb5000</td>
+      <td>0xfe3938000</td>
+      <td>0xfe3939000</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0xf832202c0</td>
+      <td>0xfb54fc000</td>
+      <td>0xfb54fd000</td>
+      <td>0xfb54fe000</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0xe49b102c0</td>
+      <td>0xfff9d7000</td>
+      <td>0xfff9d8000</td>
+      <td>0xfff9d9000</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x1000cb02c0</td>
+      <td>0xf85e1f000</td>
+      <td>0xff79a3000</td>
+      <td>0xff79a4000</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0xfad8202c0</td>
+      <td>0x8781cf000</td>
+      <td>0xfc7986000</td>
+      <td>0xfc7987000</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0xd5a4402c0</td>
+      <td>0xf93bc2000</td>
+      <td>0xfd0f76000</td>
+      <td>0xfd0f77000</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The ASLR of the rest looks pretty good.</p>
+
+<h2 id="aslr-on-freebsd">ASLR on FreeBSD</h2>
+<p>I hope by now you already see the pattern in which I compare the values. So I will only show the tables without any additional commentary because I would only repeat myself.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>bin</th>
+      <th>heap</th>
+      <th>stack</th>
+      <th>libc</th>
+      <th>math</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x30fc604edaf0</td>
+      <td>0x50521f209000</td>
+      <td>0x3104808556ec</td>
+      <td>0x310483062fe0</td>
+      <td>0x3104821b0210</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0xed517cbaf0</td>
+      <td>0x3faf8fa09000</td>
+      <td>0xf57237cb0c</td>
+      <td>0xf5736fafe0</td>
+      <td>0xf572cb6210</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x1eda82c45af0</td>
+      <td>0x39fc23a09000</td>
+      <td>0x1ee2a2f2663c</td>
+      <td>0x1ee2a3f2cfe0</td>
+      <td>0x1ee2a3846210</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x21c3261feaf0</td>
+      <td>0x23d3a0609000</td>
+      <td>0x21cb46afdcac</td>
+      <td>0x21cb48b5bfe0</td>
+      <td>0x21cb47b04210</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x21e5b4d1baf0</td>
+      <td>0x41c5b2a09000</td>
+      <td>0x21edd52db15c</td>
+      <td>0x21edd780bfe0</td>
+      <td>0x21edd6843210</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x1cf40b5c4af0</td>
+      <td>0x4d3a05e09000</td>
+      <td>0x1cfc2bd07a0c</td>
+      <td>0x1cfc2d6e9fe0</td>
+      <td>0x1cfc2c776210</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>heap-bin</th>
+      <th>stack-bin</th>
+      <th>libc-stack</th>
+      <th>libc-math</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x1f55bed1b510</td>
+      <td>0x820367bfc</td>
+      <td>0x280d8f4</td>
+      <td>0xeb2dd0</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x3ec23e23d510</td>
+      <td>0x820bb101c</td>
+      <td>0x137e4d4</td>
+      <td>0xa44dd0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x1b21a0dc3510</td>
+      <td>0x8202e0b4c</td>
+      <td>0x10069a4</td>
+      <td>0x6e6dd0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x2107a40a510</td>
+      <td>0x8208ff1bc</td>
+      <td>0x205e334</td>
+      <td>0x1057dd0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x1fdffdced510</td>
+      <td>0x8205bf66c</td>
+      <td>0x2530e84</td>
+      <td>0xfc8dd0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x3045fa844510</td>
+      <td>0x820742f1c</td>
+      <td>0x19e25d4</td>
+      <td>0xf73dd0</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>heap</th>
+      <th>1st mmap</th>
+      <th>2nd mmap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x4452c5a09000</td>
+      <td>0x4452c6000000</td>
+      <td>0x4452c6001000</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x5866d6809000</td>
+      <td>0x5866d6e00000</td>
+      <td>0x5866d6e01000</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="aslr-on-openbsd">ASLR on OpenBSD</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>bin</th>
+      <th>heap</th>
+      <th>libc</th>
+      <th>math</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0xeaa73ce7b00</td>
+      <td>0xeacecb7c2b0</td>
+      <td>0xead3c4151e0</td>
+      <td>0xead270dbdd0</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x22ecd4b00</td>
+      <td>0x504b68df0</td>
+      <td>0x4fc7a31e0</td>
+      <td>0x4fb2d3dd0</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0xa0391ed1b00</td>
+      <td>0xa062f785630</td>
+      <td>0xa061b34c1e0</td>
+      <td>0xa067afcddd0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x4b791e7b00</td>
+      <td>0x4e5fa60900</td>
+      <td>0x4e31c471e0</td>
+      <td>0x4d82904dd0</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x60e30f7db00</td>
+      <td>0x610a86e59d0</td>
+      <td>0x610b047d1e0</td>
+      <td>0x6107df94dd0</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0xa958e007b00</td>
+      <td>0xa979f0821a0</td>
+      <td>0xa981f7791e0</td>
+      <td>0xa983111ddd0</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>heap-bin</th>
+      <th>libc-heap</th>
+      <th>math-libc</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x278e947b0</td>
+      <td>0x4f898f30</td>
+      <td>-0x15339410</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x2d5e942f0</td>
+      <td>-0x83c5c10</td>
+      <td>-0x14cf410</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x29d8b3b30</td>
+      <td>-0x14439450</td>
+      <td>0x5fc81bf0</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x2e6878e00</td>
+      <td>-0x2de19720</td>
+      <td>-0xaf342410</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x277767ed0</td>
+      <td>0x7d97810</td>
+      <td>-0x324e8410</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x21107a6a0</td>
+      <td>0x806f7040</td>
+      <td>0x119a4bf0</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>heap</th>
+      <th>1st mmap</th>
+      <th>2nd mmap</th>
+      <th>1st mmap-heap</th>
+      <th>2nd mmap-1st mmap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x7bde1402210</td>
+      <td>0x7bdd019c000</td>
+      <td>0x7bdf10d4000</td>
+      <td>-0x11266210</td>
+      <td>0x20f38000</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0xb3c8e37d680</td>
+      <td>0xb3c34247000</td>
+      <td>0xb3c7c6cd000</td>
+      <td>-0x5a136680</td>
+      <td>0x48486000</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>stack</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x7f3d689ef9b4</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x74a568893c54</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x7c986d0dedc4</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x7ab552b59574</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>0x7dd201eb02a4</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>0x78bad47c0f74</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 id="aslr-on-netbsd">ASLR on NetBSD</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>bin</th>
+      <th>heap</th>
+      <th>stack</th>
+      <th>libc</th>
+      <th>math</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0xb7c00b60</td>
+      <td>0x753a144fe020</td>
+      <td>0x7f7fff950cfc</td>
+      <td>0x753a13d4426e</td>
+      <td>0x753a1421c158</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0xc6c00b60</td>
+      <td>0x6fa617e70020</td>
+      <td>0x7f7ffffe04fc</td>
+      <td>0x6fa61774426e</td>
+      <td>0x6fa617c1c158</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0xcb200b60</td>
+      <td>0x76d22e0dc020</td>
+      <td>0x7f7fffff84dc</td>
+      <td>0x76d22d94426e</td>
+      <td>0x76d22de1c158</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0xe0200b60</td>
+      <td>0x7eb1b3051020</td>
+      <td>0x7f7fff5b9b8c</td>
+      <td>0x7eb1b294426e</td>
+      <td>0x7eb1b2e1c158</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>math-libc</th>
+      <th>libc-heap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x4d7eea</td>
+      <td>-0x7b9db2</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x4d7eea</td>
+      <td>-0x72bdb2</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>0x4d7eea</td>
+      <td>-0x797db2</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>0x4d7eea</td>
+      <td>-0x70cdb2</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <thead>
+    <tr>
+      <th>i</th>
+      <th>heap</th>
+      <th>1st mmap</th>
+      <th>2nd mmap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>0x753a144fe020</td>
+      <td>0x753a144ec000</td>
+      <td>0x753a144eb000</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>0x6fa617e70020</td>
+      <td>0x6fa617e5e000</td>
+      <td>0x6fa617e5d000</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1 id="stack-canaries">Stack Canaries</h1>
+
+<p>Now let’s talk about <a href="https://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries">stack canaries</a>. I really like the way Linux does them. The first byte of a stack canary is always equal to zero. On a 64-bit system 7 bytes is still more than enough entropy and what we get from the null byte is additional security. Because of it there are scenerios where we for example overwrite N bytes with the letter A, after the letters there’s the canary, and when the letters A are printed we won’t leak the canary because of it - cuz there’s a zero byte separating them. For some reasons only Linux does this. Every other canary didn’t included the null byte. Other thing I like about the way Linux does canaries is that they are located in a <a href="https://unix.stackexchange.com/questions/453749/what-sets-fs0x28-stack-canary">special register fs</a> that stores the address of a random place in the memory. Even when he have a write-what-where condition, unless we already have a leak, we won’t be able to overwrite the original canary. 
+<img src="/files/canaryfs.png" alt="Image" />
+<img src="/files/findcanary.png" alt="Image" />
+Now, this is not true for all Linux systems. Seems like the GNU toolchain only does this on the x86 and x64 architectures. On the ARM architecture the canary is actually stored inside our binary. To be fair ARM doesn’t have the fs register, but there’s nothing stopping it from using some other one. The same applies for every non-Linux system (including x86 and x64). For example this is how we get the canary inside of x64 on OpenBSD:
+<img src="/files/bsdcanary.png" alt="Image" />
+<img src="/files/bsdcanary2.png" alt="Image" /></p>
+
+  </div><a class="u-url" href="/c/linux/bsd/pwn/2024/03/01/2024-A-comparision-of-basic-low-level-userspace-security-mitigations-in-Linux-and-BSD-flavours.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">poni&#39;s blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">poni&#39;s blog</li><li><a class="u-email" href="mailto:poniponiponiponiponiponiponiponiponiponi@protonmail.com">poniponiponiponiponiponiponiponiponiponi@protonmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/poniponiponiponiponiponiponiponiponi"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">poniponiponiponiponiponiponiponiponi</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

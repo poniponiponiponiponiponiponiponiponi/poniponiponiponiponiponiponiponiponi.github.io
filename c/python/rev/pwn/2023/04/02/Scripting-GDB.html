@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Scripting GDB For Fun And Profit - Or How To Automate The Boring Stuff With GDB | poni’s blog</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="Scripting GDB For Fun And Profit - Or How To Automate The Boring Stuff With GDB" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Introduction It’s been years since I started using GDB and I’m still using it the same way. A lot of stepping and nexting, a breakpoint there and there, some printing and hexdumping. So I thought that it’s finally time to change it and spend some time exploring automation in GDB. So that’s what I did - I spend a day researching things around to improve my GDB-fu. Because finding some specific information included going through github issues, reading stackoverflow comments and skimming through documentations, I decided to write a blogpost gathering all the things I’ve learned and would love to be a little more accessible. I’m writing from a perspective of reverse engineering and exploit development where we don’t have debugging symbols with the binary but everything there should be useful for regular debugging too. Everyone in the cybersec community uses plugins for GDB to make it more usable so if you don’t I recommend using them too. Personally I always used pwndbg and the blogpost is written with some tips for it but there’s also gef and GDB-dashboard. We’ll start with the basics, how to make simple GDB scripts if you don’t know it already, then we’ll explore the tight integration of Python with GDB, and we will wrap it up showing how to better use the Python’s exploit development library pwntools’s GDB integration. And if this wasn’t obvious already - I will assume that you have some GDB experience, just none when it comes to scripting it." />
+<meta property="og:description" content="Introduction It’s been years since I started using GDB and I’m still using it the same way. A lot of stepping and nexting, a breakpoint there and there, some printing and hexdumping. So I thought that it’s finally time to change it and spend some time exploring automation in GDB. So that’s what I did - I spend a day researching things around to improve my GDB-fu. Because finding some specific information included going through github issues, reading stackoverflow comments and skimming through documentations, I decided to write a blogpost gathering all the things I’ve learned and would love to be a little more accessible. I’m writing from a perspective of reverse engineering and exploit development where we don’t have debugging symbols with the binary but everything there should be useful for regular debugging too. Everyone in the cybersec community uses plugins for GDB to make it more usable so if you don’t I recommend using them too. Personally I always used pwndbg and the blogpost is written with some tips for it but there’s also gef and GDB-dashboard. We’ll start with the basics, how to make simple GDB scripts if you don’t know it already, then we’ll explore the tight integration of Python with GDB, and we will wrap it up showing how to better use the Python’s exploit development library pwntools’s GDB integration. And if this wasn’t obvious already - I will assume that you have some GDB experience, just none when it comes to scripting it." />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/c/python/rev/pwn/2023/04/02/Scripting-GDB.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/c/python/rev/pwn/2023/04/02/Scripting-GDB.html" />
+<meta property="og:site_name" content="poni’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-04-02T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Scripting GDB For Fun And Profit - Or How To Automate The Boring Stuff With GDB" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-04-02T00:00:00+00:00","datePublished":"2023-04-02T00:00:00+00:00","description":"Introduction It’s been years since I started using GDB and I’m still using it the same way. A lot of stepping and nexting, a breakpoint there and there, some printing and hexdumping. So I thought that it’s finally time to change it and spend some time exploring automation in GDB. So that’s what I did - I spend a day researching things around to improve my GDB-fu. Because finding some specific information included going through github issues, reading stackoverflow comments and skimming through documentations, I decided to write a blogpost gathering all the things I’ve learned and would love to be a little more accessible. I’m writing from a perspective of reverse engineering and exploit development where we don’t have debugging symbols with the binary but everything there should be useful for regular debugging too. Everyone in the cybersec community uses plugins for GDB to make it more usable so if you don’t I recommend using them too. Personally I always used pwndbg and the blogpost is written with some tips for it but there’s also gef and GDB-dashboard. We’ll start with the basics, how to make simple GDB scripts if you don’t know it already, then we’ll explore the tight integration of Python with GDB, and we will wrap it up showing how to better use the Python’s exploit development library pwntools’s GDB integration. And if this wasn’t obvious already - I will assume that you have some GDB experience, just none when it comes to scripting it.","headline":"Scripting GDB For Fun And Profit - Or How To Automate The Boring Stuff With GDB","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/c/python/rev/pwn/2023/04/02/Scripting-GDB.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/c/python/rev/pwn/2023/04/02/Scripting-GDB.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">poni&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/about/software">Software I use and why</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Scripting GDB For Fun And Profit - Or How To Automate The Boring Stuff With GDB</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-04-02T00:00:00+00:00" itemprop="datePublished">Apr 2, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="introduction">Introduction</h1>
+<p>It’s been years since I started using GDB and I’m still using it the same way.
+A lot of stepping and nexting, a breakpoint there and there, some printing and
+hexdumping. So I thought that it’s finally time to change it and spend some
+time exploring automation in GDB. So that’s what I did - I spend a day
+researching things around to improve my GDB-fu. Because finding some specific
+information included going through github issues, reading stackoverflow
+comments and skimming through documentations, I decided to write a blogpost
+gathering all the things I’ve learned and would love to be a little more
+accessible. I’m writing from a perspective of reverse engineering and exploit
+development where we don’t have debugging symbols with the binary but
+everything there should be useful for regular debugging too. Everyone in the cybersec
+community uses plugins for GDB to make it more usable so if you don’t I
+recommend using them too. Personally I always used pwndbg and the
+blogpost is written with some tips for it but there’s also gef and
+GDB-dashboard. We’ll start with the basics, how to make simple GDB scripts if you
+don’t know it already, then we’ll explore the tight integration of Python with
+GDB, and we will wrap it up showing how to better use the Python’s exploit
+development library <code class="language-plaintext highlighter-rouge">pwntools</code>’s GDB integration. And if this wasn’t obvious
+already - I will assume that you have some GDB experience, just none when it
+comes to scripting it.</p>
+
+<h1 id="basic-gdb-scripting">Basic GDB Scripting</h1>
+<p>All the testing will be done on this very simple c program:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include &lt;stdio.h&gt;
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">getchar</span><span class="p">();</span>
+    <span class="kt">int</span> <span class="n">a</span><span class="p">[</span><span class="mi">32</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">32</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">]);</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>The <code class="language-plaintext highlighter-rouge">getchar</code> is there so we can easily attach GDB to the process if needed.
+The source code is compiled with the command <code class="language-plaintext highlighter-rouge">gcc a.c</code>. There’s the disassembly
+of our main function:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">disassemble</span> <span class="n">main</span>
+<span class="n">Dump</span> <span class="n">of</span> <span class="n">assembler</span> <span class="n">code</span> <span class="k">for</span> <span class="n">function</span> <span class="n">main</span><span class="o">:</span>
+   <span class="mh">0x0000555555555159</span> <span class="o">&lt;+</span><span class="mi">0</span><span class="o">&gt;:</span> 	<span class="n">push</span>   <span class="n">rbp</span>
+   <span class="mh">0x000055555555515a</span> <span class="o">&lt;+</span><span class="mi">1</span><span class="o">&gt;:</span> 	<span class="n">mov</span>    <span class="n">rbp</span><span class="p">,</span><span class="n">rsp</span>
+   <span class="mh">0x000055555555515d</span> <span class="o">&lt;+</span><span class="mi">4</span><span class="o">&gt;:</span> 	<span class="n">sub</span>    <span class="n">rsp</span><span class="p">,</span><span class="mh">0xa0</span>
+   <span class="mh">0x0000555555555164</span> <span class="o">&lt;+</span><span class="mi">11</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">rax</span><span class="p">,</span><span class="n">QWORD</span> <span class="n">PTR</span> <span class="n">fs</span><span class="o">:</span><span class="mh">0x28</span>
+   <span class="mh">0x000055555555516d</span> <span class="o">&lt;+</span><span class="mi">20</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">QWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x8</span><span class="p">],</span><span class="n">rax</span>
+   <span class="mh">0x0000555555555171</span> <span class="o">&lt;+</span><span class="mi">24</span><span class="o">&gt;:</span>	<span class="n">xor</span>    <span class="n">eax</span><span class="p">,</span><span class="n">eax</span>
+   <span class="mh">0x0000555555555173</span> <span class="o">&lt;+</span><span class="mi">26</span><span class="o">&gt;:</span>	<span class="n">call</span>   <span class="mh">0x555555555050</span> <span class="o">&lt;</span><span class="n">getchar</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+   <span class="mh">0x0000555555555178</span> <span class="o">&lt;+</span><span class="mi">31</span><span class="o">&gt;:</span>	<span class="n">lea</span>    <span class="n">rdx</span><span class="p">,[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x90</span><span class="p">]</span>
+   <span class="mh">0x000055555555517f</span> <span class="o">&lt;+</span><span class="mi">38</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="mh">0x0</span>
+   <span class="mh">0x0000555555555184</span> <span class="o">&lt;+</span><span class="mi">43</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">ecx</span><span class="p">,</span><span class="mh">0x10</span>
+   <span class="mh">0x0000555555555189</span> <span class="o">&lt;+</span><span class="mi">48</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">rdi</span><span class="p">,</span><span class="n">rdx</span>
+   <span class="mh">0x000055555555518c</span> <span class="o">&lt;+</span><span class="mi">51</span><span class="o">&gt;:</span>	<span class="n">rep</span> <span class="n">stos</span> <span class="n">QWORD</span> <span class="n">PTR</span> <span class="n">es</span><span class="o">:</span><span class="p">[</span><span class="n">rdi</span><span class="p">],</span><span class="n">rax</span>
+   <span class="mh">0x000055555555518f</span> <span class="o">&lt;+</span><span class="mi">54</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x98</span><span class="p">],</span><span class="mh">0x0</span>
+   <span class="mh">0x0000555555555199</span> <span class="o">&lt;+</span><span class="mi">64</span><span class="o">&gt;:</span>	<span class="n">jmp</span>    <span class="mh">0x5555555551ba</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">97</span><span class="o">&gt;</span>
+   <span class="mh">0x000055555555519b</span> <span class="o">&lt;+</span><span class="mi">66</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x98</span><span class="p">]</span>
+   <span class="mh">0x00005555555551a1</span> <span class="o">&lt;+</span><span class="mi">72</span><span class="o">&gt;:</span>	<span class="n">lea</span>    <span class="n">edx</span><span class="p">,[</span><span class="n">rax</span><span class="o">+</span><span class="n">rax</span><span class="o">*</span><span class="mi">1</span><span class="p">]</span>
+   <span class="mh">0x00005555555551a4</span> <span class="o">&lt;+</span><span class="mi">75</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x98</span><span class="p">]</span>
+   <span class="mh">0x00005555555551aa</span> <span class="o">&lt;+</span><span class="mi">81</span><span class="o">&gt;:</span>	<span class="n">cdqe</span>
+   <span class="mh">0x00005555555551ac</span> <span class="o">&lt;+</span><span class="mi">83</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">+</span><span class="n">rax</span><span class="o">*</span><span class="mi">4</span><span class="o">-</span><span class="mh">0x90</span><span class="p">],</span><span class="n">edx</span>
+   <span class="mh">0x00005555555551b3</span> <span class="o">&lt;+</span><span class="mi">90</span><span class="o">&gt;:</span>	<span class="n">add</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x98</span><span class="p">],</span><span class="mh">0x1</span>
+   <span class="mh">0x00005555555551ba</span> <span class="o">&lt;+</span><span class="mi">97</span><span class="o">&gt;:</span>	<span class="n">cmp</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x98</span><span class="p">],</span><span class="mh">0x1f</span>
+   <span class="mh">0x00005555555551c1</span> <span class="o">&lt;+</span><span class="mi">104</span><span class="o">&gt;:</span>	<span class="n">jle</span>    <span class="mh">0x55555555519b</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">66</span><span class="o">&gt;</span>
+   <span class="mh">0x00005555555551c3</span> <span class="o">&lt;+</span><span class="mi">106</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x94</span><span class="p">],</span><span class="mh">0x0</span>
+   <span class="mh">0x00005555555551cd</span> <span class="o">&lt;+</span><span class="mi">116</span><span class="o">&gt;:</span>	<span class="n">jmp</span>    <span class="mh">0x5555555551fb</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">162</span><span class="o">&gt;</span>
+   <span class="mh">0x00005555555551cf</span> <span class="o">&lt;+</span><span class="mi">118</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x94</span><span class="p">]</span>
+   <span class="mh">0x00005555555551d5</span> <span class="o">&lt;+</span><span class="mi">124</span><span class="o">&gt;:</span>	<span class="n">cdqe</span>
+   <span class="mh">0x00005555555551d7</span> <span class="o">&lt;+</span><span class="mi">126</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">+</span><span class="n">rax</span><span class="o">*</span><span class="mi">4</span><span class="o">-</span><span class="mh">0x90</span><span class="p">]</span>
+   <span class="mh">0x00005555555551de</span> <span class="o">&lt;+</span><span class="mi">133</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">esi</span><span class="p">,</span><span class="n">eax</span>
+   <span class="mh">0x00005555555551e0</span> <span class="o">&lt;+</span><span class="mi">135</span><span class="o">&gt;:</span>	<span class="n">lea</span>    <span class="n">rax</span><span class="p">,[</span><span class="n">rip</span><span class="o">+</span><span class="mh">0xe1d</span><span class="p">]</span>        <span class="err">#</span> <span class="mh">0x555555556004</span>
+   <span class="mh">0x00005555555551e7</span> <span class="o">&lt;+</span><span class="mi">142</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">rdi</span><span class="p">,</span><span class="n">rax</span>
+   <span class="mh">0x00005555555551ea</span> <span class="o">&lt;+</span><span class="mi">145</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="mh">0x0</span>
+   <span class="mh">0x00005555555551ef</span> <span class="o">&lt;+</span><span class="mi">150</span><span class="o">&gt;:</span>	<span class="n">call</span>   <span class="mh">0x555555555040</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+   <span class="mh">0x00005555555551f4</span> <span class="o">&lt;+</span><span class="mi">155</span><span class="o">&gt;:</span>	<span class="n">add</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x94</span><span class="p">],</span><span class="mh">0x1</span>
+   <span class="mh">0x00005555555551fb</span> <span class="o">&lt;+</span><span class="mi">162</span><span class="o">&gt;:</span>	<span class="n">cmp</span>    <span class="n">DWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x94</span><span class="p">],</span><span class="mh">0x1f</span>
+   <span class="mh">0x0000555555555202</span> <span class="o">&lt;+</span><span class="mi">169</span><span class="o">&gt;:</span>	<span class="n">jle</span>    <span class="mh">0x5555555551cf</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">118</span><span class="o">&gt;</span>
+   <span class="mh">0x0000555555555204</span> <span class="o">&lt;+</span><span class="mi">171</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">eax</span><span class="p">,</span><span class="mh">0x0</span>
+   <span class="mh">0x0000555555555209</span> <span class="o">&lt;+</span><span class="mi">176</span><span class="o">&gt;:</span>	<span class="n">mov</span>    <span class="n">rdx</span><span class="p">,</span><span class="n">QWORD</span> <span class="n">PTR</span> <span class="p">[</span><span class="n">rbp</span><span class="o">-</span><span class="mh">0x8</span><span class="p">]</span>
+   <span class="mh">0x000055555555520d</span> <span class="o">&lt;+</span><span class="mi">180</span><span class="o">&gt;:</span>	<span class="n">sub</span>    <span class="n">rdx</span><span class="p">,</span><span class="n">QWORD</span> <span class="n">PTR</span> <span class="n">fs</span><span class="o">:</span><span class="mh">0x28</span>
+   <span class="mh">0x0000555555555216</span> <span class="o">&lt;+</span><span class="mi">189</span><span class="o">&gt;:</span>	<span class="n">je</span>     <span class="mh">0x55555555521d</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">+</span><span class="mi">196</span><span class="o">&gt;</span>
+   <span class="mh">0x0000555555555218</span> <span class="o">&lt;+</span><span class="mi">191</span><span class="o">&gt;:</span>	<span class="n">call</span>   <span class="mh">0x555555555030</span> <span class="o">&lt;</span><span class="n">__stack_chk_fail</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
+   <span class="mh">0x000055555555521d</span> <span class="o">&lt;+</span><span class="mi">196</span><span class="o">&gt;:</span>	<span class="n">leave</span>
+   <span class="mh">0x000055555555521e</span> <span class="o">&lt;+</span><span class="mi">197</span><span class="o">&gt;:</span>	<span class="n">ret</span>
+<span class="n">End</span> <span class="n">of</span> <span class="n">assembler</span> <span class="n">dump</span><span class="p">.</span>
+<span class="n">pwndbg</span><span class="o">&gt;</span>
+</code></pre></div></div>
+<p>One of the simplest and most useful tricks in GDB is to put a breakpoint
+somewhere and define some commands that are executed when we hit the breakpoint,
+but at the end of the block of commands we put a <code class="language-plaintext highlighter-rouge">continue</code> so we can observe how a
+value changes over time. For example we can see in the <code class="language-plaintext highlighter-rouge">main+83</code> instruction
+our newely calculated value being saved in an array.</p>
+<pre><code class="language-assembly">   0x00005555555551ac &lt;+83&gt;:	mov    DWORD PTR [rbp+rax*4-0x90],edx
+</code></pre>
+<p>Let’s check every loop iteration what the edx register is equal to in this
+point.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pwndbg&gt; b *main+83
+Breakpoint 2 at 0x5555555551ac
+
+pwndbg&gt; commands 2
+Type commands for breakpoint(s) 2, one per line.
+End with a line saying just "end".
+&gt;print $edx
+&gt;continue
+&gt;end
+
+pwndbg&gt;
+</code></pre></div></div>
+<p>Now when we run this program we will see every value being written to our
+array. Except when you use pwndbg. Even though I love this plugin, it has for
+years already a bug where GDB freezes because of the continue. I believe it’s
+being worked on but at the point of writing this I have the newest version from
+github and it still happens to me, so I will tell you how to fix it in case it
+happens to you too. There’s one of the issues related to it:
+<code class="language-plaintext highlighter-rouge">https://github.com/pwndbg/pwndbg/issues/1653</code>. The fix is to use <code class="language-plaintext highlighter-rouge">python
+gdb.execute('continue')</code> instead of a <code class="language-plaintext highlighter-rouge">continue</code>. This fixes the issue for me
+but sometimes GDB every roughly tenth~ time doesn’t continue and you need to
+continue by hand. Now I couldn’t replicate it, so I guess they fixed it? It’s not a
+big issue however if that happens to you try to set memoize to off by using the
+<code class="language-plaintext highlighter-rouge">memoize</code> command once. Turning off memoization makes pwndbg noticably slower
+so I recommend to turn it on after that by typing the command a second time.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pwndbg&gt; b *main+83
+Breakpoint 1 at 0x11ac
+pwndbg&gt; commands 1
+Type commands for breakpoint(s) 1, one per line.
+End with a line saying just "end".
+&gt;print $edx
+&gt;python gdb.execute('continue')
+&gt;end
+pwndbg&gt; r
+Starting program: /home/tabun-dareka/scriptgdb/test/a.out
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/libthread_db.so.1".
+
+
+Breakpoint 1, 0x00005555555551ac in main ()
+$1 = 0
+
+Breakpoint 1, 0x00005555555551ac in main ()
+$2 = 2
+
+Breakpoint 1, 0x00005555555551ac in main ()
+$3 = 4
+
+Breakpoint 1, 0x00005555555551ac in main ()
+$4 = 6
+
+...
+</code></pre></div></div>
+
+<p>Now let’s talk about scripting the control flow in pure GDB. There are <code class="language-plaintext highlighter-rouge">if</code>
+statements, <code class="language-plaintext highlighter-rouge">else</code> statements (but no else ifs, if you want an <code class="language-plaintext highlighter-rouge">else if</code> you
+need to nest two statements) and <code class="language-plaintext highlighter-rouge">while</code> statements. There are keywords for
+breaks and continues: <code class="language-plaintext highlighter-rouge">loop_break</code>, <code class="language-plaintext highlighter-rouge">loop_continue</code>. You can define a function
+with a <code class="language-plaintext highlighter-rouge">define</code> (well… in the documentation they are refered to
+as commands not functions). Inside of GDB’s “functions” we can run any command
+that we can run normally in the repl.</p>
+
+<p>A syntastic sugar for something like:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>break *main+83
+commands
+    if $edx &lt;= 30
+        continue
+    end
+end
+</code></pre></div></div>
+<p>would be:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>break *main+83 if $edx &gt; 30
+</code></pre></div></div>
+
+<p>Let’s make a fibonacci function inside of GDB just for the sake of it:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>define fib
+    set $tmp = 0
+    set $a = 1 
+    set $b = 1 
+    set $i = 1
+    while $i++ &lt; $arg0
+        set $tmp = $b
+        set $b = $a
+        set $a = $tmp + $b
+    end
+    print $a
+end
+</code></pre></div></div>
+<p>We can run our defined function by typing <code class="language-plaintext highlighter-rouge">fib 123</code>. To be honest I haven’t
+explored much of the GDB scripting language and I don’t know where its
+limitations are, but I still wouldn’t recommend using it cuz doing even simple
+things can feel quite cumbersome. Even while writing this example I couldn’t find a
+way to do this recursively because there was no way of returning the value. For
+any complicated logic I would default to the embedded Python, about which we
+will talk in the next section of the blogpost.</p>
+
+<p>Another useful trick is to log the GDB output to a file so we can later look
+at it or even parse the output somehow. It’s especially useful since there’s
+no redirect the output to a file option. We can log the output by typing:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>set logging file gdb.output
+set logging enable on
+
+*some other commands there*
+
+set logging enable off
+</code></pre></div></div>
+
+<p>Also one thing that is not scripting related but that I found while doing
+research for this post… turns out you can import structs from other programs
+compiled with debugging symbols. This is especially useful while doing dynamic
+reverse engineering and there’s a struct that you want to print and interact
+with in an easier way.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  structs cat original.c
+#include &lt;stdio.h&gt;
+
+typedef struct original_struct {
+    int a;
+    int b;
+    int c;
+} OriginalStruct;
+
+OriginalStruct s = {123, 321, 0};
+
+int main() {
+    printf("%d", s.b);
+    return 0;
+}
+
+
+➜  structs cat recreation.c
+typedef struct recreated_struct {
+    int x;
+    int y;
+    int z;
+} RecreatedStruct;
+
+// we need to use the struct in the recreated file in some way
+// cause otherwise the symbol won't be generated
+RecreatedStruct s;
+
+
+➜  structs gcc original.c
+➜  structs gcc -g -c recreation.c
+➜  structs ls
+a.out  original.c  recreation.c  recreation.o
+➜  structs
+</code></pre></div></div>
+<p>Now when we use GDB on <code class="language-plaintext highlighter-rouge">./a.out</code>:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pwndbg&gt; p s
+'s' has unknown type; cast it to its declared type
+
+pwndbg&gt; p (struct recreated_struct)s
+No struct type named recreated_struct.
+
+pwndbg&gt; add-symbol-file recreation.o
+add symbol table from file "recreation.o"
+Reading symbols from recreation.o...
+
+pwndbg&gt; p (struct recreated_struct)s
+$1 = {
+  x = 123,
+  y = 321,
+  z = 0
+}
+
+pwndbg&gt; p (RecreatedStruct)s
+$2 = {
+  x = 123,
+  y = 321,
+  z = 0
+}
+
+pwndbg&gt;
+</code></pre></div></div>
+
+<h1 id="python-in-gdb">Python In GDB</h1>
+<p>Okay, let’s now move on to the main dish. We can launch Python inside of GDB in
+the following ways:</p>
+<ul>
+  <li>With the <code class="language-plaintext highlighter-rouge">python</code> command, we can use Python in something like a batch mode. We
+type a bunch of lines, we type <code class="language-plaintext highlighter-rouge">end</code> and all the lines get executed</li>
+  <li>With the <code class="language-plaintext highlighter-rouge">pi</code> or <code class="language-plaintext highlighter-rouge">python-interactive</code> command we launch Python in a
+REPL. In my opinion this is the best way to interact with Python.</li>
+  <li>With the <code class="language-plaintext highlighter-rouge">source script_name.py</code> command. We execute a given Python script.</li>
+</ul>
+
+<p>By giving either <code class="language-plaintext highlighter-rouge">python</code> or <code class="language-plaintext highlighter-rouge">pi</code> a line of code as an argument, then
+the line will be executed instead. If you use pwndbg you can also you
+the <code class="language-plaintext highlighter-rouge">ipi</code> command which launches Python in the superior iPython
+REPL. Now what can we do with Python inside of GDB? Everything! One
+thing that is cool about the Python interpreter there is that it lives
+inside of GDB, so it remembers everything we do between the
+invocations.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">ipi</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">a</span> <span class="o">=</span> <span class="mi">123</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">quit</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span> <span class="n">ipi</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="k">print</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+<span class="mi">123</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">quit</span>
+
+<span class="n">pwndbg</span><span class="o">&gt;</span>
+</code></pre></div></div>
+<p>GDB exposes to us a god object called <code class="language-plaintext highlighter-rouge">gdb</code> that we can use for everything.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">gdb</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="o">&lt;</span><span class="n">module</span> <span class="s">'gdb'</span> <span class="k">from</span> <span class="s">'/usr/share/gdb/python/gdb/__init__.py'</span><span class="o">&gt;</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">help</span><span class="p">(</span><span class="n">gdb</span><span class="p">)</span>
+</code></pre></div></div>
+<p>If we want to check everything that is possible with it we can either <a href="https://sourceware.org/gdb/onlinedocs/gdb/Python.html">read the
+docs</a> or use the
+Python’s built-in help function. So how can we use this object? The most
+important method that you will be using all the time is <code class="language-plaintext highlighter-rouge">gdb.execute (command
+[, from_tty [, to_string]])</code>. It takes as an argument a command to execute and
+an optional keyword argument <code class="language-plaintext highlighter-rouge">to_string</code>. If it’s set to <code class="language-plaintext highlighter-rouge">True</code> then the
+command instead of returning the output to the screen, we get the output as a
+string, so later we can parse it. In theory this method is more than enough but
+parsing all the output would be a nightmare so GDB exposes a method for a lot
+of things for us. For example we can read an expression’s result or register
+value in the following ways:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">gdb</span><span class="p">.</span><span class="n">parse_and_eval</span><span class="p">(</span><span class="s">'$rip'</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="o">&lt;</span><span class="n">gdb</span><span class="p">.</span><span class="n">Value</span> <span class="n">at</span> <span class="mh">0x7fb087f99430</span><span class="o">&gt;</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">gdb</span><span class="p">.</span><span class="n">selected_frame</span><span class="p">().</span><span class="n">read_register</span><span class="p">(</span><span class="s">'rip'</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="o">&lt;</span><span class="n">gdb</span><span class="p">.</span><span class="n">Value</span> <span class="n">at</span> <span class="mh">0x7fb0873e8cf0</span><span class="o">&gt;</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">gdb</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'print $rip'</span><span class="p">,</span> <span class="n">to_string</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="s">'$1 = (void (*)()) 0x55555555515d &lt;main+4&gt;</span><span class="se">\n</span><span class="s">'</span>
+</code></pre></div></div>
+<p>But there’s no other way to change a register value than using
+<code class="language-plaintext highlighter-rouge">gdb.execute('set $rax = 0x10')</code>. The most important object that we will want to
+create is the <code class="language-plaintext highlighter-rouge">Breakpoint</code> object. Even though it’s called a breakpoint, it can
+be also used to create watchpoints. The first constructor argument is a string
+that holds an expression for the <code class="language-plaintext highlighter-rouge">break</code> or <code class="language-plaintext highlighter-rouge">watch</code>. The second argument is
+what we want to create. Check <a href="https://sourceware.org/gdb/onlinedocs/gdb/Breakpoints-In-Python.html#Breakpoints-In-Python">the
+docs</a>
+for a full description of the available types but you can guess what they do
+    just by their names: <code class="language-plaintext highlighter-rouge">gdb.BP_BREAKPOINT</code>, <code class="language-plaintext highlighter-rouge">gdb.BP_HARDWARE_BREAKPOINT</code>,
+    <code class="language-plaintext highlighter-rouge">gdb.BP_WATCHPOINT</code>, <code class="language-plaintext highlighter-rouge">gdb.BP_HARDWARE_WATCHPOINT</code>, <code class="language-plaintext highlighter-rouge">gdb.BP_READ_WATCHPOINT</code>
+    or <code class="language-plaintext highlighter-rouge">gdb.BP_ACCESS_WATCHPOINT</code>. If you don’t specify any, the default is
+    your typical breakpoint. If the type is set to a watchpoint breakpoint
+    (gdb.BP_WATCHPOINT) then we have to specify a third argument for the
+    watchpoint type: <code class="language-plaintext highlighter-rouge">gdb.WP_READ</code>, <code class="language-plaintext highlighter-rouge">gdb.WP_WRITE</code> or <code class="language-plaintext highlighter-rouge">gdb.WP_ACCESS</code>. Now
+    after we created our breakpoint it has quite a number of useful methods and
+    attributes. For example:</p>
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">Breakpoint.delete()</code> deletes the breakpoint.</li>
+  <li>You can change the <code class="language-plaintext highlighter-rouge">Breakpoint.enabled</code> attribute to <code class="language-plaintext highlighter-rouge">False</code> to turn the
+breakpoint off or to <code class="language-plaintext highlighter-rouge">True</code> to turn it on</li>
+  <li>The <code class="language-plaintext highlighter-rouge">Breakpoint.condition</code> attribute contains a string of the conditional
+expression of the breakpoint. If it evaluates to true then we stop.</li>
+  <li>The <code class="language-plaintext highlighter-rouge">Breakpoint.commands</code> attribute contains the commands executed when
+hitting the breakpoint.</li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">bp1</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">(</span><span class="s">"*main"</span><span class="p">)</span>
+<span class="n">Breakpoint</span> <span class="mi">3</span> <span class="n">at</span> <span class="mh">0x555555555159</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="c1"># a random condition
+</span>
+<span class="n">In</span> <span class="p">[</span><span class="mi">3</span><span class="p">]:</span> <span class="n">bp1</span><span class="p">.</span><span class="n">condition</span> <span class="o">=</span> <span class="s">"$rip &gt; 10"</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">4</span><span class="p">]:</span> <span class="n">bp1</span><span class="p">.</span><span class="n">commands</span> <span class="o">=</span> <span class="s">"print $rip</span><span class="se">\n</span><span class="s">continue"</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">5</span><span class="p">]:</span> <span class="n">bp</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">(</span><span class="s">"*0x7fffffffdb4c"</span><span class="p">,</span> <span class="n">gdb</span><span class="p">.</span><span class="n">BP_WATCHPOINT</span><span class="p">,</span> <span class="n">gdb</span><span class="p">.</span><span class="n">WP_WRITE</span><span class="p">)</span>
+<span class="n">Hardware</span> <span class="n">watchpoint</span> <span class="mi">4</span><span class="p">:</span> <span class="o">*</span><span class="mh">0x7fffffffdb4c</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">6</span><span class="p">]:</span> <span class="n">bp1</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">(</span><span class="s">"*main+1"</span><span class="p">,</span> <span class="n">gdb</span><span class="p">.</span><span class="n">BP_HARDWARE_BREAKPOINT</span><span class="p">)</span>
+<span class="n">Hardware</span> <span class="n">assisted</span> <span class="n">breakpoint</span> <span class="mi">5</span> <span class="n">at</span> <span class="mh">0x55555555515a</span>
+</code></pre></div></div>
+<p>But for some reasons the types <code class="language-plaintext highlighter-rouge">gdb.BP_HARDWARE_WATCHPOINT</code>,
+<code class="language-plaintext highlighter-rouge">gdb.BP_READ_WATCHPOINT</code> and <code class="language-plaintext highlighter-rouge">gdb.BP_ACCESS_WATCHPOINT</code> that are mentioned in
+the documentation don’t work for me. Instead, like we can see in the snippet
+above, normal watchpoints already use hardware watchpoints so I guess those
+types are not needed anyway.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">7</span><span class="p">]:</span> <span class="n">bp</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">(</span><span class="s">"*0x7fffffffdb4c"</span><span class="p">,</span> <span class="n">gdb</span><span class="p">.</span><span class="n">BP_HARDWARE_WATCHPOINT</span><span class="p">)</span>
+<span class="o">---------------------------------------------------------------------------</span>
+<span class="n">error</span>                                     <span class="n">Traceback</span> <span class="p">(</span><span class="n">most</span> <span class="n">recent</span> <span class="n">call</span> <span class="n">last</span><span class="p">)</span>
+<span class="n">Cell</span> <span class="n">In</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">line</span> <span class="mi">1</span>
+<span class="o">----&gt;</span> <span class="mi">1</span> <span class="n">bp</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">(</span><span class="s">"*0x7fffffffdb4c"</span><span class="p">,</span> <span class="n">gdb</span><span class="p">.</span><span class="n">BP_HARDWARE_WATCHPOINT</span><span class="p">)</span>
+
+<span class="n">error</span><span class="p">:</span> <span class="n">Do</span> <span class="ow">not</span> <span class="n">understand</span> <span class="n">breakpoint</span> <span class="nb">type</span> <span class="n">to</span> <span class="nb">set</span><span class="p">.</span>
+</code></pre></div></div>
+
+<p>You can also subclass the gdb.Breakpoint class to create a breakpoint with a
+custom <code class="language-plaintext highlighter-rouge">.stop(self)</code> method. The <code class="language-plaintext highlighter-rouge">stop</code> method is called every time the breakpoint is
+hit and if it returns <code class="language-plaintext highlighter-rouge">True</code> then it stops and when it returns <code class="language-plaintext highlighter-rouge">False</code> then it 
+continues.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">12</span><span class="p">]:</span> <span class="kn">import</span> <span class="nn">random</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">13</span><span class="p">]:</span> <span class="k">class</span> <span class="nc">EvilBreakpoint</span><span class="p">(</span><span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">):</span>
+    <span class="p">...:</span>     <span class="k">def</span> <span class="nf">stop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="p">...:</span>         <span class="k">return</span> <span class="n">random</span><span class="p">.</span><span class="n">choice</span><span class="p">([</span><span class="bp">False</span><span class="p">,</span> <span class="bp">True</span><span class="p">])</span>
+    <span class="p">...:</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">14</span><span class="p">]:</span> <span class="n">bp</span> <span class="o">=</span> <span class="n">EvilBreakpoint</span><span class="p">(</span><span class="s">"*main+22"</span><span class="p">)</span>
+<span class="n">Breakpoint</span> <span class="mi">7</span> <span class="n">at</span> <span class="mh">0x55555555516f</span>
+</code></pre></div></div>
+
+<p>Another thing that I think might is useful is the option to create new
+commands. I will not dive deeper into it than a “hello world” example but
+if you ever find yourself in a need to create a command to make things easier
+or faster for you, <a href="https://sourceware.org/gdb/onlinedocs/gdb/CLI-Commands-In-Python.html#CLI-Commands-In-Python">the options is there</a>.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="k">class</span> <span class="nc">MyCommand</span><span class="p">(</span><span class="n">gdb</span><span class="p">.</span><span class="n">Command</span><span class="p">):</span>
+   <span class="p">...:</span>     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+   <span class="p">...:</span>         <span class="nb">super</span><span class="p">(</span><span class="n">MyCommand</span><span class="p">,</span> <span class="bp">self</span><span class="p">).</span><span class="n">__init__</span><span class="p">(</span><span class="s">"my_command_name"</span><span class="p">,</span> <span class="n">gdb</span><span class="p">.</span><span class="n">COMMAND_USER</span><span class="p">)</span>
+   <span class="p">...:</span>
+   <span class="p">...:</span>     <span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">from_tty</span><span class="p">):</span>
+   <span class="p">...:</span>         <span class="k">print</span><span class="p">(</span><span class="s">"hewwo!"</span><span class="p">)</span>
+   <span class="p">...:</span>
+
+<span class="n">In</span> <span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="n">MyCommand</span><span class="p">()</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">2</span><span class="p">]:</span> <span class="o">&lt;</span><span class="n">__main__</span><span class="p">.</span><span class="n">MyCommand</span> <span class="n">at</span> <span class="mh">0x7ff3df20c600</span><span class="o">&gt;</span>
+</code></pre></div></div>
+<p>After we define our class we need to instantiate it for GDB to register it.
+Now we can call your command by the name we typed.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pwndbg&gt; my_command_name
+hewwo!
+pwndbg&gt;
+</code></pre></div></div>
+
+<h1 id="abusing-gdb-in-pwntools">Abusing GDB In pwntools</h1>
+<p>If you’ve ever used pwntools for exploit development then I’m sure you’ve
+already seen that you can pass GDB commands to the <code class="language-plaintext highlighter-rouge">gdb.attach</code> or 
+<code class="language-plaintext highlighter-rouge">gdb.debug</code> functions through the <code class="language-plaintext highlighter-rouge">gdbscript</code> argument.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./a.out"</span><span class="p">)</span>
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+
+<span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+<span class="n">gdb</span><span class="p">.</span><span class="n">attach</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">gdbscript</span><span class="o">=</span><span class="s">'''
+    break *main
+    continue
+'''</span><span class="p">)</span>
+</code></pre></div></div>
+<p>But this is very limiting. We can’t access GDB before making a decision what we
+want to execute and we can’t execute anything after. To the rescue comes
+pwntools’ integration with GDB that allows us to access the GDB’s <code class="language-plaintext highlighter-rouge">gdb</code> god
+object through our script. It’s possible thanks to the <a href="https://rpyc.readthedocs.io/en/latest/">RPyC library</a> which is super interesting. The only
+thing we need to do for it to work is to pass <code class="language-plaintext highlighter-rouge">api=True</code> as an argument.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./a.out"</span><span class="p">)</span>
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+
+<span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">],</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+<p>Now we can do anything we’ve learned in the second blogpost’s section about
+Python. Neat! For example this is how we define a breakpoint:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">bp</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">gdb</span><span class="p">.</span><span class="n">Breakpoint</span><span class="p">(</span><span class="s">"*main"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>We can confirm that, in fact, we’re working with the same object by doing a
+small experiment. Let’s take a look at this example script:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./a.out_patched"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="p">[</span><span class="s">'alacritty'</span><span class="p">,</span> <span class="s">'-e'</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">],</span> <span class="n">api</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">time</span><span class="p">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="n">r</span><span class="p">.</span><span class="n">gdb</span><span class="p">.</span><span class="n">magic</span><span class="p">)</span>
+        <span class="k">except</span> <span class="nb">AttributeError</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">'magic not defined'</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>Okay now let’s run it.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  dsa python solve.py
+[*] '/tmp/dsa/a.out_patched'
+    Arch:     amd64-64-little
+    RELRO:    Partial RELRO
+    Stack:    No canary found
+    NX:       NX enabled
+    PIE:      PIE enabled
+[+] Starting local process '/usr/bin/gdbserver': pid 64755
+[*] running in new terminal: ['/usr/bin/gdb', '-q', '/tmp/dsa/a.out_patched', '-x', '/tmp/pwn0qtbhyhr.gdb']
+magic not defined
+magic not defined
+magic not defined
+magic not defined
+</code></pre></div></div>
+
+<p>Now we run the Python interpreter in GDB and define the magic attribute.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="n">gdb</span><span class="p">.</span><span class="n">magic</span> <span class="o">=</span> <span class="mi">1234</span>
+</code></pre></div></div>
+
+<p>It works!</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>magic not defined
+magic not defined
+1234
+1234
+1234
+1234
+</code></pre></div></div>
+
+  </div><a class="u-url" href="/c/python/rev/pwn/2023/04/02/Scripting-GDB.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">poni&#39;s blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">poni&#39;s blog</li><li><a class="u-email" href="mailto:poniponiponiponiponiponiponiponiponiponi@protonmail.com">poniponiponiponiponiponiponiponiponiponi@protonmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/poniponiponiponiponiponiponiponiponi"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">poniponiponiponiponiponiponiponiponi</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

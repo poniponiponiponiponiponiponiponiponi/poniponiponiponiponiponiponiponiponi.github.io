@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>My Personal CTF Notes | poni’s blog</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="My Personal CTF Notes" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Introduction These are my private notes that I used to keep for myself but I figured that there is some in my opinion cool stuff worth sharing there. I use them all the time myself!" />
+<meta property="og:description" content="Introduction These are my private notes that I used to keep for myself but I figured that there is some in my opinion cool stuff worth sharing there. I use them all the time myself!" />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/c/python/pwn/rev/ctf/2023/09/18/Personal-CTF-Notes.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/c/python/pwn/rev/ctf/2023/09/18/Personal-CTF-Notes.html" />
+<meta property="og:site_name" content="poni’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2023-09-18T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="My Personal CTF Notes" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-09-18T00:00:00+00:00","datePublished":"2023-09-18T00:00:00+00:00","description":"Introduction These are my private notes that I used to keep for myself but I figured that there is some in my opinion cool stuff worth sharing there. I use them all the time myself!","headline":"My Personal CTF Notes","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/c/python/pwn/rev/ctf/2023/09/18/Personal-CTF-Notes.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/c/python/pwn/rev/ctf/2023/09/18/Personal-CTF-Notes.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">poni&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/about/software">Software I use and why</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">My Personal CTF Notes</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2023-09-18T00:00:00+00:00" itemprop="datePublished">Sep 18, 2023
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="introduction">Introduction</h1>
+<p>These are my private notes that I used to keep for myself but I figured that there is some in my opinion cool stuff worth sharing there. I use them all the time myself!</p>
+
+<h1 id="running-non-native-binaries-with-qemu">Running non-native binaries with Qemu</h1>
+<p>Run:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>qemu-aarch64-static -g 2345 -L optional_library_path ./a.out
+</code></pre></div></div>
+<p>…and after this we can connect with gdb-multiarch through:</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pwndbg&gt; target remote 0.0.0.0:2345
+</code></pre></div></div>
+<p>However it can be super wonky. <code class="language-plaintext highlighter-rouge">Ctrl-c</code> to stop execution doesn’t work, but we can instead send the sigint signal to the qemu process and then it stops execution after a <code class="language-plaintext highlighter-rouge">continue</code>. It’s still buggy though, for example when we disconnect and connect GDB again after a continue, then sending sigint instead of stopping the execution, terminates the process. It’s a common problem there’s a 12 years old bug report: https://gdb.sourceware.narkive.com/Z1LCkr20/remote-qemu-ctrl-c-does-not-work .
+Also plugins like pwndbg and gef might appear buggy cuz qemu might not provide vmmap info to GDB: https://lore.kernel.org/all/20220221030910.3203063-1-dominik.b.czarnota@gmail.com/ .</p>
+
+<h1 id="copying-libc-and-ld-from-a-docker-container">Copying libc and ld from a Docker Container</h1>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>docker run <span class="nt">--rm</span> <span class="nt">-ti</span> <span class="nt">-v</span> <span class="s2">"</span><span class="nv">$PWD</span><span class="s2">"</span>:/host ubuntu bash <span class="c"># to get an ubuntu container with a mounted path to copy things out</span>
+ldd /bin/ls <span class="c"># to see where the libc is or whatever (in this case libc is in /lib/x86_64-linux-gnu)</span>
+<span class="nb">cp</span> /lib/x86_64-linux-gnu/libc.so.6 /host
+</code></pre></div></div>
+
+<h1 id="links">Links</h1>
+<ul>
+  <li><a href="https://niftic.ca/posts/fsop/">FSOP stuff cuz I always forget the details</a></li>
+  <li><a href="https://heap-exploitation.dhavalkapil.com/diving_into_glibc_heap/security_checks">ptmalloc security checks</a></li>
+  <li><a href="https://syscalls.mebeim.net/?table=x86/64/x64/latest">Best syscall website</a></li>
+</ul>
+
+<h1 id="papers">Papers</h1>
+<ul>
+  <li><a href="https://arxiv.org/pdf/2304.07940.pdf">AVX Timing Side-Channel Attacks against Address Space Layout Randomization</a></li>
+  <li><a href="https://gruss.cc/files/prefetch.pdf">Prefetch Side-Channel Attacks: Bypassing SMAP and Kernel ASLR</a></li>
+  <li><a href="https://www.sec.in.tum.de/i20/publications/blind-format-string-attacks/@@download/file/formatstring.pdf">Blind Format Strings Attacks</a></li>
+</ul>
+
+<h1 id="linux-kernel-exploitation">Linux kernel exploitation</h1>
+<p>In case a challenge doesn’t provide helper scripts there are some templates based on https://lkmidas.github.io/posts/20210123-linux-kernel-pwn-part-1/ .
+For compressing the initramfs directory:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="c"># try to move the exploit automatically to initramfs</span>
+gcc <span class="nt">-o</span> exploit <span class="nt">-static</span> <span class="nv">$1</span>
+<span class="nb">mv</span> ./exploit ./initramfs
+
+<span class="c"># compress the initramfs dir</span>
+<span class="nb">cd </span>initramfs
+find <span class="nb">.</span> <span class="se">\</span>
+| cpio <span class="nt">-ov</span> <span class="nt">--format</span><span class="o">=</span>newc <span class="nt">--owner</span><span class="o">=</span>root <span class="se">\</span>
+| <span class="nb">gzip</span> <span class="nt">-v1</span> <span class="o">&gt;</span> initramfs.cpio.gz
+<span class="nb">mv</span> ./initramfs.cpio.gz ../
+</code></pre></div></div>
+
+<p>For decompressing <code class="language-plaintext highlighter-rouge">initramfs.cpio.gz</code>:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+<span class="nb">mkdir </span>initramfs
+<span class="nb">cd </span>initramfs
+<span class="nb">cp</span> ../initramfs.cpio.gz <span class="nb">.</span>
+<span class="nb">gunzip</span> ./initramfs.cpio.gz
+cpio <span class="nt">-idm</span> &lt; ./initramfs.cpio
+<span class="nb">rm </span>initramfs.cpio
+</code></pre></div></div>
+
+<p>For decompressing the compressed kernel image (usually called vmlinuz) use: <a href="https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux">this</a>.</p>
+
+<p>For running the kernel vm with an exposed GDB port:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c">#!/bin/sh</span>
+
+qemu-system-x86_64 <span class="se">\</span>
+    <span class="nt">-m</span> 128M <span class="se">\</span>
+    <span class="nt">-cpu</span> kvm64,+smep,+smap <span class="se">\</span>
+    <span class="nt">-kernel</span> vmlinuz <span class="se">\</span>
+    <span class="nt">-initrd</span> initramfs.cpio.gz <span class="se">\</span>
+    <span class="nt">-hdb</span> flag.txt <span class="se">\</span>
+    <span class="nt">-snapshot</span> <span class="se">\</span>
+    <span class="nt">-nographic</span> <span class="se">\</span>
+    <span class="nt">-monitor</span> /dev/null <span class="se">\</span>
+    <span class="nt">-gdb</span> tcp::1234 <span class="se">\</span>
+    <span class="nt">-no-reboot</span> <span class="se">\</span>
+    <span class="nt">-append</span> <span class="s2">"console=ttyS0 kaslr pti=on quiet panic=1"</span>
+</code></pre></div></div>
+
+<h2 id="links-1">Links</h2>
+<ul>
+  <li><a href="https://pawnyable.cafe/">Best resource for kernel exploitation introduction</a></li>
+  <li><a href="https://ptr-yudai.hatenablog.com/entry/2020/03/16/165628">Structs useful for heap exploitation</a></li>
+  <li>https://github.com/ocastejon/linux-kernel-learning/blob/main/notes/slab-allocator.md</li>
+  <li><a href="https://github.com/lorenzo-stoakes/linux-mm-notes">Linux mm notes</a></li>
+  <li><a href="https://zolutal.github.io/understanding-paging/">Understanding paging</a></li>
+</ul>
+
+<h1 id="more-or-less-obscure-tricks">More or less obscure tricks</h1>
+<ul>
+  <li><a href="https://github.com/nobodyisnobody/docs/tree/main/code.execution.on.last.libc">Code execution with a write primitive on last libc</a></li>
+  <li>There’s the <code class="language-plaintext highlighter-rouge">_dl_make_stack_executable</code> function in glibc’s ld. I’ve never seen this used in an actual exploit but seems cool to know about nonetheless.</li>
+  <li><code class="language-plaintext highlighter-rouge">mmap</code> returns addresses placed close to libc (check out <code class="language-plaintext highlighter-rouge">house of muney</code> for more info).</li>
+  <li>The read and write syscalls do not complain about being fed an invalid memory address and simply return an error. Might be useful for finding writeable memory without having a leak.</li>
+  <li>Allegedly theres a magic race condition in one <code class="language-plaintext highlighter-rouge">one_gadget</code> (the gadget is actually in exec_comm and to find it you have to use one_gadget with <code class="language-plaintext highlighter-rouge">-l 1</code> argument). It can return a shell even though the constraints aren’t met. I saw it a long ago in a ctf being used but when I tried to recreate it recently it didn’t seem to work, so take this with a grain of salt and do your own research.
+    <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="mh">0x10dbca</span> <span class="n">posix_spawn</span><span class="p">(</span><span class="n">rsp</span><span class="o">+</span><span class="mh">0x64</span><span class="p">,</span> <span class="s">"/bin/sh"</span><span class="p">,</span> <span class="p">[</span><span class="n">rsp</span><span class="o">+</span><span class="mh">0x40</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">rsp</span><span class="o">+</span><span class="mh">0x70</span><span class="p">,</span> <span class="n">r9</span><span class="p">)</span>
+<span class="n">constraints</span><span class="o">:</span>
+<span class="p">[</span><span class="n">rsp</span><span class="o">+</span><span class="mh">0x70</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span>
+<span class="p">[</span><span class="n">r9</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">||</span> <span class="n">r9</span> <span class="o">==</span> <span class="nb">NULL</span>
+<span class="p">[</span><span class="n">rsp</span><span class="o">+</span><span class="mh">0x40</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">||</span> <span class="p">(</span><span class="n">s32</span><span class="p">)[[</span><span class="n">rsp</span><span class="o">+</span><span class="mh">0x40</span><span class="p">]</span><span class="o">+</span><span class="mh">0x4</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">0</span>
+</code></pre></div>    </div>
+  </li>
+  <li>In QEMU challs check if <code class="language-plaintext highlighter-rouge">-monitor null</code> is present for the cheese possibility.</li>
+</ul>
+
+<h1 id="important-versions-of-things">Important versions of things</h1>
+<ul>
+  <li>glibc-2.24 - Added check for <code class="language-plaintext highlighter-rouge">FILE</code>s vtable address.</li>
+  <li>glibc-2.26 - Moved the <code class="language-plaintext highlighter-rouge">FILE</code>s vtable to a non-writable memory.</li>
+  <li>glibc-2.28 - Added tcache double free check.</li>
+  <li>glibc-2.29 - Moved the <code class="language-plaintext highlighter-rouge">FILE</code>s vtable back to a writable area.</li>
+  <li>glibc-2.34 - Removed the ret2csu gadget.</li>
+  <li>glibc-2.34 - <code class="language-plaintext highlighter-rouge">malloc</code> hooks removed from the API.</li>
+  <li>Linux 2.6.23 - NULL ptr dereference mitigation</li>
+  <li>Linux 6.2 - <code class="language-plaintext highlighter-rouge">commit_creds(prepare_kernel_cred(NULL));</code> no longer works. Now we need to pass <code class="language-plaintext highlighter-rouge">&amp;init_cred</code> as the arg.</li>
+</ul>
+
+<h1 id="pyjails">Pyjails</h1>
+<p>Example payloads to reuse:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="p">(</span><span class="n">__builtins__</span><span class="p">:</span><span class="o">=</span><span class="nb">__import__</span><span class="p">(</span><span class="s">'code'</span><span class="p">))</span><span class="o">==</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span><span class="n">interact</span><span class="p">())()</span>
+
+<span class="c1"># from https://hackmd.io/@crazyman/H1s0b1Hii
+</span><span class="nb">__import__</span><span class="p">(</span><span class="s">'antigravity'</span><span class="p">,</span><span class="nb">setattr</span><span class="p">(</span><span class="nb">__import__</span><span class="p">(</span><span class="s">'os'</span><span class="p">),</span><span class="s">'environ'</span><span class="p">,</span><span class="nb">dict</span><span class="p">(</span><span class="n">BROWSER</span><span class="o">=</span><span class="s">'/bin/sh -c "/readflag giveflag" #%s'</span><span class="p">)))</span>
+</code></pre></div></div>
+<p>Tricks that might be helpful:</p>
+<ul>
+  <li><a href="https://peps.python.org/pep-3131/">Non-ascii identifiers get translated to ascii
+ones.</a></li>
+  <li><a href="https://peps.python.org/pep-0263/">You can change the encoding of the file with a comment. Changing to
+utf-7 is especially useful.</a></li>
+  <li><a href="https://esolangs.org/wiki/Symbolic_Python">Symbolic Python.</a></li>
+</ul>
+
+<h1 id="latex">LaTeX</h1>
+<p>For simple RCE’s I like <a href="https://book.hacktricks.xyz/pentesting-web/formula-csv-doc-latex-ghostscript-injection">the hacktricks article</a>. If it’s not enough there’s this very cool paper: <a href="https://hovav.net/ucsd/dist/texhack.pdf">Are Text-Only Data Formats Safe? Or, Use This LATEX Class File to Pwn Your Computer</a>. Also <a href="https://tex.stackexchange.com/a/70636">reading binary files might be useful</a>.</p>
+
+
+  </div><a class="u-url" href="/c/python/pwn/rev/ctf/2023/09/18/Personal-CTF-Notes.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">poni&#39;s blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">poni&#39;s blog</li><li><a class="u-email" href="mailto:poniponiponiponiponiponiponiponiponiponi@protonmail.com">poniponiponiponiponiponiponiponiponiponi@protonmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/poniponiponiponiponiponiponiponiponi"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">poniponiponiponiponiponiponiponiponi</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
