@@ -532,13 +532,15 @@ We can see that the `movq $4, ...` instructions is at offset main+3627. This ins
 is 8 bytes long, where the 4 bytes we move are at the. So we want to write poni at address
 main+3627+4.
 
-![image](https://github.com/user-attachments/assets/81e90f15-0eb4-47f4-be21-1cd47f2d7839)
+![image](https://github.com/user-attachments/assets/72596d83-ea72-4f9d-a1a7-baa8a2591f90)
+
 
 And analogously we do the same for movl before the read function. Notice that there
 the compiler used a different instruction that is 7 bytes long. So we do +3 when
 calculating the offsets instead.
 
-![image](https://github.com/user-attachments/assets/51d0be4e-1c08-4b40-a041-47083175793d)
+![image](https://github.com/user-attachments/assets/305569f4-8a05-4541-bc3b-b1f4563c7b2c)
+
 
 ```python
     # Overwrite the mov instructions.
