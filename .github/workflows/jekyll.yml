@@ -17,23 +17,29 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.1
+          ruby-version: '3.1'
 
       - name: Install dependencies
-        run: |
-          bundle install
+        run: bundle install
 
-      - name: Build site with Jekyll
-        run: |
-          bundle exec jekyll build
+      - name: Build Jekyll site
+        run: bundle exec jekyll build
 
-      - name: Upload GitHub Pages artifact
+      # Workaround to prefetch upload-artifact (not executed)
+      - name: Workaround for upload-artifact resolution
+        uses: actions/upload-artifact@v3
+        with:
+          name: dummy
+          path: README.md
+        if: false
+
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
         with:
           path: _site
