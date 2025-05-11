@@ -14,7 +14,8 @@ Congrats to kalmarunionen and valgrind for solving the challenge!
 
 This challenge is a simple memory allocator, called a buddy allocator, written in Rust and compiled to Risc-V. I found this to be a cool idea that I'm proud of because it's one of the rare cases where using unsafe Rust is very natural, so there isn't just a bunch of unsafes for the challenge's sake. There's isn't much functionality in the program: you can write to a buffer (called a flag) and you can free it. That's all. This is how it looks like:
 
-![image](https://github.com/user-attachments/assets/578fd3c2-ef42-4a7c-b273-693f45b287bd)
+![image](https://github.com/user-attachments/assets/72bea86f-bb0d-49e9-91a9-f82d828b1f22)
+
 
 and the non-allocator related logic:
 ```rust
@@ -77,7 +78,8 @@ Additionally, I compiled the binary with no-PIC. There are no leaks so we can on
 If you don't know what a buddy allocator is or how it works, I found [this to be a good resource](https://youtu.be/DRAHRJEAEso).
 In short, it's an allocation scheme where you can image it as a binary tree, where each level represents some power of two size of our memory space that is designated for allocation. If you have some competitive programming background, it resembles a [segment tree](https://cp-algorithms.com/data_structures/segment_tree.html). In fact, I based my implementation on the video above and segment trees with how I store the tree and propagate the values. My implementation is very bad, and not only because it includes bugs to be exploited, it's also pretty slow and not memory efficient at all.
 
-![image](https://github.com/user-attachments/assets/aae90724-4182-4c2e-8c4b-ca5c31d3d524)
+![image](https://github.com/user-attachments/assets/6f5f050b-bde6-4af5-a834-84c05f069f05)
+
 
 We have three arrays in the program.
 A TREE array that stores information about each node, a FREE array that stores a doubly linked list of free nodes at each level, and a MEM array that represents the memory to be allocated.
@@ -136,7 +138,8 @@ fn free(ptr: &mut [u8]) {
 ```
 The check `if depth <= 1 { break; }` is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn't. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it's two nodes in one, because it's the buddy of node 1, and it's also the parent of node 1. To visually this, the tree looks kinda like this, where each node number is its index in the TREE array.
 
-![image](https://github.com/user-attachments/assets/ee9d5db4-48f9-4951-995d-f527b53ac060)
+![image](https://github.com/user-attachments/assets/4fdcb429-d70e-4b1e-b9f9-dc85bca2c0bb)
+
 
 This gives us a strong primitive of a 1024-byte long overflow in the binary section with global variables.
 ```python
@@ -156,7 +159,8 @@ This gives us a strong primitive of a 1024-byte long overflow in the binary sect
 
 If we inspect the memory, we can see that the rust compiler nicely placed for us some useful structs after our MEM array.
 
-![image](https://github.com/user-attachments/assets/7cb97fd7-32a8-42db-a4b7-649a3865fbfd)
+![image](https://github.com/user-attachments/assets/f924f529-f562-4257-acb0-25a6c4aad7c2)
+
 
 We can see in the Rust's source code that HOOK [is an enum Hook wrapped around in a RwLock<>](https://stdrs.dev/nightly/x86_64-unknown-linux-gnu/std/panicking/static.HOOK.html)
 ```rust
@@ -190,31 +194,35 @@ From an exploitation point of view the only things we need to care about are tha
 
 After doing the overflow, our memory will look like this:
 
-![image](https://github.com/user-attachments/assets/29dfb833-3ae8-48b0-adc6-72f8b7716e3a)
+![image](https://github.com/user-attachments/assets/1dfddc34-e4c4-439a-bfcb-3622796bdf25)
+
 
 It's probably a good time to dive-in into the basics of the Risc-V architecture.
 The most important thing to note is that a ret at the the end of a gadget is a lie - it's a pseudo-instruction. In reality, Risc-V doesn't have a ret and this is equal to a jmp to whatever is stored in the ra register. This makes Risc-V exploitation much harder than on x86 since we need gadgets that not only have a ret at the end, but also something that pops the ra value, or moves, or something (or does a jmp to some other register value). Another thing that limits possible gadgets is that instruction are of the same size and aligned, so we can't just jump to the middle of some instruction opcode.
 Copied [from some other writeup](https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/
 ), this is what all the registers are and what is their purpose:
 
-![image](https://github.com/user-attachments/assets/97738ae2-3d11-48b7-bb28-009faf6c9b88)
+![image](https://github.com/user-attachments/assets/d4034757-83b9-4be7-a878-c50c1c6da75c)
+
 
 To make syscalls we execute the ecall instruction, which stores the syscall number in the a7 register and all the arguments in a0 to a5. If you want to know more about Risc-V I recommend the writeup linked above.
 
 
 Alright, so this is the stackpivot gadget we jump to in our overflow:
 
-![image](https://github.com/user-attachments/assets/56a5a2ae-7ec9-4c86-b7e9-25286f5752bc)
+![image](https://github.com/user-attachments/assets/c32b56f7-6548-4a2d-97dd-3084d77bff60)
+
 
 During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case an srop.
 
 I spent a lot of time trying to get the control of a7 to make a syscall (either execve or sigreturn), but In the end I failed. This is where I had the realization that our rust binary is still linked against libc and I checked the GOT.
 
-![image](https://github.com/user-attachments/assets/2cb18601-b6ac-4eff-afdb-a2abb2619949)
+![image](https://github.com/user-attachments/assets/72524188-fc2d-46dc-92ac-462f9cb7dc90)
+
 
 We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like int syscall(int syscall_num, int arg0, ...); we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.
+![image](https://github.com/user-attachments/assets/5f3aee3f-5347-45f5-9dd0-c97be109f149)
 
-![image](https://github.com/user-attachments/assets/b44a2e4d-49ee-4c47-8e5e-890fcdcf6843)
 
 If you dont know what an SROP is,
 [it's a special technique that uses the sigreturn syscall to get control of all the registers](https://en.wikipedia.org/wiki/Sigreturn-oriented_programming). You can image the syscall as a function that pops all the registers from the stack, and I mean all of them. This sounds great but might be a little bit annoying since we have to set the stack etc to values that makes sense. We will use it to call the execve syscall with all proper registers set.
@@ -436,7 +444,8 @@ Firstly, we need to find the base address of our executable binary.
 We do it with writes in the increments of 0xb1000 cuz that's the size of our binary after loading it
 into memory. 
 
-![image](https://github.com/user-attachments/assets/afa4357a-2840-44a5-b71a-542a37e37760)
+![image](https://github.com/user-attachments/assets/273576a1-70c2-4989-83e4-021d56d48e00)
+
 
 We have 0x700 tries in the loop and this is more than enough even
 assuming 1GiB of randomization, since:
@@ -450,7 +459,8 @@ If the error message is printed it means that there's
 nothing mapped to the memory address we tried to write to.
 To visualize, this is what we're trying to do:
 
-![image](https://github.com/user-attachments/assets/3d72e6fd-c1a6-4813-88e6-3b3b890f2d62)
+![image](https://github.com/user-attachments/assets/31aae774-aaf8-440d-8fc4-593cfcd41a16)
+
 
 ```python
     # Size of the first allocation done internally by glibc.
@@ -828,12 +838,14 @@ void resize_dump(void) {
 ```
 
 This is how the heap looks like before the merge, where each color represents a different allocated chunk:
-![image](https://github.com/user-attachments/assets/51993355-78e9-411e-9ec0-5610ce9425c4)
+![image](https://github.com/user-attachments/assets/7fb1da74-5187-415a-b3bb-11c117e210fc)
+
 
 And this is how the heap looks like after the merge. We free the chunk representing dump a and we overwrite
 dump c's chunk size to 0x411.
 
-![image](https://github.com/user-attachments/assets/d7cfcefa-302c-4202-a0b2-04491f0faac6)
+![image](https://github.com/user-attachments/assets/80ae1d03-30ba-4386-bd4d-72fc45fe3e5a)
+
 
 If you're confused for example why all the chunks have the same size 0x20 (or what is tcache later in the write-up), I recommend diving into glibc's malloc
 internals. [This link is a good start](https://sourceware.org/glibc/wiki/MallocInternals).
