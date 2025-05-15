@@ -1,19 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-11T20:03:06+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For Bts Ctf 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For Bts Ctf 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;p&gt;layout: post
-title: “Challenges I Wrote For BtSCTF 2025”
-date: 2025-05-11
-categories: ctf pwn c rust risc-v
-—&lt;/p&gt;
-&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-15T19:02:45+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
+
+&lt;p&gt;I had the opportunity to design challenges for BreakTheSyntax CTF 2025 that took place this weekend, both on-site at Wroclaw’s University of Science and Technology and online. The event was organized by the science circle White Hats, which I’m a member of. I created 5 challenges - three binary exploitation ones, one reverse engineering task, and a misc challenge. The pwn challenges especially received very positive feedback, which made me really happy. You can find all the files for every challenge in this repo, in &lt;a href=&quot;https://github.com/poniponiponiponiponiponiponiponiponi/poniponiponiponiponiponiponiponiponi.github.io/tree/main/files/bts&quot;&gt;/files/bts&lt;/a&gt;. Personally, as a player, I enjoy challenges with source code included, so I distributed each of my tasks with the source code (except the reverse engineering one, of course) :).&lt;/p&gt;
 
 &lt;h2 id=&quot;arrrocator&quot;&gt;aRRRocator&lt;/h2&gt;
 
-&lt;p&gt;Congrats to kalmarunionen and valgrind for solving the challenge!&lt;/p&gt;
+&lt;p&gt;This turned out to be the hardest challenge in the whole competition, collecting only two solves over 40 hours by world-class ctf teams. Congrats to kalmarunionen and valgrind for solving it!&lt;/p&gt;
 
 &lt;h3 id=&quot;reversing-and-finding-the-bug&quot;&gt;Reversing and finding the bug&lt;/h3&gt;
 
 &lt;p&gt;This challenge is a simple memory allocator, called a buddy allocator, written in Rust and compiled to Risc-V. I found this to be a cool idea that I’m proud of because it’s one of the rare cases where using unsafe Rust is very natural, so there isn’t just a bunch of unsafes for the challenge’s sake. There’s isn’t much functionality in the program: you can write to a buffer (called a flag) and you can free it. That’s all. This is how it looks like:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/7c196720-1bcb-49bf-8fdf-78f33d716b9f&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/arr.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;and the non-allocator related logic:&lt;/p&gt;
 &lt;div class=&quot;language-rust highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;fn&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_flag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;-&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;&apos;static&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;mut&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;u8&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -75,7 +72,7 @@ categories: ctf pwn c rust risc-v
 &lt;p&gt;If you don’t know what a buddy allocator is or how it works, I found &lt;a href=&quot;https://youtu.be/DRAHRJEAEso&quot;&gt;this to be a good resource&lt;/a&gt;.
 In short, it’s an allocation scheme where you can image it as a binary tree, where each level represents some power of two size of our memory space that is designated for allocation. If you have some competitive programming background, it resembles a &lt;a href=&quot;https://cp-algorithms.com/data_structures/segment_tree.html&quot;&gt;segment tree&lt;/a&gt;. In fact, I based my implementation on the video above and segment trees with how I store the tree and propagate the values. My implementation is very bad, and not only because it includes bugs to be exploited, it’s also pretty slow and not memory efficient at all.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/6f5f050b-bde6-4af5-a834-84c05f069f05&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/tree1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;We have three arrays in the program.
 A TREE array that stores information about each node, a FREE array that stores a doubly linked list of free nodes at each level, and a MEM array that represents the memory to be allocated.&lt;/p&gt;
@@ -132,7 +129,7 @@ A TREE array that stores information about each node, a FREE array that stores a
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;p&gt;The check &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;if depth &amp;lt;= 1 { break; }&lt;/code&gt; is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn’t. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it’s two nodes in one, because it’s the buddy of node 1, and it’s also the parent of node 1. To visually this, the tree looks kinda like this, where each node number is its index in the TREE array.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/4fdcb429-d70e-4b1e-b9f9-dc85bca2c0bb&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/tree2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;This gives us a strong primitive of a 1024-byte long overflow in the binary section with global variables.&lt;/p&gt;
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;c1&quot;&gt;# Exploit the bug in the memory allocator to get a strong primitive
@@ -151,7 +148,7 @@ A TREE array that stores information about each node, a FREE array that stores a
 
 &lt;p&gt;If we inspect the memory, we can see that the rust compiler nicely placed for us some useful structs after our MEM array.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/f924f529-f562-4257-acb0-25a6c4aad7c2&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/hook.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;We can see in the Rust’s source code that HOOK &lt;a href=&quot;https://stdrs.dev/nightly/x86_64-unknown-linux-gnu/std/panicking/static.HOOK.html&quot;&gt;is an enum Hook wrapped around in a RwLock&amp;lt;&amp;gt;&lt;/a&gt;&lt;/p&gt;
 &lt;div class=&quot;language-rust highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;enum&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Hook&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
@@ -183,31 +180,31 @@ A TREE array that stores information about each node, a FREE array that stores a
 
 &lt;p&gt;After doing the overflow, our memory will look like this:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/1dfddc34-e4c4-439a-bfcb-3622796bdf25&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/tele.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;It’s probably a good time to dive-in into the basics of the Risc-V architecture.
 The most important thing to note is that a ret at the the end of a gadget is a lie - it’s a pseudo-instruction. In reality, Risc-V doesn’t have a ret and this is equal to a jmp to whatever is stored in the ra register. This makes Risc-V exploitation much harder than on x86 since we need gadgets that not only have a ret at the end, but also something that pops the ra value, or moves, or something (or does a jmp to some other register value). Another thing that limits possible gadgets is that instruction are of the same size and aligned, so we can’t just jump to the middle of some instruction opcode.
 Copied &lt;a href=&quot;https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/&quot;&gt;from some other writeup&lt;/a&gt;, this is what all the registers are and what is their purpose:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/d4034757-83b9-4be7-a878-c50c1c6da75c&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/regs.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;To make syscalls we execute the ecall instruction, which stores the syscall number in the a7 register and all the arguments in a0 to a5. If you want to know more about Risc-V I recommend the writeup linked above.&lt;/p&gt;
+&lt;p&gt;To make syscalls we execute the ecall instruction, which stores the syscall number in the a7 register and all of the arguments in registers from a0 to a5. If you want to know more about Risc-V I recommend the writeup linked above.&lt;/p&gt;
 
 &lt;p&gt;Alright, so this is the stackpivot gadget we jump to in our overflow:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/c32b56f7-6548-4a2d-97dd-3084d77bff60&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/pivot.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case an srop.&lt;/p&gt;
+&lt;p&gt;During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case a srop.&lt;/p&gt;
 
 &lt;p&gt;I spent a lot of time trying to get the control of a7 to make a syscall (either execve or sigreturn), but In the end I failed. This is where I had the realization that our rust binary is still linked against libc and I checked the GOT.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/72524188-fc2d-46dc-92ac-462f9cb7dc90&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/got.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like int syscall(int syscall_num, int arg0, …); we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.
-&lt;img src=&quot;https://github.com/user-attachments/assets/5f3aee3f-5347-45f5-9dd0-c97be109f149&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;int syscall(int syscall_num, int arg0, ...);&lt;/code&gt; we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.
+&lt;img src=&quot;/files/bts/imgs/syscall.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;If you dont know what an SROP is,
-&lt;a href=&quot;https://en.wikipedia.org/wiki/Sigreturn-oriented_programming&quot;&gt;it’s a special technique that uses the sigreturn syscall to get control of all the registers&lt;/a&gt;. You can image the syscall as a function that pops all the registers from the stack, and I mean all of them. This sounds great but might be a little bit annoying since we have to set the stack etc to values that makes sense. We will use it to call the execve syscall with all proper registers set.&lt;/p&gt;
+&lt;a href=&quot;https://en.wikipedia.org/wiki/Sigreturn-oriented_programming&quot;&gt;it’s a special technique that uses the sigreturn syscall to get control of all the registers&lt;/a&gt;. You can image the syscall as a function that pops all the registers from the stack, and I mean all of them. This sounds great but might be a little bit annoying since we have to set the stack etc to values that make sense. We will use it to call the execve syscall with all registers set to proper values.&lt;/p&gt;
 
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;c1&quot;&gt;# The offset 184 is where return address after stack pivot happens to be.
 &lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;do_pivot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;flat&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt;
@@ -242,7 +239,7 @@ Copied &lt;a href=&quot;https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/&q
     &lt;span class=&quot;n&quot;&gt;io&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendlineafter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;flag:&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mem_start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;do_pivot&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;srop&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;overflow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;… and after executing the execve syscall we get a shell ;). Because we overwrote the panic handler, we need to get somehow trigger a panic. For example we can sent a random input to the int parsing function.&lt;/p&gt;
+&lt;p&gt;… and after executing the execve syscall we get a shell ;). Because we overwrote the panic handler, we need to somehow trigger a panic. For example we can send a random input to the int parsing function which will cause a crash with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.unwrap()&lt;/code&gt;.&lt;/p&gt;
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;n&quot;&gt;io&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendlineafter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;gimme&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;io&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendlineafter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Length&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;asd&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
     &lt;span class=&quot;n&quot;&gt;io&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;sendline&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;b&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;cat flag&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
@@ -378,40 +375,40 @@ lingo) small offset from our binary, even with PIE and ASLR, so it’s very brut
 the past there was a 1 in 32M chance for a hit, now it’s a 1 in 1G
 chance for x64. It got improved in the kernel version 6.9:
 &lt;a href=&quot;https://elixir.bootlin.com/linux/v6.9-rc1/source/arch/x86/kernel/process.c#L1001&quot;&gt;link&lt;/a&gt;.
-&lt;a href=&quot;https://elixir.bootlin.com/linux/v6.8.12/source/arch/x86/kernel/process.c#L1031&quot;&gt;And there’s kernel 6.8 for comparision.&lt;/a&gt;
-```c
-// Improved kernel 6.9 version.
-unsigned long arch_randomize_brk(struct mm_struct *mm)
-{
- if (mmap_is_ia32())
-     return randomize_page(mm-&amp;gt;brk, SZ_32M);&lt;/p&gt;
-
-    &lt;p&gt;return randomize_page(mm-&amp;gt;brk, SZ_1G);
-}&lt;/p&gt;
+&lt;a href=&quot;https://elixir.bootlin.com/linux/v6.8.12/source/arch/x86/kernel/process.c#L1031&quot;&gt;And there’s kernel 6.8 for comparision.&lt;/a&gt;&lt;/p&gt;
   &lt;/li&gt;
 &lt;/ol&gt;
 
-&lt;p&gt;// Kernel 6.8 version. The size 0x02000000 is the same as 32MiB.
-unsigned long arch_randomize_brk(struct mm_struct *mm)
-{
-	return randomize_page(mm-&amp;gt;brk, 0x02000000);
-}&lt;/p&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// Improved kernel 6.9 version.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_randomize_brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_is_ia32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SZ_32M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;The chall was made so it&apos;s not that hard to hit either way since
-we didn&apos;t know on what kernel version will the infra be.
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SZ_1G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 
-In the program&apos;s loop we get 0x700 chances to write b&quot;poni&quot; to an
-arbitrary address. Our first problem to overcome is that we don&apos;t
-have leaks and we only control the `n` variable. So we can write
-our string to a relative offset of the heap.
-```c
-        // Error: Too many ponis on the stack. Switching to heap allocation.
-        char *h = malloc(0);
-        // Poni-ter arithmetic detected! (poni++)^10
-        lseek(ponifile, ((size_t)h + n), SEEK_SET);
-        if (write(ponifile, &quot;poni&quot;, 4) == -1) {
-            puts(&quot;I just don&apos;t know what went wrong... :&amp;lt;&quot;);
-        }
+&lt;span class=&quot;c1&quot;&gt;// Kernel 6.8 version. The size 0x02000000 is the same as 32MiB.&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_randomize_brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x02000000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The chall was made so it’s not that hard to hit either way since
+we didn’t know on what kernel version will the infra be.&lt;/p&gt;
+
+&lt;p&gt;In the program’s loop we get 0x700 chances to write b”poni” to an
+arbitrary address. Our first problem to overcome is that we don’t
+have leaks and we only control the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;n&lt;/code&gt; variable. So we can write
+our string to a relative offset of the heap.&lt;/p&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;        &lt;span class=&quot;c1&quot;&gt;// Error: Too many ponis on the stack. Switching to heap allocation.&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;h&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;malloc&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Poni-ter arithmetic detected! (poni++)^10&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;lseek&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ponifile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;size_t&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;h&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;n&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SEEK_SET&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ponifile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;poni&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;4&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;n&quot;&gt;puts&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;I just don&apos;t know what went wrong... :&amp;lt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;If you’re wondering, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;malloc(0)&lt;/code&gt; is there just for giggles. It
@@ -427,7 +424,7 @@ of the write-up!&lt;/p&gt;
 We do it with writes in the increments of 0xb1000 cuz that’s the size of our binary after loading it
 into memory.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/273576a1-70c2-4989-83e4-021d56d48e00&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/ppv_vmmap.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;We have 0x700 tries in the loop and this is more than enough even
 assuming 1GiB of randomization, since:&lt;/p&gt;
@@ -440,7 +437,7 @@ assuming 1GiB of randomization, since:&lt;/p&gt;
 nothing mapped to the memory address we tried to write to.
 To visualize, this is what we’re trying to do:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/31aae774-aaf8-440d-8fc4-593cfcd41a16&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/ppv_mem.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;c1&quot;&gt;# Size of the first allocation done internally by glibc.
 &lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;first_alloc_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x1860&lt;/span&gt;
@@ -507,17 +504,17 @@ too long writes.&lt;/p&gt;
         &lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;s&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to_read&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;We can see that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;movq $4, ...&lt;/code&gt; instructions is at offset main+3627. This instruction
+&lt;p&gt;We can see that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;movq $4, ...&lt;/code&gt; instruction is at offset main+3627. This instruction
 is 8 bytes long, where the 4 bytes we move are at the. So we want to write poni at address
 main+3627+4.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/72596d83-ea72-4f9d-a1a7-baa8a2591f90&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/ppv_target1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;And analogously we do the same for movl before the read function. Notice that there
 the compiler used a different instruction that is 7 bytes long. So we do +3 when
 calculating the offsets instead.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/305569f4-8a05-4541-bc3b-b1f4563c7b2c&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/ppv_target2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    &lt;span class=&quot;c1&quot;&gt;# Overwrite the mov instructions.
 &lt;/span&gt;    &lt;span class=&quot;n&quot;&gt;bin_base_offset&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x20&lt;/span&gt;
@@ -684,7 +681,7 @@ calculating the offsets instead.&lt;/p&gt;
 You can ask other teams for their solve.&lt;/p&gt;
 
 &lt;h3 id=&quot;intended&quot;&gt;Intended&lt;/h3&gt;
-&lt;p&gt;TLDR: Merge with a dump of size zero to get an 8-byte overflow -&amp;gt; get overlapping chunks -&amp;gt; tcache poison -&amp;gt; arbitrary code execution on latest libc (e.g., via FSOP)&lt;/p&gt;
+&lt;p&gt;TLDR: Merge with a dump of size zero to get an 8-byte overflow -&amp;gt; get overlapping chunks -&amp;gt; tcache poison -&amp;gt; arbitrary code execution on latest libc (e.g., via FSOP).&lt;/p&gt;
 
 &lt;p&gt;Our goal is to get an out-of-bounds write on the heap.
 By examining the code, we can notice a potential issue in the Duff’s Device when &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;count&lt;/code&gt; equals zero. Indeed in the wikipedia post it’s written that &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;This code assumes that initial count &amp;gt; 0&lt;/code&gt;.
@@ -810,12 +807,12 @@ is very annoying in the context of this challenge.&lt;/p&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;This is how the heap looks like before the merge, where each color represents a different allocated chunk:
-&lt;img src=&quot;https://github.com/user-attachments/assets/7fb1da74-5187-415a-b3bb-11c117e210fc&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;img src=&quot;/files/bts/imgs/tree1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;And this is how the heap looks like after the merge. We free the chunk representing dump a and we overwrite
 dump c’s chunk size to 0x411.&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;https://github.com/user-attachments/assets/80ae1d03-30ba-4386-bd4d-72fc45fe3e5a&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/tree2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;If you’re confused for example why all the chunks have the same size 0x20 (or what is tcache later in the write-up), I recommend diving into glibc’s malloc
 internals. &lt;a href=&quot;https://sourceware.org/glibc/wiki/MallocInternals&quot;&gt;This link is a good start&lt;/a&gt;.
@@ -1073,8 +1070,9 @@ I use a payload I’ve seen only ptr-yudai use in their’s write-ups, but it’
 
 &lt;h2 id=&quot;other-challenges-i-made&quot;&gt;Other challenges I made&lt;/h2&gt;
 
-&lt;p&gt;I also made two other challanges, Rainbom Bash Adventure and stupid fd manager. but they were pretty simple compared to the previous ones,
-so I won’t dedicate them a separate chapter.&lt;/p&gt;
+&lt;p&gt;I also made two other challanges, Rainbom Bash Adventure and stupid fd
+manager. but they were pretty simple and not that interesting compared
+to the previous ones, so I won’t dedicate a separate section for them.&lt;/p&gt;
 
 &lt;p&gt;For Rainbom Bash Adventure, the challenge is a renpy visual novel. You
 can find the code of the game in ./game/script.rpy. There what you
@@ -1082,10 +1080,10 @@ have to do is to parse all the choices as a weighted graph and solve
 the TSP problem using heuristics. You can tell it’s a TSP problem by
 the dialogue: “Help Rainbom Bash smash all the clouds in the fastest
 possible way and return to the origin. I heard it’s a well known
-problem….”. Actually, because of how I generated the graph, you could
-just do a nearest neighbour algorithm instead of a heuristic and I was
-of that but I left it as an unintended-intended since it made the generating
-of the graph easier :P.&lt;/p&gt;
+problem….”. Actually, because of how I generated the graph, you
+could just do a nearest neighbour algorithm instead of a heuristic and
+I was of aware that but I left it as an unintended-intended, since it
+made the generating of the graph easier :P.&lt;/p&gt;
 
 &lt;p&gt;For stupid fd manager, the solve was to abuse two facts:&lt;/p&gt;
 &lt;ul&gt;
@@ -1093,10 +1091,10 @@ of the graph easier :P.&lt;/p&gt;
   &lt;li&gt;Opening a file opens the file in the lowest possible file descriptor.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;So The solve was to in one line to write “3 0 2 ./flag”.
-The program buffers the whole line -&amp;gt; it closes file descriptor 0, which is standard input -&amp;gt;
+&lt;p&gt;So The solve was in one line to write &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3 0 2 ./flag&lt;/code&gt;.
+The program buffers the whole line -&amp;gt; it closes file descriptor 0 (which is standard input) -&amp;gt;
 it opens ./flag as file descriptor 0 -&amp;gt; scanf() and family now will do io operations
-on the flag instead of standard input, which shows us the flag.&lt;/p&gt;</content><author><name></name></author><summary type="html">layout: post title: “Challenges I Wrote For BtSCTF 2025” date: 2025-05-11 categories: ctf pwn c rust risc-v — Challenges I wrote for BreakTheSyntax CTF 2025</summary></entry><entry><title type="html">Challenges I Wrote For WxMCTF 2024</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html" rel="alternate" type="text/html" title="Challenges I Wrote For WxMCTF 2024" /><published>2024-03-31T00:00:00+00:00</published><updated>2024-03-31T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html">&lt;h1 id=&quot;intro&quot;&gt;Intro&lt;/h1&gt;
+on the flag instead of standard input, which shows us the flag.&lt;/p&gt;</content><author><name></name></author><category term="ctf" /><category term="pwn" /><category term="c" /><category term="rust" /><category term="risc-v" /><summary type="html">Challenges I wrote for BreakTheSyntax CTF 2025</summary></entry><entry><title type="html">Challenges I Wrote For WxMCTF 2024</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html" rel="alternate" type="text/html" title="Challenges I Wrote For WxMCTF 2024" /><published>2024-03-31T00:00:00+00:00</published><updated>2024-03-31T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html">&lt;h1 id=&quot;intro&quot;&gt;Intro&lt;/h1&gt;
 &lt;p&gt;Even though &lt;a href=&quot;https://ctftime.org/event/2179/&quot;&gt;WxMCTF 2024&lt;/a&gt; was a CTF competition made mostly by high schoolers for high schoolers, I was invited as a guest author by my friend ToadyTop to help them with creating some challenges.
 What they didn’t yet had done was pwn4 and pwn5 (the second hardest and hardest pwn), so my assigned task was to create them.
 In this post I will go over my thought process of designing the challenges and the solutions.&lt;/p&gt;
