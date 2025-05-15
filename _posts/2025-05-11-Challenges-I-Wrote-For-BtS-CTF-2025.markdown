@@ -11,6 +11,10 @@ I had the opportunity to design challenges for BreakTheSyntax CTF 2025 that took
 
 ## aRRRocator
 
+> solves: 2
+> 
+> Rust, Risc-v, Rawr! Play this challenge to get your own flag for fRRRRRRee!!
+
 This turned out to be the hardest challenge in the whole competition, collecting only two solves over 40 hours by world-class ctf teams. Congrats to kalmarunionen and valgrind for solving it!
 
 ### Reversing and finding the bug
@@ -216,7 +220,9 @@ Alright, so this is the stackpivot gadget we jump to in our overflow:
 ![image](/files/bts/imgs/pivot.png)
 
 
-During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case a srop.
+During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can execute a rop chain, in this case srop.
+
+![image](/files/bts/imgs/dist.png)
 
 I spent a lot of time trying to get the control of a7 to make a syscall (either execve or sigreturn), but In the end I failed. This is where I had the realization that our rust binary is still linked against libc and I checked the GOT.
 
@@ -224,6 +230,7 @@ I spent a lot of time trying to get the control of a7 to make a syscall (either 
 
 
 We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like `int syscall(int syscall_num, int arg0, ...);` we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.
+
 ![image](/files/bts/imgs/syscall.png)
 
 
@@ -375,6 +382,14 @@ if __name__ == "__main__":
 ```
 
 ## poniponi-virus
+
+> solves: 7
+> 
+> Inspired by write-flag-where. write-poni-where?
+> poniponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponi!!
+
+
+### Solution
 
 TLDR: Find binary base by checking the return value of write ->
 partially overwrite mov instructions with b"poni" to get leaks
@@ -711,11 +726,17 @@ if __name__ == "__main__":
 
 ## HexDumper
 
+> solves: 19
+> 
+> A forbidden hex festers deep within the heap’s vile heart.
+> Tame the heap, brew thy exploit, and summon forth the sacred flag.
+> Fail, and be forever HexDumped into the void.
+
 ### Unintended
 There was an unintended in the `ask_for_index()` function for negative indexes :(. Skill issue on my part.
 You can ask other teams for their solve.
 
-### Intended
+### Solution
 TLDR: Merge with a dump of size zero to get an 8-byte overflow -> get overlapping chunks -> tcache poison -> arbitrary code execution on latest libc (e.g., via FSOP).
 
 Our goal is to get an out-of-bounds write on the heap.
