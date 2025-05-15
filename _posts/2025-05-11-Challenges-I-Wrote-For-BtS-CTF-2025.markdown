@@ -845,13 +845,13 @@ void resize_dump(void) {
 ```
 
 This is how the heap looks like before the merge, where each color represents a different allocated chunk:
-![image](/files/bts/imgs/tree1.png)
+![image](/files/bts/imgs/hd1.png)
 
 
 And this is how the heap looks like after the merge. We free the chunk representing dump a and we overwrite
 dump c's chunk size to 0x411.
 
-![image](/files/bts/imgs/tree2.png)
+![image](/files/bts/imgs/hd2.png)
 
 
 If you're confused for example why all the chunks have the same size 0x20 (or what is tcache later in the write-up), I recommend diving into glibc's malloc
