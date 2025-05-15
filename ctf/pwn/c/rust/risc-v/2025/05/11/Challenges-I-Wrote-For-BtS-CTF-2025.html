@@ -856,12 +856,12 @@ is very annoying in the context of this challenge.</p>
 </code></pre></div></div>
 
 <p>This is how the heap looks like before the merge, where each color represents a different allocated chunk:
-<img src="/files/bts/imgs/tree1.png" alt="image" /></p>
+<img src="/files/bts/imgs/hd1.png" alt="image" /></p>
 
 <p>And this is how the heap looks like after the merge. We free the chunk representing dump a and we overwrite
 dump c’s chunk size to 0x411.</p>
 
-<p><img src="/files/bts/imgs/tree2.png" alt="image" /></p>
+<p><img src="/files/bts/imgs/hd2.png" alt="image" /></p>
 
 <p>If you’re confused for example why all the chunks have the same size 0x20 (or what is tcache later in the write-up), I recommend diving into glibc’s malloc
 internals. <a href="https://sourceware.org/glibc/wiki/MallocInternals">This link is a good start</a>.
