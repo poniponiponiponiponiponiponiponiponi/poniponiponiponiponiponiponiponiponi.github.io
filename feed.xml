@@ -1,8 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-15T19:04:57+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-15T19:46:50+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
 
 &lt;p&gt;I had the opportunity to design challenges for BreakTheSyntax CTF 2025 that took place this weekend, both on-site at Wroclaw’s University of Science and Technology and online. The event was organized by the science circle White Hats, which I’m a member of. I created 5 challenges - three binary exploitation ones, one reverse engineering task, and a misc challenge. The pwn challenges especially received very positive feedback, which made me really happy. You can find all the files for every challenge in this repo, in &lt;a href=&quot;https://github.com/poniponiponiponiponiponiponiponiponi/poniponiponiponiponiponiponiponiponi.github.io/tree/main/files/bts&quot;&gt;/files/bts&lt;/a&gt;. Personally, as a player, I enjoy challenges with source code included, so I distributed each of my tasks with the source code (except the reverse engineering one, of course) :).&lt;/p&gt;
 
 &lt;h2 id=&quot;arrrocator&quot;&gt;aRRRocator&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;solves: 2&lt;/p&gt;
+
+  &lt;p&gt;Rust, Risc-v, Rawr! Play this challenge to get your own flag for fRRRRRRee!!&lt;/p&gt;
+&lt;/blockquote&gt;
 
 &lt;p&gt;This turned out to be the hardest challenge in the whole competition, collecting only two solves over 40 hours by world-class ctf teams. Congrats to kalmarunionen and valgrind for solving it!&lt;/p&gt;
 
@@ -194,14 +200,17 @@ Copied &lt;a href=&quot;https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/&q
 
 &lt;p&gt;&lt;img src=&quot;/files/bts/imgs/pivot.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case a srop.&lt;/p&gt;
+&lt;p&gt;During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can execute a rop chain, in this case srop.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/dist.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;I spent a lot of time trying to get the control of a7 to make a syscall (either execve or sigreturn), but In the end I failed. This is where I had the realization that our rust binary is still linked against libc and I checked the GOT.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/files/bts/imgs/got.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;int syscall(int syscall_num, int arg0, ...);&lt;/code&gt; we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.
-&lt;img src=&quot;/files/bts/imgs/syscall.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;int syscall(int syscall_num, int arg0, ...);&lt;/code&gt; we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/syscall.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;If you dont know what an SROP is,
 &lt;a href=&quot;https://en.wikipedia.org/wiki/Sigreturn-oriented_programming&quot;&gt;it’s a special technique that uses the sigreturn syscall to get control of all the registers&lt;/a&gt;. You can image the syscall as a function that pops all the registers from the stack, and I mean all of them. This sounds great but might be a little bit annoying since we have to set the stack etc to values that make sense. We will use it to call the execve syscall with all registers set to proper values.&lt;/p&gt;
@@ -348,6 +357,15 @@ Copied &lt;a href=&quot;https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/&q
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;h2 id=&quot;poniponi-virus&quot;&gt;poniponi-virus&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;solves: 7&lt;/p&gt;
+
+  &lt;p&gt;Inspired by write-flag-where. write-poni-where?
+poniponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponi!!&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;solution&quot;&gt;Solution&lt;/h3&gt;
 
 &lt;p&gt;TLDR: Find binary base by checking the return value of write -&amp;gt;
 partially overwrite mov instructions with b”poni” to get leaks
@@ -676,11 +694,19 @@ calculating the offsets instead.&lt;/p&gt;
 
 &lt;h2 id=&quot;hexdumper&quot;&gt;HexDumper&lt;/h2&gt;
 
+&lt;blockquote&gt;
+  &lt;p&gt;solves: 19&lt;/p&gt;
+
+  &lt;p&gt;A forbidden hex festers deep within the heap’s vile heart.
+Tame the heap, brew thy exploit, and summon forth the sacred flag.
+Fail, and be forever HexDumped into the void.&lt;/p&gt;
+&lt;/blockquote&gt;
+
 &lt;h3 id=&quot;unintended&quot;&gt;Unintended&lt;/h3&gt;
 &lt;p&gt;There was an unintended in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ask_for_index()&lt;/code&gt; function for negative indexes :(. Skill issue on my part.
 You can ask other teams for their solve.&lt;/p&gt;
 
-&lt;h3 id=&quot;intended&quot;&gt;Intended&lt;/h3&gt;
+&lt;h3 id=&quot;solution-1&quot;&gt;Solution&lt;/h3&gt;
 &lt;p&gt;TLDR: Merge with a dump of size zero to get an 8-byte overflow -&amp;gt; get overlapping chunks -&amp;gt; tcache poison -&amp;gt; arbitrary code execution on latest libc (e.g., via FSOP).&lt;/p&gt;
 
 &lt;p&gt;Our goal is to get an out-of-bounds write on the heap.

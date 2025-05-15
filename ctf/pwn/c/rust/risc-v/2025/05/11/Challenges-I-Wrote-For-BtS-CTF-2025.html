@@ -53,6 +53,12 @@
 
 <h2 id="arrrocator">aRRRocator</h2>
 
+<blockquote>
+  <p>solves: 2</p>
+
+  <p>Rust, Risc-v, Rawr! Play this challenge to get your own flag for fRRRRRRee!!</p>
+</blockquote>
+
 <p>This turned out to be the hardest challenge in the whole competition, collecting only two solves over 40 hours by world-class ctf teams. Congrats to kalmarunionen and valgrind for solving it!</p>
 
 <h3 id="reversing-and-finding-the-bug">Reversing and finding the bug</h3>
@@ -243,14 +249,17 @@ Copied <a href="https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/">from som
 
 <p><img src="/files/bts/imgs/pivot.png" alt="image" /></p>
 
-<p>During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can perform a rop chain, in this case a srop.</p>
+<p>During the execution of our stackpivot we can see that sp is equal to 0x7893162c7b00 and bufor we control on the stack start at 0x7893162c7f48, so we have a distance of 0x448 bytes (or 1096 in decimal). This is what we use the stack pivot for, so sp is at a value we control so we can execute a rop chain, in this case srop.</p>
+
+<p><img src="/files/bts/imgs/dist.png" alt="image" /></p>
 
 <p>I spent a lot of time trying to get the control of a7 to make a syscall (either execve or sigreturn), but In the end I failed. This is where I had the realization that our rust binary is still linked against libc and I checked the GOT.</p>
 
 <p><img src="/files/bts/imgs/got.png" alt="image" /></p>
 
-<p>We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like <code class="language-plaintext highlighter-rouge">int syscall(int syscall_num, int arg0, ...);</code> we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.
-<img src="/files/bts/imgs/syscall.png" alt="image" /></p>
+<p>We can see a syscall function! Bingo! Since we control a0, and a syscall function declaration looks probably something like <code class="language-plaintext highlighter-rouge">int syscall(int syscall_num, int arg0, ...);</code> we control the first argument to it from our panicking hook. So we control the syscall number, we can execute the syscall sigreturn and perform sigreturn oriented programming! And in fact, after disassembling the function this turns out to be true.</p>
+
+<p><img src="/files/bts/imgs/syscall.png" alt="image" /></p>
 
 <p>If you dont know what an SROP is,
 <a href="https://en.wikipedia.org/wiki/Sigreturn-oriented_programming">it’s a special technique that uses the sigreturn syscall to get control of all the registers</a>. You can image the syscall as a function that pops all the registers from the stack, and I mean all of them. This sounds great but might be a little bit annoying since we have to set the stack etc to values that make sense. We will use it to call the execve syscall with all registers set to proper values.</p>
@@ -397,6 +406,15 @@ Copied <a href="https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/">from som
 </code></pre></div></div>
 
 <h2 id="poniponi-virus">poniponi-virus</h2>
+
+<blockquote>
+  <p>solves: 7</p>
+
+  <p>Inspired by write-flag-where. write-poni-where?
+poniponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponi!!</p>
+</blockquote>
+
+<h3 id="solution">Solution</h3>
 
 <p>TLDR: Find binary base by checking the return value of write -&gt;
 partially overwrite mov instructions with b”poni” to get leaks
@@ -725,11 +743,19 @@ calculating the offsets instead.</p>
 
 <h2 id="hexdumper">HexDumper</h2>
 
+<blockquote>
+  <p>solves: 19</p>
+
+  <p>A forbidden hex festers deep within the heap’s vile heart.
+Tame the heap, brew thy exploit, and summon forth the sacred flag.
+Fail, and be forever HexDumped into the void.</p>
+</blockquote>
+
 <h3 id="unintended">Unintended</h3>
 <p>There was an unintended in the <code class="language-plaintext highlighter-rouge">ask_for_index()</code> function for negative indexes :(. Skill issue on my part.
 You can ask other teams for their solve.</p>
 
-<h3 id="intended">Intended</h3>
+<h3 id="solution-1">Solution</h3>
 <p>TLDR: Merge with a dump of size zero to get an 8-byte overflow -&gt; get overlapping chunks -&gt; tcache poison -&gt; arbitrary code execution on latest libc (e.g., via FSOP).</p>
 
 <p>Our goal is to get an out-of-bounds write on the heap.
