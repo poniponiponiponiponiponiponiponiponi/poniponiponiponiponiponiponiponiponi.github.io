@@ -9,15 +9,15 @@
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Challenges I wrote for BreakTheSyntax CTF 2025" />
 <meta property="og:description" content="Challenges I wrote for BreakTheSyntax CTF 2025" />
-<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" />
-<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" />
+<link rel="canonical" href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" />
+<meta property="og:url" content="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" />
 <meta property="og:site_name" content="poni’s blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2025-05-11T00:00:00+00:00" />
+<meta property="article:published_time" content="2025-05-16T00:00:00+00:00" />
 <meta name="twitter:card" content="summary" />
 <meta property="twitter:title" content="Challenges I Wrote For BreakTheSyntax CTF 2025" />
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-05-11T00:00:00+00:00","datePublished":"2025-05-11T00:00:00+00:00","description":"Challenges I wrote for BreakTheSyntax CTF 2025","headline":"Challenges I Wrote For BreakTheSyntax CTF 2025","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html"}</script>
+{"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2025-05-16T00:00:00+00:00","datePublished":"2025-05-16T00:00:00+00:00","description":"Challenges I wrote for BreakTheSyntax CTF 2025","headline":"Challenges I Wrote For BreakTheSyntax CTF 2025","mainEntityOfPage":{"@type":"WebPage","@id":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html"},"url":"https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" title="poni&apos;s blog" /></head>
 <body><header class="site-header" role="banner">
@@ -42,7 +42,7 @@
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">Challenges I Wrote For BreakTheSyntax CTF 2025</h1>
     <p class="post-meta">
-      <time class="dt-published" datetime="2025-05-11T00:00:00+00:00" itemprop="datePublished">May 11, 2025
+      <time class="dt-published" datetime="2025-05-16T00:00:00+00:00" itemprop="datePublished">May 16, 2025
       </time></p>
   </header>
 
@@ -405,6 +405,14 @@ Copied <a href="https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/">from som
     <span class="n">main</span><span class="p">()</span>
 </code></pre></div></div>
 
+<h3 id="post-mortem">Post-mortem</h3>
+
+<p>Turns out, programs ran with Qemu have an executable stack, even though it’s not marked as such. This is what a player from kalmarunionen wrote to me after the ctf:</p>
+
+<p><img src="/files/bts/imgs/disco.png" alt="image" /></p>
+
+<p>Explains why they solved it so fast :P.</p>
+
 <h2 id="poniponi-virus">poniponi-virus</h2>
 
 <blockquote>
@@ -482,8 +490,8 @@ our string to a relative offset of the heap.</p>
 doesn’t change anything - as long as malloc in glibc is concerned,
 this is the same as doing <code class="language-plaintext highlighter-rouge">malloc(16)</code>.</p>
 
-<p>Writing to the stack or dynamically loaded libraries is off-limits because
-of ASLR. But what we can potentially write to is our binary because
+<p><del>Writing to the stack or dynamically loaded libraries is off-limits because
+of ASLR</del> (check out the post-mortem). But what we can potentially write to is our binary because
 of the two facts about brk and write syscalls mentioned at the beginning
 of the write-up!</p>
 
@@ -741,6 +749,19 @@ calculating the offsets instead.</p>
     <span class="n">main</span><span class="p">()</span>
 </code></pre></div></div>
 
+<h3 id="post-mortem-1">Post-mortem</h3>
+
+<p>Funnily enough, even though the flag was <code class="language-plaintext highlighter-rouge">BtSCTF{I_really_hope_you_solved_it_the_intended_way}</code>
+some people didn’t notice the intended path and did some crazy stuff instead, which were way more cool.
+This is what one player did:</p>
+
+<p><img src="/files/bts/imgs/disco2.png" alt="image" /></p>
+
+<p>One player called lmongol @0ur4n05 on the Discord server was able to to find the stack address,
+which now seems obvious but I didn’t even consider it.</p>
+
+<p><img src="/files/bts/imgs/disco3.png" alt="image" /></p>
+
 <h2 id="hexdumper">HexDumper</h2>
 
 <blockquote>
@@ -750,10 +771,6 @@ calculating the offsets instead.</p>
 Tame the heap, brew thy exploit, and summon forth the sacred flag.
 Fail, and be forever HexDumped into the void.</p>
 </blockquote>
-
-<h3 id="unintended">Unintended</h3>
-<p>There was an unintended in the <code class="language-plaintext highlighter-rouge">ask_for_index()</code> function for negative indexes :(. Skill issue on my part.
-You can ask other teams for their solve.</p>
 
 <h3 id="solution-1">Solution</h3>
 <p>TLDR: Merge with a dump of size zero to get an 8-byte overflow -&gt; get overlapping chunks -&gt; tcache poison -&gt; arbitrary code execution on latest libc (e.g., via FSOP).</p>
@@ -1143,36 +1160,44 @@ I use a payload I’ve seen only ptr-yudai use in their’s write-ups, but it’
     <span class="n">main</span><span class="p">()</span>
 </code></pre></div></div>
 
+<h3 id="post-mortem-2">Post-mortem</h3>
+
+<p>There was an unintended in the <code class="language-plaintext highlighter-rouge">ask_for_index()</code> function for negative indexes :(. Skill issue on my part.
+You can see the Discord server of the competition for other teams’ solves.
+In hindsight, the unintended was probably a good thing. Thanks to it we had a
+challenge that was easier than the other two resulting in a better solve distribution.</p>
+
 <h2 id="other-challenges-i-made">Other challenges I made</h2>
 
-<p>I also made two other challanges, Rainbom Bash Adventure and stupid fd
-manager. but they were pretty simple and not that interesting compared
-to the previous ones, so I won’t dedicate a separate section for them.</p>
+<p>I also made two other challanges, Rainbom Bash Adventure (106 solves)
+and stupid fd manager (35 solves), but they were pretty simple and not
+that interesting compared to the previous ones, so I won’t dedicate a
+separate section for them.</p>
 
-<p>For Rainbom Bash Adventure, the challenge is a renpy visual novel. You
-can find the code of the game in ./game/script.rpy. There what you
-have to do is to parse all the choices as a weighted graph and solve
-the TSP problem using heuristics. You can tell it’s a TSP problem by
-the dialogue: “Help Rainbom Bash smash all the clouds in the fastest
-possible way and return to the origin. I heard it’s a well known
-problem….”. Actually, because of how I generated the graph, you
-could just do a nearest neighbour algorithm instead of a heuristic and
-I was of aware that but I left it as an unintended-intended, since it
-made the generating of the graph easier :P.</p>
+<p>For Rainbom Bash Adventure, the challenge is a Ren’Py visual
+novel. You can find the code of the game in <code class="language-plaintext highlighter-rouge">./game/script.rpy</code>. There
+what you have to do is to parse all the choices as a weighted graph
+and solve the TSP problem using heuristics. You can tell it’s a TSP
+problem by the dialogue: “Help Rainbom Bash smash all the clouds in
+the fastest possible way and return to the origin. I heard it’s a well
+known problem….”. Actually, because of how I generated the graph,
+you could just do a nearest neighbour algorithm instead of a heuristic
+and I was of aware that but I left it as an unintended-intended, since
+it made the generating of the graph stupid simple :P.</p>
 
-<p>For stupid fd manager, the solve was to abuse two facts:</p>
+<p>For stupid fd manager, the solve was about abusing two facts:</p>
 <ul>
   <li>stdio in libc is buffered.</li>
   <li>Opening a file opens the file in the lowest possible file descriptor.</li>
 </ul>
 
-<p>So The solve was in one line to write <code class="language-plaintext highlighter-rouge">3 0 2 ./flag</code>.
+<p>So the solve to write in one line <code class="language-plaintext highlighter-rouge">3 0 2 ./flag</code>.
 The program buffers the whole line -&gt; it closes file descriptor 0 (which is standard input) -&gt;
 it opens ./flag as file descriptor 0 -&gt; scanf() and family now will do io operations
 on the flag instead of standard input, which shows us the flag.</p>
 
 
-  </div><a class="u-url" href="/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" hidden></a>
+  </div><a class="u-url" href="/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" hidden></a>
 </article>
 
       </div>

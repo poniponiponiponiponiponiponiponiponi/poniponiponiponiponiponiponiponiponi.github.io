@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-15T19:46:50+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-11T00:00:00+00:00</published><updated>2025-05-11T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/11/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-16T09:02:37+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-16T00:00:00+00:00</published><updated>2025-05-16T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
 
 &lt;p&gt;I had the opportunity to design challenges for BreakTheSyntax CTF 2025 that took place this weekend, both on-site at Wroclaw’s University of Science and Technology and online. The event was organized by the science circle White Hats, which I’m a member of. I created 5 challenges - three binary exploitation ones, one reverse engineering task, and a misc challenge. The pwn challenges especially received very positive feedback, which made me really happy. You can find all the files for every challenge in this repo, in &lt;a href=&quot;https://github.com/poniponiponiponiponiponiponiponiponi/poniponiponiponiponiponiponiponiponi.github.io/tree/main/files/bts&quot;&gt;/files/bts&lt;/a&gt;. Personally, as a player, I enjoy challenges with source code included, so I distributed each of my tasks with the source code (except the reverse engineering one, of course) :).&lt;/p&gt;
 
@@ -356,6 +356,14 @@ Copied &lt;a href=&quot;https://chalkiadakis.me/posts/hack-a-sat-23/riscv-pwn/&q
     &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
+&lt;h3 id=&quot;post-mortem&quot;&gt;Post-mortem&lt;/h3&gt;
+
+&lt;p&gt;Turns out, programs ran with Qemu have an executable stack, even though it’s not marked as such. This is what a player from kalmarunionen wrote to me after the ctf:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/disco.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Explains why they solved it so fast :P.&lt;/p&gt;
+
 &lt;h2 id=&quot;poniponi-virus&quot;&gt;poniponi-virus&lt;/h2&gt;
 
 &lt;blockquote&gt;
@@ -433,8 +441,8 @@ our string to a relative offset of the heap.&lt;/p&gt;
 doesn’t change anything - as long as malloc in glibc is concerned,
 this is the same as doing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;malloc(16)&lt;/code&gt;.&lt;/p&gt;
 
-&lt;p&gt;Writing to the stack or dynamically loaded libraries is off-limits because
-of ASLR. But what we can potentially write to is our binary because
+&lt;p&gt;&lt;del&gt;Writing to the stack or dynamically loaded libraries is off-limits because
+of ASLR&lt;/del&gt; (check out the post-mortem). But what we can potentially write to is our binary because
 of the two facts about brk and write syscalls mentioned at the beginning
 of the write-up!&lt;/p&gt;
 
@@ -692,6 +700,19 @@ calculating the offsets instead.&lt;/p&gt;
     &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
+&lt;h3 id=&quot;post-mortem-1&quot;&gt;Post-mortem&lt;/h3&gt;
+
+&lt;p&gt;Funnily enough, even though the flag was &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;BtSCTF{I_really_hope_you_solved_it_the_intended_way}&lt;/code&gt;
+some people didn’t notice the intended path and did some crazy stuff instead, which were way more cool.
+This is what one player did:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/disco2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;One player called lmongol @0ur4n05 on the Discord server was able to to find the stack address,
+which now seems obvious but I didn’t even consider it.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/bts/imgs/disco3.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
 &lt;h2 id=&quot;hexdumper&quot;&gt;HexDumper&lt;/h2&gt;
 
 &lt;blockquote&gt;
@@ -701,10 +722,6 @@ calculating the offsets instead.&lt;/p&gt;
 Tame the heap, brew thy exploit, and summon forth the sacred flag.
 Fail, and be forever HexDumped into the void.&lt;/p&gt;
 &lt;/blockquote&gt;
-
-&lt;h3 id=&quot;unintended&quot;&gt;Unintended&lt;/h3&gt;
-&lt;p&gt;There was an unintended in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ask_for_index()&lt;/code&gt; function for negative indexes :(. Skill issue on my part.
-You can ask other teams for their solve.&lt;/p&gt;
 
 &lt;h3 id=&quot;solution-1&quot;&gt;Solution&lt;/h3&gt;
 &lt;p&gt;TLDR: Merge with a dump of size zero to get an 8-byte overflow -&amp;gt; get overlapping chunks -&amp;gt; tcache poison -&amp;gt; arbitrary code execution on latest libc (e.g., via FSOP).&lt;/p&gt;
@@ -1094,30 +1111,38 @@ I use a payload I’ve seen only ptr-yudai use in their’s write-ups, but it’
     &lt;span class=&quot;n&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
+&lt;h3 id=&quot;post-mortem-2&quot;&gt;Post-mortem&lt;/h3&gt;
+
+&lt;p&gt;There was an unintended in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ask_for_index()&lt;/code&gt; function for negative indexes :(. Skill issue on my part.
+You can see the Discord server of the competition for other teams’ solves.
+In hindsight, the unintended was probably a good thing. Thanks to it we had a
+challenge that was easier than the other two resulting in a better solve distribution.&lt;/p&gt;
+
 &lt;h2 id=&quot;other-challenges-i-made&quot;&gt;Other challenges I made&lt;/h2&gt;
 
-&lt;p&gt;I also made two other challanges, Rainbom Bash Adventure and stupid fd
-manager. but they were pretty simple and not that interesting compared
-to the previous ones, so I won’t dedicate a separate section for them.&lt;/p&gt;
+&lt;p&gt;I also made two other challanges, Rainbom Bash Adventure (106 solves)
+and stupid fd manager (35 solves), but they were pretty simple and not
+that interesting compared to the previous ones, so I won’t dedicate a
+separate section for them.&lt;/p&gt;
 
-&lt;p&gt;For Rainbom Bash Adventure, the challenge is a renpy visual novel. You
-can find the code of the game in ./game/script.rpy. There what you
-have to do is to parse all the choices as a weighted graph and solve
-the TSP problem using heuristics. You can tell it’s a TSP problem by
-the dialogue: “Help Rainbom Bash smash all the clouds in the fastest
-possible way and return to the origin. I heard it’s a well known
-problem….”. Actually, because of how I generated the graph, you
-could just do a nearest neighbour algorithm instead of a heuristic and
-I was of aware that but I left it as an unintended-intended, since it
-made the generating of the graph easier :P.&lt;/p&gt;
+&lt;p&gt;For Rainbom Bash Adventure, the challenge is a Ren’Py visual
+novel. You can find the code of the game in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;./game/script.rpy&lt;/code&gt;. There
+what you have to do is to parse all the choices as a weighted graph
+and solve the TSP problem using heuristics. You can tell it’s a TSP
+problem by the dialogue: “Help Rainbom Bash smash all the clouds in
+the fastest possible way and return to the origin. I heard it’s a well
+known problem….”. Actually, because of how I generated the graph,
+you could just do a nearest neighbour algorithm instead of a heuristic
+and I was of aware that but I left it as an unintended-intended, since
+it made the generating of the graph stupid simple :P.&lt;/p&gt;
 
-&lt;p&gt;For stupid fd manager, the solve was to abuse two facts:&lt;/p&gt;
+&lt;p&gt;For stupid fd manager, the solve was about abusing two facts:&lt;/p&gt;
 &lt;ul&gt;
   &lt;li&gt;stdio in libc is buffered.&lt;/li&gt;
   &lt;li&gt;Opening a file opens the file in the lowest possible file descriptor.&lt;/li&gt;
 &lt;/ul&gt;
 
-&lt;p&gt;So The solve was in one line to write &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3 0 2 ./flag&lt;/code&gt;.
+&lt;p&gt;So the solve to write in one line &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;3 0 2 ./flag&lt;/code&gt;.
 The program buffers the whole line -&amp;gt; it closes file descriptor 0 (which is standard input) -&amp;gt;
 it opens ./flag as file descriptor 0 -&amp;gt; scanf() and family now will do io operations
 on the flag instead of standard input, which shows us the flag.&lt;/p&gt;</content><author><name></name></author><category term="ctf" /><category term="pwn" /><category term="c" /><category term="rust" /><category term="risc-v" /><summary type="html">Challenges I wrote for BreakTheSyntax CTF 2025</summary></entry><entry><title type="html">Challenges I Wrote For WxMCTF 2024</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html" rel="alternate" type="text/html" title="Challenges I Wrote For WxMCTF 2024" /><published>2024-03-31T00:00:00+00:00</published><updated>2024-03-31T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/2024/03/31/Challenges-I-Wrote-For-WXM-CTF-2024.html">&lt;h1 id=&quot;intro&quot;&gt;Intro&lt;/h1&gt;
