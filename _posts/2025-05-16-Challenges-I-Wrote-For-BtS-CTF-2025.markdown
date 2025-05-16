@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Challenges I Wrote For BreakTheSyntax CTF 2025"
-date: 2025-05-11
+date: 2025-05-16
 categories: ctf pwn c rust risc-v
 ---
 
@@ -381,6 +381,14 @@ if __name__ == "__main__":
     main()
 ```
 
+### Post-mortem
+
+Turns out, programs ran with Qemu have an executable stack, even though it's not marked as such. This is what a player from kalmarunionen wrote to me after the ctf:
+
+![image](/files/bts/imgs/disco.png)
+
+Explains why they solved it so fast :P.
+
 ## poniponi-virus
 
 > solves: 7
@@ -455,8 +463,8 @@ If you're wondering, the `malloc(0)` is there just for giggles. It
 doesn't change anything - as long as malloc in glibc is concerned,
 this is the same as doing `malloc(16)`.
 
-Writing to the stack or dynamically loaded libraries is off-limits because
-of ASLR. But what we can potentially write to is our binary because
+~~Writing to the stack or dynamically loaded libraries is off-limits because
+of ASLR~~ (check out the post-mortem). But what we can potentially write to is our binary because
 of the two facts about brk and write syscalls mentioned at the beginning
 of the write-up!
 
@@ -724,6 +732,19 @@ if __name__ == "__main__":
     main()
 ```
 
+### Post-mortem
+
+Funnily enough, even though the flag was `BtSCTF{I_really_hope_you_solved_it_the_intended_way}`
+some people didn't notice the intended path and did some crazy stuff instead, which were way more cool.
+This is what one player did:
+
+![image](/files/bts/imgs/disco2.png)
+
+One player called lmongol @0ur4n05 on the Discord server was able to to find the stack address,
+which now seems obvious but I didn't even consider it.
+
+![image](/files/bts/imgs/disco3.png)
+
 ## HexDumper
 
 > solves: 19
@@ -731,10 +752,6 @@ if __name__ == "__main__":
 > A forbidden hex festers deep within the heap’s vile heart.
 > Tame the heap, brew thy exploit, and summon forth the sacred flag.
 > Fail, and be forever HexDumped into the void.
-
-### Unintended
-There was an unintended in the `ask_for_index()` function for negative indexes :(. Skill issue on my part.
-You can ask other teams for their solve.
 
 ### Solution
 TLDR: Merge with a dump of size zero to get an 8-byte overflow -> get overlapping chunks -> tcache poison -> arbitrary code execution on latest libc (e.g., via FSOP).
@@ -1134,28 +1151,36 @@ if __name__ == "__main__":
     main()
 ```
 
+### Post-mortem
+
+There was an unintended in the `ask_for_index()` function for negative indexes :(. Skill issue on my part.
+You can see the Discord server of the competition for other teams' solves.
+In hindsight, the unintended was probably a good thing. Thanks to it we had a
+challenge that was easier than the other two resulting in a better solve distribution.
+
 ## Other challenges I made
 
-I also made two other challanges, Rainbom Bash Adventure and stupid fd
-manager. but they were pretty simple and not that interesting compared
-to the previous ones, so I won't dedicate a separate section for them.
+I also made two other challanges, Rainbom Bash Adventure (106 solves)
+and stupid fd manager (35 solves), but they were pretty simple and not
+that interesting compared to the previous ones, so I won't dedicate a
+separate section for them.
 
-For Rainbom Bash Adventure, the challenge is a renpy visual novel. You
-can find the code of the game in ./game/script.rpy. There what you
-have to do is to parse all the choices as a weighted graph and solve
-the TSP problem using heuristics. You can tell it's a TSP problem by
-the dialogue: "Help Rainbom Bash smash all the clouds in the fastest
-possible way and return to the origin. I heard it's a well known
-problem....". Actually, because of how I generated the graph, you
-could just do a nearest neighbour algorithm instead of a heuristic and
-I was of aware that but I left it as an unintended-intended, since it
-made the generating of the graph easier :P.
+For Rainbom Bash Adventure, the challenge is a Ren'Py visual
+novel. You can find the code of the game in `./game/script.rpy`. There
+what you have to do is to parse all the choices as a weighted graph
+and solve the TSP problem using heuristics. You can tell it's a TSP
+problem by the dialogue: "Help Rainbom Bash smash all the clouds in
+the fastest possible way and return to the origin. I heard it's a well
+known problem....". Actually, because of how I generated the graph,
+you could just do a nearest neighbour algorithm instead of a heuristic
+and I was of aware that but I left it as an unintended-intended, since
+it made the generating of the graph stupid simple :P.
 
-For stupid fd manager, the solve was to abuse two facts:
+For stupid fd manager, the solve was about abusing two facts:
 - stdio in libc is buffered.
 - Opening a file opens the file in the lowest possible file descriptor.
 
-So The solve was in one line to write `3 0 2 ./flag`.
+So the solve to write in one line `3 0 2 ./flag`.
 The program buffers the whole line -> it closes file descriptor 0 (which is standard input) ->
 it opens ./flag as file descriptor 0 -> scanf() and family now will do io operations
 on the flag instead of standard input, which shows us the flag.
