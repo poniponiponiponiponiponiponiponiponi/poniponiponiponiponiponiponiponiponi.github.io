@@ -182,7 +182,7 @@ A TREE array that stores information about each node, a FREE array that stores a
     <span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div></div>
-<p>The check <code class="language-plaintext highlighter-rouge">if depth &lt;= 1 { break; }</code> is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn’t. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it’s two nodes in one, because it’s the buddy of node 1, and it’s also the parent of node 1. To visually this, the tree looks kinda like this, where each node number is its index in the TREE array.</p>
+<p>The check <code class="language-plaintext highlighter-rouge">if depth &lt;= 1 { break; }</code> is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn’t. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it’s two nodes in one, because it’s the buddy of node 1, and it’s also the parent of node 1. To visualize this, the tree looks kinda like this, where each node number is its index in the TREE array.</p>
 
 <p><img src="/files/bts/imgs/tree2.png" alt="image" /></p>
 
@@ -752,7 +752,7 @@ calculating the offsets instead.</p>
 <h3 id="post-mortem-1">Post-mortem</h3>
 
 <p>Funnily enough, even though the flag was <code class="language-plaintext highlighter-rouge">BtSCTF{I_really_hope_you_solved_it_the_intended_way}</code>
-some people didn’t notice the intended path and did some crazy stuff instead, which were way more cool.
+some people didn’t notice the intended path and did some crazy stuff instead, which was way more cool.
 This is what one player did:</p>
 
 <p><img src="/files/bts/imgs/disco2.png" alt="image" /></p>
