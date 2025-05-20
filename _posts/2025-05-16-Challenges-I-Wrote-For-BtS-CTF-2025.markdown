@@ -143,7 +143,7 @@ fn free(ptr: &mut [u8]) {
     }
 }
 ```
-The check `if depth <= 1 { break; }` is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn't. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it's two nodes in one, because it's the buddy of node 1, and it's also the parent of node 1. To visually this, the tree looks kinda like this, where each node number is its index in the TREE array.
+The check `if depth <= 1 { break; }` is done after the first merge is done, so when we start at the root node, it still assumes it has a buddy, even though it doesn't. In the tree I start my indexing from 1 because it makes the math easier, but it also has this nice property that we have an unused phantom-node at index 0. You can even say it's two nodes in one, because it's the buddy of node 1, and it's also the parent of node 1. To visualize this, the tree looks kinda like this, where each node number is its index in the TREE array.
 
 ![image](/files/bts/imgs/tree2.png)
 
@@ -735,7 +735,7 @@ if __name__ == "__main__":
 ### Post-mortem
 
 Funnily enough, even though the flag was `BtSCTF{I_really_hope_you_solved_it_the_intended_way}`
-some people didn't notice the intended path and did some crazy stuff instead, which were way more cool.
+some people didn't notice the intended path and did some crazy stuff instead, which was way more cool.
 This is what one player did:
 
 ![image](/files/bts/imgs/disco2.png)
