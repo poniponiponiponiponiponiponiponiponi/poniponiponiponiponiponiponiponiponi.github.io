@@ -1,8 +1,7 @@
 ---
 permalink: /about/software
+hidden: true
 ---
-
-# Software I use and why
 
 Warning! Opinions below.
 
