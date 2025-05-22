@@ -405,8 +405,8 @@ and a stack buffer overflow -> rop.
 
 ![image](/files/bts/imgs/poni.png)
 
-Those are the parts of the source code that matters (you can find the
-full source in the files linked above):
+Those are the parts of the source code that matter (you can find the
+full source in the files linked at the beginning):
 
 ```c
 #define PONI write(1, poni, 4);
