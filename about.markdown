@@ -20,15 +20,10 @@ I used to play in a team made out of a small group of internet friends.
 In 2024 most people in the team got, what for me feels like, burned out
 and we don't play anymore.
 - Some CTF highlights:
-
 1st place in [pingCTF 2025](https://ctftime.org/event/2670),
-
 3rd place in [1753CTF 2024](https://ctftime.org/event/2234),
-
 3rd place in [BlueHens CTF2023](https://ctftime.org/event/2126),
-
 2nd place in [NewportBlakeCTF 2023](https://ctftime.org/event/2072),
-
 3rd place in [AmateursCTF 2023](https://ctftime.org/event/1983).
 
 Now to be honest those are mostly competitions aimed at intermediate people or beginners so
