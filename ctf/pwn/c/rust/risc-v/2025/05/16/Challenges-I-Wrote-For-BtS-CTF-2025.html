@@ -428,6 +428,78 @@ poniponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponiponi
 partially overwrite mov instructions with b”poni” to get leaks
 and a stack buffer overflow -&gt; rop.</p>
 
+<p><img src="/files/bts/imgs/poni.png" alt="image" /></p>
+
+<p>Those are the parts of the source code that matters (you can find the
+full source in the files linked above):</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#define PONI write(1, poni, 4);
+#define PONI_1 PONI
+#define PONI_2 PONI_1 PONI
+#define PONI_3 PONI_2 PONI
+#define PONI_4 PONI_3 PONI
+#define PONI_5 PONI_4 PONI
+#define PONI_6 PONI_5 PONI
+#define PONI_7 PONI_6 PONI
+#define PONI_8 PONI_7 PONI
+#define PONI_9 PONI_8 PONI
+#define PONI_10 PONI_9 PONI
+#define PONIPONI(N) PONI_##N
+</span>
+<span class="cp">#define BUF_SIZE 0x10
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">poni</span><span class="p">[]</span> <span class="o">=</span> <span class="s">"poni"</span><span class="p">;</span>
+    <span class="n">make_me_a_ctf_challenge</span><span class="p">();</span>
+    <span class="n">srand</span><span class="p">(</span><span class="n">time</span><span class="p">(</span><span class="nb">NULL</span><span class="p">));</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">48</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">size_t</span> <span class="n">text_choices_n</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="n">text_colors</span> <span class="o">/</span> <span class="k">sizeof</span> <span class="n">text_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="kt">size_t</span> <span class="n">bg_choices_n</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="n">bg_colors</span> <span class="o">/</span> <span class="k">sizeof</span> <span class="n">bg_colors</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="kt">size_t</span> <span class="n">style_choices_n</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="n">text_styles</span> <span class="o">/</span> <span class="k">sizeof</span> <span class="n">text_styles</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+        <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">text_color</span> <span class="o">=</span> <span class="n">text_colors</span><span class="p">[</span><span class="n">random_choice</span><span class="p">(</span><span class="n">text_choices_n</span><span class="p">)];</span>
+        <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">bg_color</span> <span class="o">=</span> <span class="n">bg_colors</span><span class="p">[</span><span class="n">random_choice</span><span class="p">(</span><span class="n">bg_choices_n</span><span class="p">)];</span>
+        <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">style</span> <span class="o">=</span> <span class="n">text_styles</span><span class="p">[</span><span class="n">random_choice</span><span class="p">(</span><span class="n">style_choices_n</span><span class="p">)];</span>
+
+        <span class="n">printf</span><span class="p">(</span><span class="s">"%s%s%s"</span><span class="p">,</span> <span class="n">text_color</span><span class="p">,</span> <span class="n">bg_color</span><span class="p">,</span> <span class="n">style</span><span class="p">);</span>
+        <span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+        <span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+        <span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span><span class="n">PONIPONI</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+        <span class="n">usleep</span><span class="p">(</span><span class="mi">75000</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">"!!!"</span><span class="p">);</span>
+
+    <span class="kt">int</span> <span class="n">ponifile</span> <span class="o">=</span> <span class="n">open</span><span class="p">(</span><span class="s">"/proc/self/mem"</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+    <span class="c1">// Incrementing poni_counter... PONI_PONI_OVERFLOW! 🦄</span>
+    <span class="c1">// Seven is a lucky number.</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">poni_counter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">poni_counter</span> <span class="o">&lt;</span> <span class="mh">0x700</span><span class="p">;</span> <span class="o">++</span><span class="n">poni_counter</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">usleep</span><span class="p">(</span><span class="mi">10000</span><span class="p">);</span>
+        
+        <span class="kt">size_t</span> <span class="n">len</span> <span class="o">=</span> <span class="k">sizeof</span> <span class="n">poni</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">to_write</span> <span class="o">=</span> <span class="n">len</span><span class="p">;</span>
+        <span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">poni</span><span class="p">,</span> <span class="n">to_write</span><span class="p">);</span>
+        
+        <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">BUF_SIZE</span><span class="p">;</span>
+        <span class="kt">char</span> <span class="n">s</span><span class="p">[</span><span class="n">BUF_SIZE</span><span class="p">]</span> <span class="o">=</span> <span class="p">{};</span>
+        <span class="kt">char</span> <span class="n">to_read</span> <span class="o">=</span> <span class="n">size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">read</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">to_read</span><span class="p">);</span>
+        
+        <span class="kt">long</span> <span class="n">n</span> <span class="o">=</span> <span class="n">strtol</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">10</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">n</span> <span class="o">==</span> <span class="mh">0xc0ffee</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        
+        <span class="c1">// Error: Too many ponis on the stack. Switching to heap allocation.</span>
+        <span class="kt">char</span> <span class="o">*</span><span class="n">h</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+        <span class="c1">// Poni-ter arithmetic detected! (poni++)^10</span>
+        <span class="n">lseek</span><span class="p">(</span><span class="n">ponifile</span><span class="p">,</span> <span class="p">((</span><span class="kt">size_t</span><span class="p">)</span><span class="n">h</span> <span class="o">+</span> <span class="n">n</span><span class="p">),</span> <span class="n">SEEK_SET</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">write</span><span class="p">(</span><span class="n">ponifile</span><span class="p">,</span> <span class="s">"poni"</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">puts</span><span class="p">(</span><span class="s">"I just don't know what went wrong... :&lt;"</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
 <p>The idea of writing to <code class="language-plaintext highlighter-rouge">/proc/self/mem</code> is from googleCTF’s
 write-flag-where but it’s mentioned in the chall’s description that this
 chall is my spin on their idea, so no
@@ -774,6 +846,8 @@ Fail, and be forever HexDumped into the void.</p>
 
 <h3 id="solution-1">Solution</h3>
 <p>TLDR: Merge with a dump of size zero to get an 8-byte overflow -&gt; get overlapping chunks -&gt; tcache poison -&gt; arbitrary code execution on latest libc (e.g., via FSOP).</p>
+
+<p><img src="/files/bts/imgs/hx.png" alt="image" /></p>
 
 <p>Our goal is to get an out-of-bounds write on the heap.
 By examining the code, we can notice a potential issue in the Duff’s Device when <code class="language-plaintext highlighter-rouge">count</code> equals zero. Indeed in the wikipedia post it’s written that <code class="language-plaintext highlighter-rouge">This code assumes that initial count &gt; 0</code>.
@@ -1184,6 +1258,8 @@ known problem….”. Actually, because of how I generated the graph,
 you could just do a nearest neighbour algorithm instead of a heuristic
 and I was of aware that but I left it as an unintended-intended, since
 it made the generating of the graph stupid simple :P.</p>
+
+<p><img src="/files/bts/imgs/mlp.png" alt="image" /></p>
 
 <p>For stupid fd manager, the solve was about abusing two facts:</p>
 <ul>
