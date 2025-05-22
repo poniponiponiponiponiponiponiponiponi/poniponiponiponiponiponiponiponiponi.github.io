@@ -1251,7 +1251,7 @@ you could just do a nearest neighbour algorithm instead of a heuristic
 and I was of aware that but I left it as an unintended-intended, since
 it made the generating of the graph stupid simple :P.
 
-![image](/files/bts/imgs/mlp.png)
+![image](/files/bts/imgs/pony.png)
 
 For stupid fd manager, the solve was about abusing two facts:
 - stdio in libc is buffered.
