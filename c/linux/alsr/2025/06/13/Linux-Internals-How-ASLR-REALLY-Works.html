@@ -162,20 +162,13 @@ address randomization, while gaining significant security.</p>
 
 <h2 id="linux-internals">Linux Internals</h2>
 
-<p>Żeby zobaczyć eksperymentalnie, nie tylko patrząc na kod i bez
-robienia żadnych założeń, jak liczone są wszystkie adresy, zbudowałem
-kernel Linuxa z symbolami do debugowania. Podpinając debugger gdb do
-kernela uruchomionego w wirtualnej maszynie QEMU zobaczymy od środka
-jaki kod się wykonuje i jakie zmienne przyjmują jakie
-wartości. Zachęcam do wykonania eksperymentu również u siebie w domu!</p>
-
 <p>To experimentally see (without just reading code or making
 assumptions) how addresses are calculated, I built a Linux kernel with
 debug symbols. By attaching GDB to the kernel running in QEMU, we’ll
 see the executing code and variable’s values. I encourage you to do
 this in home!</p>
 
-<h3 id="przygotowanie-środowiska">Przygotowanie środowiska</h3>
+<h3 id="prepare-the-environment">Prepare the environment</h3>
 
 <p>The steps that I’ll do are based on:
 https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/
@@ -195,10 +188,6 @@ replicating the experiment yourself.</p>
 (6.15-rc7 as of writing), and extract it.</p>
 
 <p><img src="/files/aslr/l1.png" alt="image" /></p>
-
-<p>Wygenerować pliki potrzebne do kompilacji poprzez napisanie <code class="language-plaintext highlighter-rouge">$ make
-defconfig</code>, po czym otworzyć plik .config w ulubionym edytorze
-tekstowym, w moim przypadku jest to Emacs, i dopisać na koniec:</p>
 
 <p>Generate build files with <code class="language-plaintext highlighter-rouge">$ make defconfig</code>, then edit the <code class="language-plaintext highlighter-rouge">.config</code>
 with your favourite (in my case Emacs) to add:</p>
@@ -659,13 +648,13 @@ Randomness”</a> compared randomness
 distribution) in different operating systems.  This is how the
 distribution looks on Linux:</p>
 
-<p><img src="dist_linux.png" alt="image" /></p>
+<p><img src="/files/aslr/dist_linux.png" alt="image" /></p>
 
 <p>and this is how it looks on Windows and macOS:</p>
 
-<p><img src="dist_win.png" alt="image" /></p>
+<p><img src="/files/aslr/dist_win.png" alt="image" /></p>
 
-<p><img src="dist_mac.png" alt="image" /></p>
+<p><img src="/files/aslr/dist_mac.png" alt="image" /></p>
 
 <p>I encourage the curious to read the original paper, as it is very
 interesting.</p>

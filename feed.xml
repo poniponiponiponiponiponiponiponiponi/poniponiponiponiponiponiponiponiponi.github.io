@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-13T13:28:54+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-13T13:32:17+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
 
 &lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;Nowadays, the security of our programs doesn’t depend solely on the
@@ -113,20 +113,13 @@ address randomization, while gaining significant security.&lt;/p&gt;
 
 &lt;h2 id=&quot;linux-internals&quot;&gt;Linux Internals&lt;/h2&gt;
 
-&lt;p&gt;Żeby zobaczyć eksperymentalnie, nie tylko patrząc na kod i bez
-robienia żadnych założeń, jak liczone są wszystkie adresy, zbudowałem
-kernel Linuxa z symbolami do debugowania. Podpinając debugger gdb do
-kernela uruchomionego w wirtualnej maszynie QEMU zobaczymy od środka
-jaki kod się wykonuje i jakie zmienne przyjmują jakie
-wartości. Zachęcam do wykonania eksperymentu również u siebie w domu!&lt;/p&gt;
-
 &lt;p&gt;To experimentally see (without just reading code or making
 assumptions) how addresses are calculated, I built a Linux kernel with
 debug symbols. By attaching GDB to the kernel running in QEMU, we’ll
 see the executing code and variable’s values. I encourage you to do
 this in home!&lt;/p&gt;
 
-&lt;h3 id=&quot;przygotowanie-środowiska&quot;&gt;Przygotowanie środowiska&lt;/h3&gt;
+&lt;h3 id=&quot;prepare-the-environment&quot;&gt;Prepare the environment&lt;/h3&gt;
 
 &lt;p&gt;The steps that I’ll do are based on:
 https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/
@@ -146,10 +139,6 @@ replicating the experiment yourself.&lt;/p&gt;
 (6.15-rc7 as of writing), and extract it.&lt;/p&gt;
 
 &lt;p&gt;&lt;img src=&quot;/files/aslr/l1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Wygenerować pliki potrzebne do kompilacji poprzez napisanie &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ make
-defconfig&lt;/code&gt;, po czym otworzyć plik .config w ulubionym edytorze
-tekstowym, w moim przypadku jest to Emacs, i dopisać na koniec:&lt;/p&gt;
 
 &lt;p&gt;Generate build files with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ make defconfig&lt;/code&gt;, then edit the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.config&lt;/code&gt;
 with your favourite (in my case Emacs) to add:&lt;/p&gt;
@@ -610,13 +599,13 @@ Randomness”&lt;/a&gt; compared randomness
 distribution) in different operating systems.  This is how the
 distribution looks on Linux:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;dist_linux.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/aslr/dist_linux.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;and this is how it looks on Windows and macOS:&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;dist_win.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/aslr/dist_win.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;img src=&quot;dist_mac.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/files/aslr/dist_mac.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;I encourage the curious to read the original paper, as it is very
 interesting.&lt;/p&gt;
