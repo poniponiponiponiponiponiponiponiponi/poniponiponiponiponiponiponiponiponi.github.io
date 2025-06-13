@@ -123,20 +123,13 @@ address randomization, while gaining significant security.
 
 ## Linux Internals
 
-Żeby zobaczyć eksperymentalnie, nie tylko patrząc na kod i bez
-robienia żadnych założeń, jak liczone są wszystkie adresy, zbudowałem
-kernel Linuxa z symbolami do debugowania. Podpinając debugger gdb do
-kernela uruchomionego w wirtualnej maszynie QEMU zobaczymy od środka
-jaki kod się wykonuje i jakie zmienne przyjmują jakie
-wartości. Zachęcam do wykonania eksperymentu również u siebie w domu!
-
 To experimentally see (without just reading code or making
 assumptions) how addresses are calculated, I built a Linux kernel with
 debug symbols. By attaching GDB to the kernel running in QEMU, we'll
 see the executing code and variable's values. I encourage you to do
 this in home!
 
-### Przygotowanie środowiska
+### Prepare the environment
 
 The steps that I'll do are based on:
 https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/
@@ -157,10 +150,6 @@ Next, download the latest kernel tarball from https://www.kernel.org/
 (6.15-rc7 as of writing), and extract it.
 
 ![image](/files/aslr/l1.png)
-
-Wygenerować pliki potrzebne do kompilacji poprzez napisanie `$ make
-defconfig`, po czym otworzyć plik .config w ulubionym edytorze
-tekstowym, w moim przypadku jest to Emacs, i dopisać na koniec:
 
 Generate build files with `$ make defconfig`, then edit the `.config`
 with your favourite (in my case Emacs) to add:
@@ -640,13 +629,13 @@ Randomness"](https://arxiv.org/abs/2408.15107) compared randomness
 distribution) in different operating systems.  This is how the
 distribution looks on Linux:
 
-![image](dist_linux.png)
+![image](/files/aslr/dist_linux.png)
 
 and this is how it looks on Windows and macOS:
 
-![image](dist_win.png)
+![image](/files/aslr/dist_win.png)
 
-![image](dist_mac.png)
+![image](/files/aslr/dist_mac.png)
 
 I encourage the curious to read the original paper, as it is very
 interesting.
