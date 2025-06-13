@@ -653,7 +653,7 @@ for the heap (18 bits of entropy), and `randomize_stack_top()` and
 combined). Each of these mechanisms works independently during program
 loading.
 
-## Źródła
+## Sources
 - https://arxiv.org/abs/2408.15107
 - https://whitehats.pwr.edu.pl/research/buffer-overflow/
 - https://sam4k.com/linternals-virtual-memory-part-1/
