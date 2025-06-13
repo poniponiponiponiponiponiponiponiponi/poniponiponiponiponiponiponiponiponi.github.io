@@ -56,7 +56,7 @@ Windows implement various mitigations to make it harder for attackers
 to exploit vulnerabilities - one such mitigation is Address Space
 Layout Randomization, commonly known as ASLR. In this article, we’ll
 explore not just the basics but also, thanks to open-source, examine
-under the hood how each random base address is determined. We’ll also
+under the hood how each random base address is determined. We’ll
 see that no implementation is perfect, as developers implementing such
 solutions must balance security, speed, and simplicity.</p>
 
@@ -190,7 +190,7 @@ replicating the experiment yourself.</p>
 <p><img src="/files/aslr/l1.png" alt="image" /></p>
 
 <p>Generate build files with <code class="language-plaintext highlighter-rouge">$ make defconfig</code>, then edit the <code class="language-plaintext highlighter-rouge">.config</code>
-with your favourite (in my case Emacs) to add:</p>
+with your favourite editor (in my case Emacs) to add:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Coverage collection.
 CONFIG_KCOV=y

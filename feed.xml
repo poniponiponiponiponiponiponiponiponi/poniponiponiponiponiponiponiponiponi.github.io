@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-13T13:34:06+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-13T13:38:11+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
 
 &lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;Nowadays, the security of our programs doesn’t depend solely on the
@@ -7,7 +7,7 @@ Windows implement various mitigations to make it harder for attackers
 to exploit vulnerabilities - one such mitigation is Address Space
 Layout Randomization, commonly known as ASLR. In this article, we’ll
 explore not just the basics but also, thanks to open-source, examine
-under the hood how each random base address is determined. We’ll also
+under the hood how each random base address is determined. We’ll
 see that no implementation is perfect, as developers implementing such
 solutions must balance security, speed, and simplicity.&lt;/p&gt;
 
@@ -141,7 +141,7 @@ replicating the experiment yourself.&lt;/p&gt;
 &lt;p&gt;&lt;img src=&quot;/files/aslr/l1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
 
 &lt;p&gt;Generate build files with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ make defconfig&lt;/code&gt;, then edit the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.config&lt;/code&gt;
-with your favourite (in my case Emacs) to add:&lt;/p&gt;
+with your favourite editor (in my case Emacs) to add:&lt;/p&gt;
 
 &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Coverage collection.
 CONFIG_KCOV=y
