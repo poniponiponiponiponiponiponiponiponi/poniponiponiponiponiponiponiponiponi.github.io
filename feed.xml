@@ -1,4 +1,652 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-05-22T00:20:20+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-16T00:00:00+00:00</published><updated>2025-05-16T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-13T13:28:54+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
+
+&lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
+&lt;p&gt;Nowadays, the security of our programs doesn’t depend solely on the
+programmer. Modern compilers and operating systems like Linux and
+Windows implement various mitigations to make it harder for attackers
+to exploit vulnerabilities - one such mitigation is Address Space
+Layout Randomization, commonly known as ASLR. In this article, we’ll
+explore not just the basics but also, thanks to open-source, examine
+under the hood how each random base address is determined. We’ll also
+see that no implementation is perfect, as developers implementing such
+solutions must balance security, speed, and simplicity.&lt;/p&gt;
+
+&lt;h2 id=&quot;quick-demonstration&quot;&gt;Quick Demonstration&lt;/h2&gt;
+&lt;p&gt;Wikipedia tells us: “Address Space Layout Randomization is a computer
+security technique used to prevent exploitation of memory corruption
+vulnerabilities. To prevent an attacker from redirecting code
+execution, for example to a specific function in memory, ASLR randomly
+arranges key data areas of a process in the address space, including
+the base of the executable and the positions of the stack, heap, and
+libraries.” While this definition is correct, I believe things are
+easiest to explain by showing. Let’s take a simple C program printing
+the address of a local variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;c&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;char&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;%p&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After compiling and running this code multiple times, we can observe
+that the variable’s address changes each time. This is thanks to ASLR!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/p1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We can repeat the experiment for variables in different memory
+segments: e.g., local, global, and function addresses.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;globalna&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;funkcja&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lokalna&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;lokalna:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;%p&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lokalna&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;globalna:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;%p&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;globalna&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;funkcja:&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;%p&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;funkcja&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;printf: &lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\t&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;%p&lt;/span&gt;&lt;span class=&quot;se&quot;&gt;\n&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;printf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;And the result:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/p2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Observant readers can already spot some imperfections, but let’s not
+get ahead of ourselves :).&lt;/p&gt;
+
+&lt;h2 id=&quot;the-cake---position-independent-executable-pie&quot;&gt;The Cake - Position Independent Executable (PIE)&lt;/h2&gt;
+
+&lt;p&gt;ASLR presence alone isn’t enough. For an executable to be loaded
+anywhere in the virtual address space, it must be compiled in a
+special way to be position-independent. The compiler must avoid
+absolute addressing and use relative addressing everywhere. Shared
+libraries have always been compiled with the assumption they wouldn’t
+know their memory location, but historically this wasn’t always true
+for executables. For example, let’s take this program and compile it
+in different ways:&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;global&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x41&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;global&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x61&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;For x86-64 64-bit systems, compilation method doesn’t matter - both
+cases (at least with my gcc 15.1.1) use RIP-relative addressing: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;movl
+$0x61, 0x2efc(%rip)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/pie2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;For 32-bit x86 systems, things get more interesting. The x86
+architecture lacks EIP-relative addressing, so the compiler works
+around this differently for PIE binaries. For no-PIE, we know the
+variable address. For PIE, the compiler created a special
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;__x86.get_pc_thunk.ax&lt;/code&gt; function that loads &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%eip&lt;/code&gt; into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;%eax&lt;/code&gt; by
+reading the return address from the stack.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/pie3.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/thunk.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Depending on your distro, PIE may be enabled by default or
+not. There’s no standard. According to my tests on Fedora and
+OpenSUSE, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-pie&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-fpie&lt;/code&gt; flags aren’t added automatically. On Arch
+(which I use), Gentoo, Ubuntu and Debian, these flags are added
+automatically… except when using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-static&lt;/code&gt;! For illustration, we’ll
+use checksec from pwntools. Compilation with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-static&lt;/code&gt; builds without
+position-independent code. I’d recommend avoiding this flag and using
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-static-pie&lt;/code&gt; instead. We lose nothing but a few CPU cycles during
+address randomization, while gaining significant security.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/pie1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;linux-internals&quot;&gt;Linux Internals&lt;/h2&gt;
+
+&lt;p&gt;Żeby zobaczyć eksperymentalnie, nie tylko patrząc na kod i bez
+robienia żadnych założeń, jak liczone są wszystkie adresy, zbudowałem
+kernel Linuxa z symbolami do debugowania. Podpinając debugger gdb do
+kernela uruchomionego w wirtualnej maszynie QEMU zobaczymy od środka
+jaki kod się wykonuje i jakie zmienne przyjmują jakie
+wartości. Zachęcam do wykonania eksperymentu również u siebie w domu!&lt;/p&gt;
+
+&lt;p&gt;To experimentally see (without just reading code or making
+assumptions) how addresses are calculated, I built a Linux kernel with
+debug symbols. By attaching GDB to the kernel running in QEMU, we’ll
+see the executing code and variable’s values. I encourage you to do
+this in home!&lt;/p&gt;
+
+&lt;h3 id=&quot;przygotowanie-środowiska&quot;&gt;Przygotowanie środowiska&lt;/h3&gt;
+
+&lt;p&gt;The steps that I’ll do are based on:
+https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/
+. You can skip reading this section if you’re not interested in
+replicating the experiment yourself.&lt;/p&gt;
+
+&lt;p&gt;First install all the dependencies:&lt;/p&gt;
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# ubuntu&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get update
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;apt-get &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;git fakeroot build-essential ncurses-dev xz-utils libssl-dev bc flex libelf-dev bison qemu-system-x86 debootstrap
+
+&lt;span class=&quot;c&quot;&gt;# archlinux&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;sudo &lt;/span&gt;pacman &lt;span class=&quot;nt&quot;&gt;-S&lt;/span&gt; git fakeroot base-devel ncurses xz openssl bc flex libelf bison qemu-system-x86 debootstrap
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Next, download the latest kernel tarball from https://www.kernel.org/
+(6.15-rc7 as of writing), and extract it.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l1.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Wygenerować pliki potrzebne do kompilacji poprzez napisanie &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ make
+defconfig&lt;/code&gt;, po czym otworzyć plik .config w ulubionym edytorze
+tekstowym, w moim przypadku jest to Emacs, i dopisać na koniec:&lt;/p&gt;
+
+&lt;p&gt;Generate build files with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ make defconfig&lt;/code&gt;, then edit the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.config&lt;/code&gt;
+with your favourite (in my case Emacs) to add:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Coverage collection.
+CONFIG_KCOV=y
+
+# Debug info for symbolization.
+CONFIG_DEBUG_INFO=y
+
+# Memory bug detector
+CONFIG_KASAN=y
+CONFIG_KASAN_INLINE=y
+
+# Required for Debian Stretch
+CONFIG_CONFIGFS_FS=y
+CONFIG_SECURITYFS=y
+
+CONFIG_DEBUG_INFO_DWARF5=y
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;After that, run $ make olddefconfig then compile with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ make
+-j$(nproc)&lt;/code&gt;. This may take 10 minutes to several hours.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l2.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;If you’ve never compiled a kernel before, as you can see it’s not
+nearly as scary as it might seem! After the compilation is done, two
+files should be created: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;./vmlinux&lt;/code&gt; which is the kernel file with
+debugging symbols and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch/x86_64/boot/bzImage&lt;/code&gt;, which is the
+compressed vmlinux loaded by the bootloader.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l3.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Next, we need to prepare a filesystem image that our compiled kernel
+will use. We execute those commands:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;mkdir &lt;/span&gt;image &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;image
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;wget https://raw.githubusercontent.com/google/syzkaller/master/tools/create-image.sh &lt;span class=&quot;nt&quot;&gt;-O&lt;/span&gt; create-image.sh
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;chmod&lt;/span&gt; +x create-image.sh
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./create-image.sh
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;that will create a disk image based on Debian.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l4.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;At this point we have everything ready to run the system. We create a
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;./run.sh&lt;/code&gt; file into which we write:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;qemu-system-x86_64 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-m&lt;/span&gt; 1G &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-smp&lt;/span&gt; 2 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-gdb&lt;/span&gt; tcp::1234 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-kernel&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$1&lt;/span&gt;/arch/x86/boot/bzImage &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-append&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;console=ttyS0 root=/dev/sda earlyprintk=serial net.ifnames=0 nokaslr&quot;&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-drive&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$2&lt;/span&gt;/bullseye.img,format&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;raw &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-net&lt;/span&gt; user,host&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;10.0.2.10,hostfwd&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;tcp:127.0.0.1:10021-:22 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-net&lt;/span&gt; nic,model&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;e1000 &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-enable-kvm&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-nographic&lt;/span&gt; &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        &lt;span class=&quot;nt&quot;&gt;-pidfile&lt;/span&gt; vm.pid &lt;span class=&quot;se&quot;&gt;\&lt;/span&gt;
+        2&amp;gt;&amp;amp;1 | &lt;span class=&quot;nb&quot;&gt;tee &lt;/span&gt;vm.log
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;and we run it with:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;chmod&lt;/span&gt; +x run.sh
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./run.sh &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; image/
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l5.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;After execution we should see a screen with system login, we log in as
+the root user, which has no password.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l6.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;At this point we can connect from a second terminal using gdb to port
+1234 provided by qemu. We run gdb with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ gdb ./vmlinux&lt;/code&gt; and enter the
+gdb command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;target remote 0:1234&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l7.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;At this point we have gdb connected to the Linux kernel that we
+compiled, yay! We can execute all the commands we know from debugging
+programs running in userspace, like breakpoints, stepping and
+nexting. Additionally I use a gdb plugin
+&lt;a href=&quot;https://github.com/pwndbg/pwndbg&quot;&gt;pwndbg&lt;/a&gt;, which theoretically is
+created with exploit development and reverse engineering in mind,
+however I also use it for regular debugging since it makes using gdb
+easier and I’m used to it. There are also other plugins like
+&lt;a href=&quot;https://github.com/hugsy/gef&quot;&gt;gef&lt;/a&gt;, or
+&lt;a href=&quot;https://github.com/cyrus-and/gdb-dashboard&quot;&gt;gdb-dashboard&lt;/a&gt;, which is
+more created with regular programmers in mind. I recommend picking one
+and installing it according to the instructions in the given plugin’s
+README.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/l8.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We’re also able to connect to the user inside qemu via ssh, as well as
+transfer files through scp (which can be useful e.g. to transfer a
+binary that we compile locally but want to execute inside QEMU).&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;scp &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; image/bullseye.id_rsa &lt;span class=&quot;nt&quot;&gt;-P&lt;/span&gt; 10021 &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;StrictHostKeyChecking no&quot;&lt;/span&gt; ./plik root@localhost:/
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;ssh &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; image/bullseye.id_rsa &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 10021 &lt;span class=&quot;nt&quot;&gt;-o&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;StrictHostKeyChecking no&quot;&lt;/span&gt; root@localhost
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;deep-dive&quot;&gt;Deep-dive&lt;/h3&gt;
+
+&lt;p&gt;The function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;static int load_elf_binary(struct linux_binprm *bprm)&lt;/code&gt;
+in the file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fs/binfmt_elf.c&lt;/code&gt; is responsible for loading executable
+files into memory, and it’s precisely from its fragments that we’ll
+begin, as randomization starts right here.&lt;/p&gt;
+
+&lt;p&gt;To understand how this works in gdb, we set a breakpoint in the
+aforementioned function and will run the program &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;$ cat
+/proc/self/maps&lt;/code&gt;, which will display where all memory segments are
+mapped.&lt;/p&gt;
+
+&lt;h4 id=&quot;binary&quot;&gt;Binary&lt;/h4&gt;
+
+&lt;p&gt;On line 1130 we have code executing for ELF files with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ET_DYN&lt;/code&gt; (in
+other words, these are binaries compiled with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-pie -fpie&lt;/code&gt;). In the if
+condition, we additionally check whether our binary has some
+“interpreter”. In the case of ELFs, this is the loader/ld-linux.so,
+while in the case of executable text files, the interpreter is defined
+by the &lt;a href=&quot;https://en.wikipedia.org/wiki/Shebang_(Unix)&quot;&gt;shebang&lt;/a&gt;.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;			&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;interpreter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+				&lt;span class=&quot;cm&quot;&gt;/* On ET_DYN with PT_INTERP, we do the ASLR. */&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;load_bias&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ELF_ET_DYN_BASE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+				&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PF_RANDOMIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+					&lt;span class=&quot;n&quot;&gt;load_bias&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arch_mmap_rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+				&lt;span class=&quot;cm&quot;&gt;/* Adjust alignment as requested. */&lt;/span&gt;
+				&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;alignment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+					&lt;span class=&quot;n&quot;&gt;load_bias&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;alignment&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+				&lt;span class=&quot;n&quot;&gt;elf_flags&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;|=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAP_FIXED_NOREPLACE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The macro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ELF_ET_DYN_BASE&lt;/code&gt; equals &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x555555554aaa&lt;/code&gt; and defines the
+base address (precisely 0x555555554000 after alignment to memory
+pages) for PIE loading, to which our program would be loaded if not
+for ASLR.  This seemingly random value was most likely chosen as easy
+to recognize during debugging - the “555” pattern is characteristic
+and immediately indicates a PIE binary. Since we have ASLR enabled,
+the line &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;load_bias += arch_mmap_rnd();&lt;/code&gt; is additionally executed,
+which adds randomness to the address where our program will be
+loaded. Now let’s examine this function.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_mmap_rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arch_rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_is_ia32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap32_rnd_bits&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap64_rnd_bits&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rndbits&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PF_RANDOMIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_random_long&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1UL&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rndbits&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_SHIFT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_mmap_rnd&lt;/code&gt; calls &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_rnd&lt;/code&gt; with the argument
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap64_rnd_bits&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap32_rnd_bits&lt;/code&gt;, depending on whether our
+program is 32-bit. The constant &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap64_rnd_bits&lt;/code&gt; equals 28. The
+function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_rnd&lt;/code&gt; generates a 28-bit number for us, then performs a
+bit shift (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PAGE_SHIFT&lt;/code&gt;) to align the numbers to memory pages, which
+have a size of 4KiB. Example numbers that this function will return
+are: 0xe14e215000, 0x110feee000, and 0x6eb8eda000.&lt;/p&gt;
+
+&lt;p&gt;The generated number is added to the variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;load_bias&lt;/code&gt;, which
+equals &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x555555554aaa&lt;/code&gt;. After adding &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x6eb8eda000&lt;/code&gt; to this variable,
+it takes the value &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x55c40e42eaaa&lt;/code&gt;. The mask &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;~(alignment - 1)&lt;/code&gt;
+equals &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0xfffffffffffff000&lt;/code&gt;, so after the masking operation &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;load_bias
+&amp;amp;= ~(alignment - 1);&lt;/code&gt; the variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;load_bias&lt;/code&gt; equals
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;0x55c40e42e000&lt;/code&gt;. After typing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;continue&lt;/code&gt; in gdb, the cat command
+shows us that indeed our program appeared at this location in memory.&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;root@syzkaller:~# &lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /proc/self/maps
+55c40e42e000-55c40e430000 r--p 00000000 08:00 12243                      /usr/bin/cat
+55c40e430000-55c40e435000 r-xp 00002000 08:00 12243                      /usr/bin/cat
+55c40e435000-55c40e438000 r--p 00007000 08:00 12243                      /usr/bin/cat
+55c40e438000-55c40e439000 r--p 00009000 08:00 12243                      /usr/bin/cat
+55c40e439000-55c40e43a000 rw-p 0000a000 08:00 12243                      /usr/bin/cat
+55c448bc7000-55c448be8000 rw-p 00000000 00:00 0                          &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;heap]
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;heap&quot;&gt;Heap&lt;/h4&gt;
+
+&lt;p&gt;Much lower in the same function, at the very end on line 1330, we have
+randomization of the location where the heap beginning will be found.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ELF_PAGEALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elf_brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PF_RANDOMIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;snapshot_randomize_va_space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;cm&quot;&gt;/*
+		 * If we didn&apos;t move the brk to ELF_ET_DYN_BASE (above),
+		 * leave a gap between .bss and brk.
+		 */&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk_moved&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_SIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+		&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start_brk&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arch_randomize_brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;brk_moved&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;This value is randomized in the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_randomize_brk&lt;/code&gt;, which
+we’ll examine. The name &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;brk&lt;/code&gt; comes from the fact that the place where
+the heap is designated is defined by the system call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;brk&lt;/code&gt;. The word
+“break” here means “boundary” or “breakpoint” - &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;brk&lt;/code&gt; is a pointer in
+memory that defines the end of the heap. When a program needs more
+memory on the heap, it uses the system call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;brk&lt;/code&gt; and “moves the
+break” higher in memory, thereby increasing the available space.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_randomize_brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_is_ia32&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SZ_32M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;brk&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SZ_1G&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;randomize_page&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PAGE_ALIGNED&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_ALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_ALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ULONG_MAX&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ULONG_MAX&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_SHIFT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_random_long&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;%&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;range&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_SHIFT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_randomize_brk&lt;/code&gt; we call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;randomize_page&lt;/code&gt; with an
+argument depending on whether the program is 32-bit. The function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;randomize_page&lt;/code&gt; generates a number in the range from start to
+start+range (not inclusive). So we’ll generate a number in the range
+from mm-&amp;gt;brk (which equals the address of the memory page after which
+our loaded program ends) to mm-&amp;gt;brk+1GiB.&lt;/p&gt;
+
+&lt;p&gt;So it might seem that we have an additional 1 Gigabyte (2^30) of
+randomness. However, it should be remembered that this address is
+aligned to a memory page (4KiB, i.e., 2^12), so 12 bits are
+subtracted.  Assuming we know the binary address but don’t know the
+heap address, we have 18 (30-12) bits of entropy. This isn’t
+particularly much and is a certain weakness in ASLR on Linux. This
+fact was exploited in this year’s edition of the Break The Syntax
+hacking competition in one of my tasks &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;poniponi-virus&lt;/code&gt;, which was one
+of the more difficult tasks. You can see a write-up
+&lt;a href=&quot;https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html&quot;&gt;here&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h4 id=&quot;stack&quot;&gt;Stack&lt;/h4&gt;
+
+&lt;p&gt;We determine the stack address on line 1020 in the function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;load_elf_binary&lt;/code&gt;. Right after the base address to which our shared
+libraries will be loaded is determined (which will be discussed
+later).&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;	&lt;span class=&quot;cm&quot;&gt;/* Do this so that we can load the interpreter, if need be.  We will
+	   change some of these later */&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;retval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;setup_arg_pages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bprm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;STACK_TOP&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+				 &lt;span class=&quot;n&quot;&gt;executable_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;retval&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;goto&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;out_free_dentry&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setup_arg_pages&lt;/code&gt; takes as one of its arguments the top
+of the stack. It should be remembered that in the case of x64
+architecture, the stack grows downward (i.e., toward lower addresses),
+so we’re actually determining the beginning of the stack. The macro
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;STACK_TOP&lt;/code&gt; equals 0x7ffffffff000.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;#define __STACK_RND_MASK(is32bit) ((is32bit) ? 0x7ff : 0x3fffff)
+#define STACK_RND_MASK __STACK_RND_MASK(mmap_is_ia32())
+&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;randomize_stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;random_variable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PF_RANDOMIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;random_variable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_random_long&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;random_variable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;STACK_RND_MASK&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;random_variable&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;lt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_SHIFT&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#ifdef CONFIG_STACK_GROWSUP
+&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_ALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;random_variable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#else
+&lt;/span&gt;	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_ALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;random_variable&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#endif
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The macro &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;STACK_RND_MASK&lt;/code&gt; equals 0x3fffff, so we generate a number
+consisting of 22 random bits aligned to a memory page. After this, we
+subtract this number from the address that would be the top of the
+stack if not for ASLR.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;setup_arg_pages&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;linux_binprm&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;bprm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		    &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;executable_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#else
+&lt;/span&gt;	&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arch_align_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_ALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;unlikely&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap_min_addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;||&lt;/span&gt;
+	    &lt;span class=&quot;n&quot;&gt;unlikely&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vma&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vm_end&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vma&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vm_start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap_min_addr&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ENOMEM&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;stack_shift&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vma&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vm_end&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_top&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;bprm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_shift&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;arg_start&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bprm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;p&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;cp&quot;&gt;#endif
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setup_arg_pages&lt;/code&gt; we additionally call the function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_align_stack&lt;/code&gt;, which adds additional random less-significant bits
+to our stack. As a result, the stack won’t start at the beginning/end
+of some memory page, but in the middle. The rest of the page will
+simply be filled with zeros. This two-level stack randomization
+(randomization at the page level + fine randomization within the page)
+ensures both significant entropy and proper alignment for instructions
+requiring specific alignment.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_align_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;current&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;personality&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ADDR_NO_RANDOMIZE&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;randomize_va_space&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;get_random_u32_below&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8192&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sp&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;~&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0xf&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_align_stack&lt;/code&gt; we can see that we generate a
+number less than 8192 (0x2000). So we have 13 random bits. After this,
+before returning this number, we mask it with ~0xf, i.e., we remove 4
+bits of randomness, ultimately obtaining 9 bits of
+randomness. However, one bit overlaps with another bit from the
+previously generated number, so in practice we have about 30 bits of
+randomness (22+9-1).&lt;/p&gt;
+
+&lt;h4 id=&quot;shared-libraries-and-mmap&quot;&gt;Shared libraries and mmap&lt;/h4&gt;
+
+&lt;p&gt;In the function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;load_elf_binary&lt;/code&gt; on line 1016 we have the function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;setup_new_exec&lt;/code&gt;, which calls &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_pick_mmap_layout&lt;/code&gt;, which in turn
+calls &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_pick_mmap_base&lt;/code&gt;. In this function we determine the base
+address for dynamically loaded shared libraries (such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;libc.so.6&lt;/code&gt;)
+and addresses returned by the mmap system call.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_pick_mmap_layout&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mm_struct&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rlimit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rlim_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_is_legacy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;clear_bit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MMF_TOPDOWN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;set_bit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MMF_TOPDOWN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;flags&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;arch_pick_mmap_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mm&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_legacy_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;arch_rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap64_rnd_bits&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_size_64bit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;),&lt;/span&gt;
+			&lt;span class=&quot;n&quot;&gt;rlim_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;cm&quot;&gt;/*
+ * This function, called very early during the creation of a new
+ * process VM image, sets up which VM layout function to use:
+ */&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;arch_pick_mmap_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;legacy_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;random_factor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+		&lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rlimit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rlim_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;legacy_base&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap_legacy_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random_factor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mmap_is_legacy&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;base&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;legacy_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;else&lt;/span&gt;
+		&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;base&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mmap_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;random_factor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rlim_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The variable &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*base&lt;/code&gt; is our base address and the value returned by the
+function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap_base&lt;/code&gt; is assigned to it.&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;mmap_base&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+			       &lt;span class=&quot;k&quot;&gt;struct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rlimit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rlim_stack&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rlim_stack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;rlim_cur&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pad&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_maxrandom_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stack_guard_gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;cm&quot;&gt;/* Values close to RLIM_INFINITY can overflow. */&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pad&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pad&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+
+	&lt;span class=&quot;cm&quot;&gt;/*
+	 * Top of mmap area (just below the process stack).
+	 * Leave an at least ~128 MB hole with possible stack randomization.
+	 */&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;clamp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SIZE_128M&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;6&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;PAGE_ALIGN&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;task_size&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gap&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rnd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The argument &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rnd&lt;/code&gt; equals the result of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_rnd(mmap64_rnd_bits)&lt;/code&gt;,
+which was discussed when examining how the binary is randomized and
+works exactly the same way. As a reminder, the value returned by this
+function gives us 28 bits of entropy.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unsigned long task_size_64bit(int full_addr_space)
+{
+	return full_addr_space ? TASK_SIZE_MAX : DEFAULT_MAP_WINDOW;
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The argument &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;task_size&lt;/code&gt; equals the result of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;task_size_64bit(0)&lt;/code&gt;,
+i.e., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DEFAULT_MAP_WINDOW&lt;/code&gt; (0x7ffffffff000), since the function is
+called with argument 0.&lt;/p&gt;
+
+&lt;p&gt;The base address is determined only once during program loading and
+all libraries/mmap system calls depend on it! In the function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unmapped_area_topdown&lt;/code&gt; in the file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;./mm/vma.c&lt;/code&gt; we determine
+subsequent addresses returned by mmap and loaded libraries. We won’t
+examine this function anymore, as it’s quite complicated and considers
+many edge cases.&lt;/p&gt;
+
+&lt;p&gt;As we can see in the images below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/mmap.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/files/aslr/cat.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;for the execution of the command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cat /proc/self/maps&lt;/code&gt;, the function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap_base&lt;/code&gt; will return 0x7f1c82d07000. This is an address equal to
+the end of the last memory segment appearing before the stack. In
+practice, it turns out that each time the function
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;unmapped_area_topdown&lt;/code&gt; returns the highest possible address that is
+lower than the previous one, so all memory segments “touch each other
+and there are no gaps”. As a result, if an attacker knows one address
+(e.g., a leak of the address of some anonymous memory call returned by
+the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;mmap&lt;/code&gt; system call), they know all other addresses (e.g., the
+address of the standard libc library), because the relative offset
+remains constant. This is a major weakness in how Linux implements
+ASLR.&lt;/p&gt;
+
+&lt;h2 id=&quot;comparison-with-other-operating-systems&quot;&gt;Comparison with other operating systems&lt;/h2&gt;
+&lt;p&gt;An interesting fact is that ASLR in Linux, unlike Windows and macOS,
+is the only one that has equal probability distribution
+everywhere. Research conducted in the paper &lt;a href=&quot;https://arxiv.org/abs/2408.15107&quot;&gt;“The Illusion of
+Randomness”&lt;/a&gt; compared randomness
+(amount of absolute and conditional entropy bits, as well as
+distribution) in different operating systems.  This is how the
+distribution looks on Linux:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;dist_linux.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;and this is how it looks on Windows and macOS:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;dist_win.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;dist_mac.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;I encourage the curious to read the original paper, as it is very
+interesting.&lt;/p&gt;
+
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
+&lt;p&gt;ASLR in the Linux kernel, despite being implemented in a relatively
+simple and understandable way, has several significant security
+weaknesses. The most important of these are low heap entropy (18 bits)
+and deterministic layout of shared libraries, where knowing one
+address allows inferring all the others.  The implementation is based
+on several key functions: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_mmap_rnd()&lt;/code&gt; for randomization of
+binaries and libraries (28 bits of entropy), &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_randomize_brk()&lt;/code&gt;
+for the heap (18 bits of entropy), and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;randomize_stack_top()&lt;/code&gt; and
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;arch_align_stack()&lt;/code&gt; for the stack (about 30 bits of entropy
+combined). Each of these mechanisms works independently during program
+loading.&lt;/p&gt;
+
+&lt;h2 id=&quot;źródła&quot;&gt;Źródła&lt;/h2&gt;
+&lt;ul&gt;
+  &lt;li&gt;https://arxiv.org/abs/2408.15107&lt;/li&gt;
+  &lt;li&gt;https://whitehats.pwr.edu.pl/research/buffer-overflow/&lt;/li&gt;
+  &lt;li&gt;https://sam4k.com/linternals-virtual-memory-part-1/&lt;/li&gt;
+  &lt;li&gt;https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/&lt;/li&gt;
+  &lt;li&gt;https://en.wikipedia.org/wiki/Address_space_layout_randomization&lt;/li&gt;
+  &lt;li&gt;https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/
+(a very similar article but has some errors and not everything is
+showed)&lt;/li&gt;
+  &lt;li&gt;https://www.kernel.org/&lt;/li&gt;
+  &lt;li&gt;https://github.com/pwndbg/pwndbg&lt;/li&gt;
+&lt;/ul&gt;</content><author><name></name></author><category term="c" /><category term="linux" /><category term="alsr" /><summary type="html">Linux Internals: How ASLR REALLY works</summary></entry><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-16T00:00:00+00:00</published><updated>2025-05-16T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
 
 &lt;p&gt;I had the opportunity to design challenges for BreakTheSyntax CTF 2025 that took place this weekend, both on-site at Wroclaw’s University of Science and Technology and online. The event was organized by the science circle White Hats, which I’m a member of. I created 5 challenges - three binary exploitation ones, one reverse engineering task, and a misc challenge. The pwn challenges especially received very positive feedback, which made me really happy. You can find all the files for every challenge in this repo, in &lt;a href=&quot;https://github.com/poniponiponiponiponiponiponiponiponi/poniponiponiponiponiponiponiponiponi.github.io/tree/main/files/bts&quot;&gt;/files/bts&lt;/a&gt;. Personally, as a player, I enjoy challenges with source code included, so I distributed each of my tasks with the source code (except the reverse engineering one, of course) :).&lt;/p&gt;
 
