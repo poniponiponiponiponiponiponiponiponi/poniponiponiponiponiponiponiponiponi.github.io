@@ -582,7 +582,7 @@ which was discussed when examining how the binary is randomized and
 works exactly the same way. As a reminder, the value returned by this
 function gives us 28 bits of entropy.
 
-```
+```c
 unsigned long task_size_64bit(int full_addr_space)
 {
 	return full_addr_space ? TASK_SIZE_MAX : DEFAULT_MAP_WINDOW;
@@ -654,13 +654,12 @@ combined). Each of these mechanisms works independently during program
 loading.
 
 ## Sources
-- https://arxiv.org/abs/2408.15107
-- https://whitehats.pwr.edu.pl/research/buffer-overflow/
-- https://sam4k.com/linternals-virtual-memory-part-1/
-- https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/
-- https://en.wikipedia.org/wiki/Address_space_layout_randomization
-- https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/
+- [https://arxiv.org/abs/2408.15107](https://arxiv.org/abs/2408.15107)
+- [https://sam4k.com/linternals-virtual-memory-part-1/](https://sam4k.com/linternals-virtual-memory-part-1/)
+- [https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/](https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/)
+- [https://en.wikipedia.org/wiki/Address_space_layout_randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
+- [https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/](https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/)
   (a very similar article but has some errors and not everything is
   showed)
-- https://www.kernel.org/
-- https://github.com/pwndbg/pwndbg
+- [https://www.kernel.org/](https://www.kernel.org/)
+- [https://github.com/pwndbg/pwndbg](https://github.com/pwndbg/pwndbg)
