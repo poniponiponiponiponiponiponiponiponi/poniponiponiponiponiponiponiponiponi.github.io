@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-13T13:38:11+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.2">Jekyll</generator><link href="https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://poniponiponiponiponiponiponiponiponi.github.io/" rel="alternate" type="text/html" /><updated>2025-06-14T01:59:23+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/feed.xml</id><title type="html">poni’s blog</title><subtitle>My tech blog where I write about things I find interesting. Mostly low level programming, linux and ctf competitions.</subtitle><entry><title type="html">Linux Internals: How ASLR *REALLY* works</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" rel="alternate" type="text/html" title="Linux Internals: How ASLR *REALLY* works" /><published>2025-06-13T00:00:00+00:00</published><updated>2025-06-13T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html">&lt;h1 id=&quot;linux-internals-how-aslr-really-works&quot;&gt;Linux Internals: How ASLR &lt;em&gt;REALLY&lt;/em&gt; works&lt;/h1&gt;
 
 &lt;h2 id=&quot;introduction&quot;&gt;Introduction&lt;/h2&gt;
 &lt;p&gt;Nowadays, the security of our programs doesn’t depend solely on the
@@ -554,10 +554,10 @@ which was discussed when examining how the binary is randomized and
 works exactly the same way. As a reminder, the value returned by this
 function gives us 28 bits of entropy.&lt;/p&gt;
 
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;unsigned long task_size_64bit(int full_addr_space)
-{
-	return full_addr_space ? TASK_SIZE_MAX : DEFAULT_MAP_WINDOW;
-}
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kt&quot;&gt;unsigned&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;task_size_64bit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_addr_space&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;full_addr_space&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TASK_SIZE_MAX&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DEFAULT_MAP_WINDOW&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
 &lt;p&gt;The argument &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;task_size&lt;/code&gt; equals the result of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;task_size_64bit(0)&lt;/code&gt;,
@@ -625,16 +625,15 @@ loading.&lt;/p&gt;
 
 &lt;h2 id=&quot;sources&quot;&gt;Sources&lt;/h2&gt;
 &lt;ul&gt;
-  &lt;li&gt;https://arxiv.org/abs/2408.15107&lt;/li&gt;
-  &lt;li&gt;https://whitehats.pwr.edu.pl/research/buffer-overflow/&lt;/li&gt;
-  &lt;li&gt;https://sam4k.com/linternals-virtual-memory-part-1/&lt;/li&gt;
-  &lt;li&gt;https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/&lt;/li&gt;
-  &lt;li&gt;https://en.wikipedia.org/wiki/Address_space_layout_randomization&lt;/li&gt;
-  &lt;li&gt;https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/
+  &lt;li&gt;&lt;a href=&quot;https://arxiv.org/abs/2408.15107&quot;&gt;https://arxiv.org/abs/2408.15107&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://sam4k.com/linternals-virtual-memory-part-1/&quot;&gt;https://sam4k.com/linternals-virtual-memory-part-1/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/&quot;&gt;https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://en.wikipedia.org/wiki/Address_space_layout_randomization&quot;&gt;https://en.wikipedia.org/wiki/Address_space_layout_randomization&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/&quot;&gt;https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/&lt;/a&gt;
 (a very similar article but has some errors and not everything is
 showed)&lt;/li&gt;
-  &lt;li&gt;https://www.kernel.org/&lt;/li&gt;
-  &lt;li&gt;https://github.com/pwndbg/pwndbg&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.kernel.org/&quot;&gt;https://www.kernel.org/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://github.com/pwndbg/pwndbg&quot;&gt;https://github.com/pwndbg/pwndbg&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;</content><author><name></name></author><category term="c" /><category term="linux" /><category term="alsr" /><summary type="html">Linux Internals: How ASLR REALLY works</summary></entry><entry><title type="html">Challenges I Wrote For BreakTheSyntax CTF 2025</title><link href="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html" rel="alternate" type="text/html" title="Challenges I Wrote For BreakTheSyntax CTF 2025" /><published>2025-05-16T00:00:00+00:00</published><updated>2025-05-16T00:00:00+00:00</updated><id>https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025</id><content type="html" xml:base="https://poniponiponiponiponiponiponiponiponi.github.io/ctf/pwn/c/rust/risc-v/2025/05/16/Challenges-I-Wrote-For-BtS-CTF-2025.html">&lt;h1 id=&quot;challenges-i-wrote-for-breakthesyntax-ctf-2025&quot;&gt;Challenges I wrote for BreakTheSyntax CTF 2025&lt;/h1&gt;
 
 &lt;p&gt;I had the opportunity to design challenges for BreakTheSyntax CTF 2025 that took place this weekend, both on-site at Wroclaw’s University of Science and Technology and online. The event was organized by the science circle White Hats, which I’m a member of. I created 5 challenges - three binary exploitation ones, one reverse engineering task, and a misc challenge. The pwn challenges especially received very positive feedback, which made me really happy. You can find all the files for every challenge in this repo, in &lt;a href=&quot;https://github.com/poniponiponiponiponiponiponiponiponi/poniponiponiponiponiponiponiponiponi.github.io/tree/main/files/bts&quot;&gt;/files/bts&lt;/a&gt;. Personally, as a player, I enjoy challenges with source code included, so I distributed each of my tasks with the source code (except the reverse engineering one, of course) :).&lt;/p&gt;

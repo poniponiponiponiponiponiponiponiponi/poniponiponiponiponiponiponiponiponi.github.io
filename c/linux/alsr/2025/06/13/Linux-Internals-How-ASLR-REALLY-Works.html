@@ -603,10 +603,10 @@ which was discussed when examining how the binary is randomized and
 works exactly the same way. As a reminder, the value returned by this
 function gives us 28 bits of entropy.</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>unsigned long task_size_64bit(int full_addr_space)
-{
-	return full_addr_space ? TASK_SIZE_MAX : DEFAULT_MAP_WINDOW;
-}
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">unsigned</span> <span class="kt">long</span> <span class="nf">task_size_64bit</span><span class="p">(</span><span class="kt">int</span> <span class="n">full_addr_space</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="k">return</span> <span class="n">full_addr_space</span> <span class="o">?</span> <span class="n">TASK_SIZE_MAX</span> <span class="o">:</span> <span class="n">DEFAULT_MAP_WINDOW</span><span class="p">;</span>
+<span class="p">}</span>
 </code></pre></div></div>
 
 <p>The argument <code class="language-plaintext highlighter-rouge">task_size</code> equals the result of <code class="language-plaintext highlighter-rouge">task_size_64bit(0)</code>,
@@ -674,16 +674,15 @@ loading.</p>
 
 <h2 id="sources">Sources</h2>
 <ul>
-  <li>https://arxiv.org/abs/2408.15107</li>
-  <li>https://whitehats.pwr.edu.pl/research/buffer-overflow/</li>
-  <li>https://sam4k.com/linternals-virtual-memory-part-1/</li>
-  <li>https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/</li>
-  <li>https://en.wikipedia.org/wiki/Address_space_layout_randomization</li>
-  <li>https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/
+  <li><a href="https://arxiv.org/abs/2408.15107">https://arxiv.org/abs/2408.15107</a></li>
+  <li><a href="https://sam4k.com/linternals-virtual-memory-part-1/">https://sam4k.com/linternals-virtual-memory-part-1/</a></li>
+  <li><a href="https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/">https://vccolombo.github.io/cybersecurity/linux-kernel-qemu-setup/</a></li>
+  <li><a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization">https://en.wikipedia.org/wiki/Address_space_layout_randomization</a></li>
+  <li><a href="https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/">https://0x434b.dev/an-introduction-to-address-space-layout-randomization-aslr-in-linux/</a>
 (a very similar article but has some errors and not everything is
 showed)</li>
-  <li>https://www.kernel.org/</li>
-  <li>https://github.com/pwndbg/pwndbg</li>
+  <li><a href="https://www.kernel.org/">https://www.kernel.org/</a></li>
+  <li><a href="https://github.com/pwndbg/pwndbg">https://github.com/pwndbg/pwndbg</a></li>
 </ul>
 
   </div><a class="u-url" href="/c/linux/alsr/2025/06/13/Linux-Internals-How-ASLR-REALLY-Works.html" hidden></a>
