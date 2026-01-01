@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Scripting GDB For Fun And Profit - Or How To Automate The Boring Stuff With GDB"
+title: "Scripting GDB For Fun And Profit -- Or How To Automate The Boring Stuff With GDB"
 date: 2023-04-02
 categories: c python rev pwn
 ---
